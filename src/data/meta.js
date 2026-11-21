@@ -1,0 +1,61 @@
+// Aufgaben (wiederholbare Quest-Reihen) und Erfolge.
+// stat bezieht sich auf profile.stats; Ziel = base * mult^tier
+export const QUEST_LINES = [
+  { id: 'q_kills',   name: 'Monsterjäger',    stat: 'kills',        base: 100,  mult: 2.5, text: 'Besiege {n} Gegner.', reward: { coins: 300, gems: 10, xp: 100 } },
+  { id: 'q_waves',   name: 'Durchhalten',      stat: 'wavesCleared', base: 10,   mult: 2.5, text: 'Überstehe insgesamt {n} Wellen.', reward: { coins: 400, gems: 15, xp: 150 } },
+  { id: 'q_build',   name: 'Baumeister',       stat: 'towersBuilt',  base: 5,    mult: 2.5, text: 'Baue {n} Türme.', reward: { coins: 200, gems: 5, xp: 60 } },
+  { id: 'q_max',     name: 'Perfektionist',    stat: 'maxLevelTowers', base: 1,  mult: 3, text: 'Verbessere {n} Türme auf Stufe MAX.', reward: { coins: 600, gems: 25, xp: 200 } },
+  { id: 'q_boss',    name: 'Bossbezwinger',    stat: 'bossKills',    base: 1,    mult: 3, text: 'Besiege {n} Bosse.', reward: { coins: 800, gems: 40, crystals: 1, xp: 300 } },
+  { id: 'q_coins',   name: 'Goldrausch',       stat: 'coinsEarned',  base: 10000, mult: 3, text: 'Verdiene {n} Münzen.', reward: { gems: 30, xp: 200 } },
+  { id: 'q_runs',    name: 'Stammspieler',     stat: 'runs',         base: 3,    mult: 2.5, text: 'Spiele {n} Runden.', reward: { coins: 300, gems: 10, xp: 80 } },
+  { id: 'q_roads',   name: 'Straßenbauer',     stat: 'roadsBuilt',   base: 30,   mult: 2.5, text: 'Baue {n} Straßenfelder.', reward: { coins: 200, xp: 50 } },
+  { id: 'q_deco',    name: 'Gestalter',        stat: 'decoBuilt',    base: 10,   mult: 2.5, text: 'Platziere {n} Dekorationen oder Gebäude.', reward: { coins: 250, gems: 5, xp: 50 } },
+  { id: 'q_upg',     name: 'Aufrüster',        stat: 'upgrades',     base: 10,   mult: 2.5, text: 'Führe {n} Turm-Upgrades durch.', reward: { coins: 300, gems: 10, xp: 100 } },
+  { id: 'q_skip',    name: 'Ungeduldig',       stat: 'skips',        base: 5,    mult: 3, text: 'Überspringe {n} Wellen-Pausen.', reward: { coins: 250, gems: 5, xp: 60 } },
+  { id: 'q_best',    name: 'Rekordjagd',       stat: 'bestWave',     base: 15,   mult: 1.5, text: 'Erreiche Welle {n} in einer Runde.', reward: { coins: 700, gems: 30, xp: 250 } },
+];
+
+// cond: [stat, wert]
+export const ACHIEVEMENTS = [
+  { id: 'a_tower1',  name: 'Erster Turm',          desc: 'Baue deinen ersten Turm.', cond: ['towersBuilt', 1], gems: 5, icon: '🏰' },
+  { id: 'a_road1',   name: 'Wegbereiter',          desc: 'Baue 20 Straßenfelder.', cond: ['roadsBuilt', 20], gems: 5, icon: '🛤️' },
+  { id: 'a_wave1',   name: 'Erste Welle',          desc: 'Überstehe deine erste Welle.', cond: ['wavesCleared', 1], gems: 5, icon: '🌊' },
+  { id: 'a_wave10',  name: '10 Wellen',            desc: 'Erreiche Welle 10 in einer Runde.', cond: ['bestWave', 10], gems: 15, icon: '🔟' },
+  { id: 'a_wave25',  name: '25 Wellen',            desc: 'Erreiche Welle 25 in einer Runde.', cond: ['bestWave', 25], gems: 30, icon: '🛡️' },
+  { id: 'a_wave50',  name: '50 Wellen',            desc: 'Erreiche Welle 50 in einer Runde.', cond: ['bestWave', 50], gems: 60, icon: '⚔️' },
+  { id: 'a_wave75',  name: '75 Wellen',            desc: 'Erreiche Welle 75 in einer Runde.', cond: ['bestWave', 75], gems: 100, icon: '🔥' },
+  { id: 'a_wave100', name: '100 Wellen',           desc: 'Erreiche Welle 100 in einer Runde.', cond: ['bestWave', 100], gems: 200, icon: '👑' },
+  { id: 'a_win',     name: 'Erster Sieg',          desc: 'Gewinne eine Runde.', cond: ['victories', 1], gems: 50, icon: '🏆' },
+  { id: 'a_boss1',   name: 'Bossbezwinger',        desc: 'Besiege deinen ersten Boss.', cond: ['bossKills', 1], gems: 20, icon: '💀' },
+  { id: 'a_boss10',  name: 'Bossjäger',            desc: 'Besiege 10 Bosse.', cond: ['bossKills', 10], gems: 60, icon: '☠️' },
+  { id: 'a_titan',   name: 'Titanenfall',          desc: 'Besiege den Ultimativen Titan.', cond: ['titanKills', 1], gems: 150, icon: '🗿' },
+  { id: 'a_k100',    name: '100 Besiegte',         desc: 'Besiege 100 Gegner.', cond: ['kills', 100], gems: 10, icon: '🎯' },
+  { id: 'a_k1000',   name: '1.000 Besiegte',       desc: 'Besiege 1.000 Gegner.', cond: ['kills', 1000], gems: 30, icon: '🎯' },
+  { id: 'a_k10000',  name: '10.000 Besiegte',      desc: 'Besiege 10.000 Gegner.', cond: ['kills', 10000], gems: 100, icon: '🎯' },
+  { id: 'a_c10k',    name: 'Sparschwein',          desc: 'Verdiene 10.000 Münzen.', cond: ['coinsEarned', 10000], gems: 15, icon: '🐷' },
+  { id: 'a_c100k',   name: 'Reich!',               desc: 'Verdiene 100.000 Münzen.', cond: ['coinsEarned', 100000], gems: 50, icon: '💰' },
+  { id: 'a_c1m',     name: 'Millionär',            desc: 'Verdiene 1.000.000 Münzen.', cond: ['coinsEarned', 1000000], gems: 150, icon: '💎' },
+  { id: 'a_max1',    name: 'Maximal!',             desc: 'Verbessere einen Turm auf Stufe MAX.', cond: ['maxLevelTowers', 1], gems: 15, icon: '⭐' },
+  { id: 'a_max10',   name: 'Elitearmee',           desc: 'Verbessere 10 Türme auf Stufe MAX.', cond: ['maxLevelTowers', 10], gems: 50, icon: '🌟' },
+  { id: 'a_leg',     name: 'Legendär',             desc: 'Baue deinen ersten legendären Turm.', cond: ['legendaryBuilt', 1], gems: 30, icon: '🟠' },
+  { id: 'a_myth',    name: 'Mythisch',             desc: 'Baue einen mythischen Turm.', cond: ['mythicBuilt', 1], gems: 50, icon: '🔴' },
+  { id: 'a_secret',  name: 'Geheimnis gelüftet',   desc: 'Baue den geheimen Drachenwerfer.', cond: ['secretBuilt', 1], gems: 100, icon: '🐉' },
+  { id: 'a_lvl10',   name: 'Aufsteiger',           desc: 'Erreiche Spielerlevel 10.', cond: ['level', 10], gems: 25, icon: '📈' },
+  { id: 'a_lvl25',   name: 'Veteran',              desc: 'Erreiche Spielerlevel 25.', cond: ['level', 25], gems: 60, icon: '🎖️' },
+  { id: 'a_lvl50',   name: 'Legende',              desc: 'Erreiche Spielerlevel 50.', cond: ['level', 50], gems: 150, icon: '🏅' },
+  { id: 'a_deco25',  name: 'Innenarchitekt',       desc: 'Platziere 25 Dekorationen.', cond: ['decoBuilt', 25], gems: 15, icon: '🌸' },
+  { id: 'a_upg100',  name: 'Technikfreak',         desc: 'Führe 100 Upgrades durch.', cond: ['upgrades', 100], gems: 40, icon: '🔧' },
+  { id: 'a_sell10',  name: 'Händler',              desc: 'Verkaufe 10 Türme.', cond: ['sold', 10], gems: 10, icon: '🏷️' },
+  { id: 'a_skip10',  name: 'Eilig',                desc: 'Überspringe 10 Wellen-Pausen.', cond: ['skips', 10], gems: 15, icon: '⏩' },
+  { id: 'a_runs10',  name: 'Dauerbrenner',         desc: 'Spiele 10 Runden.', cond: ['runs', 10], gems: 20, icon: '🔁' },
+  { id: 'a_hard20',  name: 'Hartgesotten',         desc: 'Erreiche Welle 20 im schweren Modus.', cond: ['hardBest', 20], gems: 60, icon: '😤' },
+  { id: 'a_endless75', name: 'Unendlich',          desc: 'Erreiche Welle 75 im Endlosmodus.', cond: ['endlessBest', 75], gems: 120, icon: '♾️' },
+  { id: 'a_bossmode',name: 'Bossmarathon',         desc: 'Gewinne den Bossmodus.', cond: ['bossModeWins', 1], gems: 100, icon: '🐲' },
+  { id: 'a_biomes',  name: 'Weltenbummler',        desc: 'Spiele in 4 verschiedenen Biomen.', cond: ['biomesPlayed', 4], gems: 40, icon: '🗺️' },
+  { id: 'a_unlock',  name: 'Sammler',              desc: 'Schalte 20 Türme frei.', cond: ['unlockedTowers', 20], gems: 50, icon: '📚' },
+  { id: 'a_flawless',name: 'Makellos',             desc: 'Erreiche Welle 20 ohne ein Leben zu verlieren.', cond: ['flawless20', 1], gems: 50, icon: '💖' },
+  { id: 'a_shop',    name: 'Shopaholic',           desc: 'Gib 500 Edelsteine im Shop aus.', cond: ['gemsSpent', 500], gems: 25, icon: '🛍️' },
+];
+
+export const LEVEL_REWARDS = (lvl) => ({ gems: 10 + lvl * 2, coins: 100 + lvl * 50, crystals: lvl % 5 === 0 ? 1 : 0 });
+export const xpForLevel = (lvl) => Math.round(200 * Math.pow(lvl, 1.45));

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1b2a4a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Build Your Own Tower Defense</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.min.js" } }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <canvas id="c"></canvas>
+    <div id="floaters"></div>
+
+    <div id="loading">
+      <div class="logo"><span>BUILD YOUR OWN</span><b>TOWER DEFENSE</b></div>
+      <div class="lbar"><i></i></div>
+      <p id="loadtxt">Lade 3D-Welt …</p>
+    </div>
+
+    <div id="menu" class="hidden"></div>
+
+    <div id="hud" class="hidden">
+      <div id="tl" class="panel"></div>
+      <div id="tr"></div>
+      <div id="wave" class="panel"></div>
+      <div id="bossbar" class="hidden"></div>
+      <div id="side"></div>
+      <div id="cam"></div>
+      <div id="towerpanel" class="panel hidden"></div>
+      <div id="hint" class="hidden"></div>
+      <div id="buildbar"></div>
+    </div>
+
+    <div id="banner"></div>
+    <div id="toasts"></div>
+
+    <div id="modal" class="hidden">
+      <div class="mbox">
+        <div class="mhead"><h2 id="mtitle"></h2><button class="xbtn" data-act="closeModal" aria-label="Schließen">✕</button></div>
+        <div class="mbody" id="mbody"></div>
+      </div>
+    </div>
+  </div>
+  <noscript>Dieses Spiel benötigt JavaScript.</noscript>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

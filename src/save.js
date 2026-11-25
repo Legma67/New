@@ -52,7 +52,7 @@ const Save = (() => {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(P)); return true; } catch (e) { return false; }
   }
   function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); }
-  function reset() { localStorage.removeItem(SAVE_KEY); P = null; load(); save(); }
+  function reset() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} P = null; load(); save(); }
 
   function on(ev, fn) { listeners[ev].push(fn); }
   function emit(ev, ...a) { for (const f of listeners[ev]) f(...a); }

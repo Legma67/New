@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1b2a4a">
+<title>Build Your Own Tower Defense</title>
+<style>/*CSS*/</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="floats"></div>
+
+<!-- Ladebildschirm -->
+<div id="loading" class="screen">
+  <div class="logo"><span class="l1">BUILD YOUR OWN</span><span class="l2">TOWER DEFENSE</span></div>
+  <div class="loadbar"><i id="loadfill"></i></div>
+  <div class="loadtxt" id="loadtxt">Lade Welt …</div>
+</div>
+
+<!-- Hauptmenü -->
+<div id="mainmenu" class="screen hidden">
+  <div class="menu-top">
+    <div class="player-chip" id="mmPlayer"></div>
+    <div class="cur-row" id="mmCur"></div>
+  </div>
+  <div class="logo small"><span class="l1">BUILD YOUR OWN</span><span class="l2">TOWER DEFENSE</span></div>
+  <div class="menu-buttons">
+    <button class="btn big play" data-act="play">▶ PLAY</button>
+    <div class="menu-grid">
+      <button class="btn" data-act="inventory">🎒 INVENTORY</button>
+      <button class="btn" data-act="towers">🏰 TOWERS</button>
+      <button class="btn" data-act="shop">🛒 SHOP</button>
+      <button class="btn" data-act="quests">📜 QUESTS</button>
+      <button class="btn" data-act="settings">⚙️ SETTINGS</button>
+      <button class="btn" data-act="collection">📖 COLLECTION</button>
+      <button class="btn" data-act="achievements">🏆 ACHIEVEMENTS</button>
+      <button class="btn" data-act="share">🔗 GRUNDSTÜCK TEILEN</button>
+    </div>
+  </div>
+  <button class="daily-btn" id="dailyBtn">🎁 Tagesbelohnung</button>
+  <div class="menu-foot">v1.0 · Fortschritt wird automatisch gespeichert</div>
+</div>
+
+<!-- Spiel-HUD -->
+<div id="hud" class="hidden">
+  <div class="hud-tl">
+    <div class="player-chip" id="hudPlayer"></div>
+  </div>
+  <div class="hud-tc">
+    <div class="wave-panel" id="wavePanel">
+      <div class="wp-row"><b id="wpWave">Welle 0</b><span id="wpMode"></span></div>
+      <div class="wp-bar"><i id="wpFill"></i></div>
+      <div class="wp-row small"><span id="wpEnemies">Gegner: 0 / 0</span><span id="wpNext"></span></div>
+    </div>
+    <div class="boss-bar hidden" id="bossBar"><div class="bb-name" id="bbName"></div><div class="bb-track"><i id="bbFill"></i><i id="bbShield"></i></div></div>
+  </div>
+  <div class="hud-tr">
+    <div class="res lives" title="Leben"><span>❤️</span><b id="resLives">20</b></div>
+    <div class="res coins" title="Münzen"><span>🪙</span><b id="resCoins">0</b></div>
+    <div class="res gems" title="Edelsteine"><span>💎</span><b id="resGems">0</b></div>
+    <button class="btn small shopbtn" data-act="shop">🛒</button>
+  </div>
+  <div class="side-menu">
+    <button class="sbtn" data-act="pause" title="Menü">☰</button>
+    <button class="sbtn" data-act="settings" title="Einstellungen">⚙️</button>
+    <button class="sbtn" data-act="inventory" title="Inventar">🎒</button>
+    <button class="sbtn" data-act="quests" title="Aufgaben">📜<i class="dot hidden" id="questDot"></i></button>
+    <button class="sbtn" data-act="stats" title="Statistiken">📊</button>
+    <button class="sbtn" data-act="achievements" title="Erfolge">🏆</button>
+  </div>
+  <div class="cam-ctl">
+    <button class="cbtn" data-cam="rl">⟲</button><button class="cbtn" data-cam="rr">⟳</button>
+    <button class="cbtn" data-cam="zi">＋</button><button class="cbtn" data-cam="zo">－</button>
+    <button class="cbtn" data-cam="reset">⌂</button>
+  </div>
+  <div class="wave-ctl">
+    <button class="btn wavebtn" id="waveBtn">▶ WELLE STARTEN</button>
+    <div class="wc-row"><button class="btn small" id="speedBtn">1x</button><button class="btn small" id="pauseBtn">❚❚</button></div>
+  </div>
+  <div class="build-bar" id="buildBar">
+    <div class="bb-tabs" id="bbTabs">
+      <button data-tab="towers" class="on">🏰 Türme</button>
+      <button data-tab="roads">🛣️ Straßen</button>
+      <button data-tab="decos">🌳 Deko</button>
+      <button data-tab="tools">🧰 Werkzeuge</button>
+    </div>
+    <div class="bb-items" id="bbItems"></div>
+  </div>
+  <div class="build-hint hidden" id="buildHint"></div>
+  <div class="tower-panel hidden" id="towerPanel"></div>
+</div>
+
+<div id="toasts"></div>
+<div id="banner" class="hidden"></div>
+<div id="modal" class="hidden"><div class="modal-box"><div class="modal-head"><h2 id="modalTitle"></h2><button class="xbtn" id="modalClose">✕</button></div><div class="modal-body" id="modalBody"></div></div></div>
+<div id="rotateHint" class="hidden"><div>📱↻<br>Drehe dein Gerät ins <b>Querformat</b> für das beste Spielerlebnis.<br><button class="btn small" id="rotateOk">Trotzdem spielen</button></div></div>
+
+<script>/*THREE*/</script>
+<script>/*JS*/</script>
+</body>
+</html>

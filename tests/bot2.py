@@ -1,14 +1,11 @@
 import asyncio, json
 from playwright.async_api import async_playwright
-import os
-INDEX = 'file://' + os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'index.html'))
-CHROME = os.environ.get('CHROME', '/usr/bin/google-chrome')
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path=CHROME, args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+        b = await p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
         pg = await b.new_page(viewport={'width':800,'height':450}); errs=[]
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(INDEX); await pg.wait_for_timeout(2500)
+        await pg.goto('file:///home/claude/new/index.html'); await pg.wait_for_timeout(2500)
         out = await pg.evaluate('''async () => {
           UI.Tut.stop(); Save.reset(); Save.P.tutorialDone = true;
           // Belohnungs-Modal im Bot überspringen
@@ -20,7 +17,7 @@ async def main():
             Game.ui.gameOver = () => {};
             const R = Game.R; R.hold = false;
             const placeAll = () => {
-              for (const id of Object.keys(Save.P.towerInv)) for (let pl=9; pl>=0; pl--) while (Game.available('tower', id, pl) > 0) { const sp = Game.bestSpot(TOWER_BY_ID[id].range || 3); if (!sp) return; Game.setBuild({kind:'tower', id, plus: pl}); Game.tap(tileToWorld(sp.x, sp.z)); Game.setBuild(null); }
+              for (const id of Object.keys(Save.P.towerInv)) for (let pl=9; pl>=0; pl--) while (Game.available('tower', id, pl) > 0) { const sp = Game.bestSpot(TOWER_BY_ID[id].range || 3); if (!sp) return; Game.setBuild({kind:'tower', id, plus: pl}); Game.tap(tileToWorld(sp.x, sp.z)); if (!Game.confirmPlace()) { Game.setBuild(null); return; } Game.setBuild(null); }
               for (const id of Object.keys(Save.P.trapInv)) while (Game.available('trap', id) > 0) { const t = Game.route.tiles.find(([x,z],i)=> i>3 && !Game.traps.has(x+','+z)); if(!t) break; Game.setBuild({kind:'trap', id}); Game.tap(tileToWorld(t[0], t[1])); Game.setBuild(null); }
             };
             const upg = () => { for (const id of Object.keys(Save.P.towerInv)) for (let pl=0; pl<9; pl++) while (Save.inv(id,pl) >= 3) Game.fuse(id,pl); };

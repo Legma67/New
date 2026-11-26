@@ -142,7 +142,9 @@ body.portrait #root{transform:rotate(90deg) translateY(-100%)}
 .filters select option{background:#24386a}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.4em,1fr));gap:8px}
 .card{position:relative;border-radius:14px;background:rgba(255,255,255,.08);border:3px solid rgba(255,255,255,.2);padding:.4em;text-align:center;cursor:pointer}
-.card img,.card .ic{width:100%;height:5.4em;object-fit:contain;display:flex;align-items:center;justify-content:center;font-size:3em}
+.card img,.card .ic{width:100%;height:5.4em;object-fit:contain;display:flex;align-items:center;justify-content:center}
+.card .ic{font-size:3em;height:1.8em}
+@container root (max-height:430px){.card img{height:4.2em}.card .ic{height:1.4em}}
 .card .nm{font-weight:900;font-size:.85em;line-height:1.15;min-height:2.3em;display:flex;align-items:center;justify-content:center}
 .card .sub{font-size:.72em;opacity:.85}
 .card .rb{display:inline-block;font-size:.66em;font-weight:900;border-radius:6px;padding:1px 6px;margin-top:3px;color:#111}
@@ -219,7 +221,7 @@ body:not(.build-open) .build-bar{display:none}
 body:not(.build-open) #hud .build-toggle{display:block}
 body.tp-open .build-bar{display:none}
 body.touch:not(.tp-open) #hud .joy{display:block}
-body.build-open .joy{left:calc(min(36cqw,330px) + 22px + var(--safe-l))}
+
 body.touch #hud .jump-btn{display:flex}
 #buildBar img{-webkit-user-drag:none;user-select:none}#buildBar{user-select:none;-webkit-user-select:none}
 #dragFloat{position:fixed;left:0;top:0;z-index:80;width:64px;height:64px;margin:-80px 0 0 -32px;pointer-events:none;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
@@ -229,7 +231,7 @@ body.touch #hud .jump-btn{display:flex}
 .picks{margin:.8em 0;background:rgba(255,225,77,.1);border:2px solid #ffe14d;border-radius:16px;padding:.6em}
 .picks h3{margin:.1em 0 .4em;color:#ffe14d}
 .pick-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:.6em}
-.pick-row .card{border-width:3px}.pick-row .card img{height:3.2em}.pick-row .card .sub{font-size:.68em}
+.pick-row .card{border-width:3px}.pick-row .card img{height:3.2em}.pick-row .card .ic{height:1.07em}.pick-row .card .sub{font-size:.68em}
 .pick-row.done .card{opacity:.35;pointer-events:none}
 .pick-row.done .card.chosen{opacity:1;box-shadow:0 0 0 4px #5fe07a;animation:pulse 1.2s infinite}
 .swatches{display:flex;gap:6px}
@@ -313,7 +315,7 @@ body.tutorial .side-menu,body.tutorial .hud-tr .shopbtn,body.tutorial .wc-row,bo
   .item .pic{height:2.6em}.item .emo{font-size:1.6em}
   .bb-head{min-height:2em;font-size:.78em}
 }
-@container root (max-width:700px){.build-bar{width:40cqw}body.build-open .joy{left:calc(40cqw + 22px)}}
+@container root (max-width:700px){.build-bar{width:40cqw}}
 body.build-open #tut{left:auto;right:calc(12px + var(--safe-r));transform:none;width:calc(100cqw - min(36cqw,330px) - 40px);max-width:560px}
 body.tut-on #toasts{top:calc(190px + env(safe-area-inset-top,0px))}
 @container root (max-height:430px){body.tut-on #toasts{top:auto;bottom:calc(150px + var(--safe-b))}}
@@ -327,6 +329,31 @@ body.bossfight #vignette{background:radial-gradient(ellipse at 50% 45%,rgba(0,0,
 .place-confirm .ok{background:linear-gradient(#5ee07a,#22a646)}
 .place-confirm .no{background:linear-gradient(#ff6a6a,#d93a3a)}
 .place-confirm button:active{transform:translateY(3px)}
+
+/* ===== Fingerfreundliche Größen (Handy/Tablet) ===== */
+body.touch .tabs button,body.touch .bb-tabs button,body.touch .btn.small,body.touch .wc-row .btn,body.touch .hud-tr .btn,
+body.touch .tp-target button,body.touch .bb-head .hb,body.touch .modal-body .btn{min-height:34px}
+body.touch .bb-head .hb{min-width:36px}
+body.touch .tp-close{width:36px;height:36px;top:2px;right:2px;font-size:1.3em}
+body.touch .toggle{min-height:28px;min-width:52px}
+.cam-ctl #camMode{grid-column:1/-1;width:auto;min-height:2.2em;font-size:.85em;padding:0 .4em}
+/* Kamera-Knöpfe rücken neben offene Seitenleisten statt verdeckt zu werden */
+body.build-open .cam-ctl{left:calc(min(36cqw,330px) + 18px + var(--safe-l))}
+
+
+@container root (max-width:700px){ body.build-open .cam-ctl{left:calc(40cqw + 18px)} }
+
+body.tp-open .cam-ctl{display:none}
+body.touch .xbtn{min-width:38px;min-height:38px}
+body.touch .cam-ctl #camMode{min-height:32px}
+/* Joystick + Springen neben dem offenen Baumenü, ohne sich zu überlappen */
+#hud{--bw:min(36cqw,330px);--joy:128px}
+@container root (max-width:700px){#hud{--bw:40cqw}}
+@container root (max-height:430px){#hud{--joy:104px}}
+.joy{width:var(--joy);height:var(--joy)}
+body.build-open .joy{left:calc(var(--bw) + 22px + var(--safe-l))}
+body.build-open .jump-btn{right:auto;left:calc(var(--bw) + 36px + var(--joy) + var(--safe-l));width:58px;height:58px;font-size:1.4em}
+body.build-open .jump-btn small{display:none}
 </style>
 </head>
 <body>
@@ -3358,7 +3385,7 @@ const Game = (() => {
       if (sel.kind === 'erase') { const x1 = Models.mesh(Models.box(0.9, 0.1, 0.12), Models.M('#ff3030'), 0, 0.12, 0, g, false); x1.rotation.y = Math.PI / 4; const x2 = x1.clone(); x2.rotation.y = -Math.PI / 4; g.add(x2); }
     }
     g.traverse(o => {
-      if (o.isMesh) { o.material = new THREE.MeshBasicMaterial({ color: 0x55ff77, transparent: true, opacity: 0.55, depthWrite: false }); o.castShadow = false; }
+      if (o.isMesh) { o.material = new THREE.MeshBasicMaterial({ color: 0x55ff77, transparent: true, opacity: 0.72, depthWrite: false }); o.castShadow = false; }
     });
     g.rotation.y = buildRot * Math.PI / 2;
     return g;

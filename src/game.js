@@ -285,7 +285,7 @@ const Game = (() => {
       if (sel.kind === 'erase') { const x1 = Models.mesh(Models.box(0.9, 0.1, 0.12), Models.M('#ff3030'), 0, 0.12, 0, g, false); x1.rotation.y = Math.PI / 4; const x2 = x1.clone(); x2.rotation.y = -Math.PI / 4; g.add(x2); }
     }
     g.traverse(o => {
-      if (o.isMesh) { o.material = new THREE.MeshBasicMaterial({ color: 0x55ff77, transparent: true, opacity: 0.55, depthWrite: false }); o.castShadow = false; }
+      if (o.isMesh) { o.material = new THREE.MeshBasicMaterial({ color: 0x55ff77, transparent: true, opacity: 0.72, depthWrite: false }); o.castShadow = false; }
     });
     g.rotation.y = buildRot * Math.PI / 2;
     return g;

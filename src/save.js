@@ -11,9 +11,9 @@ const Save = (() => {
 
   function defaults() {
     return {
-      v: 2,
+      v: 3,
       tutorialDone: false,
-      towerInv: { crossbow: 1 },               // Türme im Besitz (Anzahl) – nur von Bossen
+      towerInv: { crossbow: [1] },             // Türme im Besitz: id -> Anzahl je Fusionsstufe [+0, +1, … +9]
       trapInv: {},                             // Fallen im Besitz (Anzahl)
       roadPieces: 4,                           // freie Wegstücke
       name: 'Spieler' + Math.floor(1000 + Math.random() * 9000),
@@ -24,7 +24,7 @@ const Save = (() => {
       boosts: { boost_coins: 0, boost_lives: 0, boost_xp: 0 },
       stats: { kills: 0, bossKills: 0, titanKills: 0, wavesTotal: 0, bestWave: 0, towersBuilt: 0, roadsBuilt: 0, decoBuilt: 0, upgrades: 0, maxTowerLevel: 0,
         coinsEarned: 0, gamesPlayed: 0, skips: 0, victories: 0, hardVictories: 0, perfectWaves: 0, legendaryBuilt: 0, damage: 0, purchases: 0,
-        playTime: 0, livesLost: 0, trapsBuilt: 0, sold: 0, gemsEarned: 0, bestStreak: 0 },
+        playTime: 0, livesLost: 0, trapsBuilt: 0, fusions: 0, maxPlus: 0, sold: 0, gemsEarned: 0, bestStreak: 0 },
       seen: {}, killsBy: {},
       achievements: {},                       // id -> Zeitstempel
       quests: {},                             // id -> 'claimed'
@@ -50,8 +50,13 @@ const Save = (() => {
     } catch (e) { P = defaults(); }
     // Umstieg auf das neue System (Türme nur von Bossen)
     if (P.v < 2) {
-      Object.assign(P, { v: 2, tutorialDone: false, towerInv: { crossbow: 1 }, trapInv: {}, roadPieces: 4, unlocked: ['crossbow'], run: null, pendingPicks: null, records: {} });
+      Object.assign(P, { v: 2, tutorialDone: false, towerInv: { crossbow: [1] }, trapInv: {}, roadPieces: 4, unlocked: ['crossbow'], run: null, pendingPicks: null, records: {} });
       P.stats.bestWave = 0;
+    }
+    // v3: Fusion statt Upgrades – Inventar je Fusionsstufe
+    if (P.v < 3) {
+      for (const k in P.towerInv) if (typeof P.towerInv[k] === 'number') P.towerInv[k] = [P.towerInv[k]];
+      P.run = null; P.v = 3;
     }
     if (!P.layout) P.layout = { roads: DEFAULT_ROADS.map(([x, z]) => [x, z, 'road_stone']), decos: [[2, 7, 'tree', 0], [3, 12, 'flowers', 0], [10, 1, 'lantern', 0], [16, 12, 'bush', 0], [20, 1, 'house', 1]] };
     refreshDaily();
@@ -70,7 +75,7 @@ const Save = (() => {
   // ---------- Stats ----------
   function stat(key) {
     if (key === 'playerLevel') return P.level;
-    if (key === 'towersUnlocked') return Object.keys(P.towerInv).filter(k => P.towerInv[k] > 0).length;
+    if (key === 'towersUnlocked') return Object.keys(P.towerInv).filter(k => invTotal(k) > 0).length;
     if (key === 'tutorial') return P.tutorialDone ? 1 : 0;
     if (key === 'enemiesSeen') return Object.keys(P.seen).length;
     return P.stats[key] || 0;
@@ -152,11 +157,29 @@ const Save = (() => {
   }
 
   // ---------- Inventar ----------
-  function addTower(id, n = 1) { P.towerInv[id] = (P.towerInv[id] || 0) + n; if (!P.unlocked.includes(id)) P.unlocked.push(id); checkAchievements(); }
+  function inv(id, plus = 0) { const a = P.towerInv[id]; return (a && a[plus]) || 0; }
+  function invTotal(id) { const a = P.towerInv[id]; return a ? a.reduce((s, n) => s + (n || 0), 0) : 0; }
+  function addTower(id, n = 1, plus = 0) {
+    const a = P.towerInv[id] || (P.towerInv[id] = []);
+    a[plus] = (a[plus] || 0) + n;
+    if (!P.unlocked.includes(id)) P.unlocked.push(id);
+    checkAchievements();
+  }
+  // 3 gleiche Türme derselben Stufe -> 1 Turm eine Stufe höher
+  function fuseTower(id, plus) {
+    if (plus >= MAX_PLUS || inv(id, plus) < 3) return false;
+    P.towerInv[id][plus] -= 3;
+    addTower(id, 1, plus + 1);
+    P.stats.fusions = (P.stats.fusions || 0) + 1;
+    maxStat('maxPlus', plus + 1);
+    checkAchievements(); save();
+    return true;
+  }
   function addTrap(id, n = 1) { P.trapInv[id] = (P.trapInv[id] || 0) + n; }
   // Zufälliger Turm, je höher die Welle desto seltener
   function rollTower(wave, exclude = []) {
-    const weight = t => ({ common: 10, uncommon: 9, rare: 3 + wave / 6, epic: 0.5 + wave / 12, legendary: wave / 25, mythic: wave / 45, secret: wave / 60 })[t.rarity];
+    // Türme, die man schon hat, kommen öfter – damit man sie fusen kann
+    const weight = t => ({ common: 10, uncommon: 9, rare: 3 + wave / 6, epic: 0.5 + wave / 12, legendary: wave / 25, mythic: wave / 45, secret: wave / 60 })[t.rarity] * (invTotal(t.id) ? 2.5 : 1);
     const pool = TOWERS.filter(t => !exclude.includes(t.id) && weight(t) > 0);
     let tot = pool.reduce((a, t) => a + weight(t), 0), r = Math.random() * tot;
     for (const t of pool) { r -= weight(t); if (r <= 0) return t.id; }
@@ -178,7 +201,7 @@ const Save = (() => {
     if (r < 0.3) bonus = { kind: 'roads', n: 4 + Math.floor(wave / 5) };
     else if (r < 0.6) { const pool = wave < 15 ? TRAPS.slice(0, 3) : TRAPS; bonus = { kind: 'trap', id: pool[Math.floor(Math.random() * pool.length)].id }; }
     else if (r < 0.8) bonus = { kind: 'coins', n: 100 + wave * 20 };
-    return { kind: 'tower', id: rollTower(wave), bonus };
+    return { kind: 'tower', id: rollTower(wave), n: wave >= 30 ? 3 : wave >= 15 ? 2 : 1, bonus };
   }
 
   // ---------- Turm-Belohnung nach einer Runde ----------
@@ -215,7 +238,7 @@ const Save = (() => {
   const openPicks = () => !!(P.pendingPicks && P.pendingPicks.some(q => !q.done));
   function tidyPicks() { if (P.pendingPicks && !openPicks()) P.pendingPicks = null; }
   return {
-    makeTowerPicks, choosePick, openPicks, tidyPicks, addTower, addTrap, rollTower, rollBossReward, rollFake,
+    makeTowerPicks, choosePick, openPicks, tidyPicks, inv, invTotal, fuseTower, addTower, addTrap, rollTower, rollBossReward, rollFake,
     load, save, saveSoon, reset, on, emit, stat, addStat, maxStat, addXP, grant, checkAchievements,
     questProgress, claimQuest, refreshDaily, dailyDef, dailyProgress, claimDaily, dailyRewardAvailable, claimDailyReward,
     get P() { return P; },

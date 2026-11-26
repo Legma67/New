@@ -82,6 +82,13 @@ const TOWERS = [
 ];
 const TOWER_BY_ID = Object.fromEntries(TOWERS.map(t => [t.id, t]));
 const MAX_TOWER_LEVEL = 5;
+// ---------- Fusion: 3 gleiche Türme (+N) -> 1 Turm (+N+1), bis +9 ----------
+const MAX_PLUS = 9;
+const plusDmg = n => Math.pow(3, n);            // ein +1 ist so stark wie die drei Türme, aus denen er entstand
+const plusRate = n => 1 + 0.04 * n;
+const plusRange = n => 0.25 * n;
+const plusVisual = n => [1, 2, 2, 3, 3, 4, 4, 5, 5, 5][n] || 5;   // Aussehen (Ringe, Stacheln, Krone ab +7)
+const PLUS_COLORS = ['#ffffff', '#7dff8a', '#5ad0ff', '#4f8bff', '#b47aff', '#ff6ad5', '#ff8a3a', '#ffd700', '#ff3b5a', '#16f2d6'];
 const LEVEL_DMG = [1, 1.55, 2.3, 3.4, 5.0];
 const LEVEL_RANGE = [0, 0.3, 0.6, 0.9, 1.3];
 const LEVEL_RATE = [1, 1.1, 1.22, 1.36, 1.55];
@@ -133,7 +140,7 @@ const ENEMIES = [
   { id:'magicdragon', name:'Magischer Drache', kind:'Magischer Drache', hp:2800, speed:1.1, reward:120, size:1.0, color:'#8a4dff', shape:'dragon', min:30, w:1, fly:true, resist:{ magic:0.6 }, glow:'#d0a0ff' },
   { id:'colossus', name:'Urzeitkoloss', kind:'Legendärer Boss', hp:9000, speed:0.55, reward:400, size:1.6, color:'#6b4f3a', shape:'golem', min:35, w:0.4, armor:0.5, mini:true },
   // ----- Bosse -----
-  { id:'boss_tut', name:'Kleiner Steinriese', kind:'Tutorial-Boss', hp:420, speed:0.42, reward:120, size:1.4, color:'#9a9282', shape:'golem', boss:true, min:999, glow:'#ffcc33' },
+  { id:'boss_tut', name:'Kleiner Steinriese', kind:'Tutorial-Boss', hp:260, speed:0.4, reward:120, size:1.4, color:'#9a9282', shape:'golem', boss:true, min:999, glow:'#ffcc33' },
   { id:'boss_stone', name:'Steinriese', kind:'Bossgegner', hp:6000, speed:0.5, reward:600, size:1.9, color:'#8d8576', shape:'golem', boss:true, armor:0.4, abilities:['stomp','summon'], summon:'skeleton', min:999 },
   { id:'boss_fire', name:'Feuerdrache', kind:'Bossgegner', hp:16000, speed:0.7, reward:1200, size:1.8, color:'#e8361c', shape:'dragon', boss:true, fly:true, immune:['fire'], abilities:['rage','summon'], summon:'fireimp', min:999, glow:'#ff8800' },
   { id:'boss_ice', name:'Eiskönig', kind:'Bossgegner', hp:30000, speed:0.55, reward:2000, size:1.9, color:'#bfefff', shape:'knight', boss:true, immune:['ice','slow'], armor:0.4, abilities:['freeze','shieldregen'], shield:5000, crown:true, min:999, glow:'#e0fbff' },
@@ -225,7 +232,7 @@ const BOOSTS = [
 // Spielmodi
 // ------------------------------------------------------------
 const MODES = [
-  { id:'endless', name:'Endlos', icon:'♾️', desc:'Unendlich viele Wellen – jede 5. Welle kommt ein Boss.', win:0, hp:1, speed:1, lives:20, bossEvery:5 },
+  { id:'endless', name:'Endlos', icon:'♾️', desc:'Unendlich viele Wellen – jede 5. Welle kommt ein Boss.', win:0, hp:0.5, speed:1, lives:20, bossEvery:5 },
 ];
 const MODE_BY_ID = Object.fromEntries(MODES.map(m => [m.id, m]));
 
@@ -236,7 +243,7 @@ const QUESTS = [
   { id:'q_kill100', name:'Monsterjäger', desc:'Besiege 100 Gegner.', stat:'kills', goal:100, reward:{ gems:15, xp:100 } },
   { id:'q_wave10', name:'Durchhalten', desc:'Überstehe insgesamt 10 Wellen.', stat:'wavesTotal', goal:10, reward:{ gems:15, xp:120 } },
   { id:'q_tower5', name:'Baumeister', desc:'Platziere 5 Türme.', stat:'towersBuilt', goal:5, reward:{ gems:10, xp:60 } },
-  { id:'q_up5', name:'Maximalstufe', desc:'Verbessere einen Turm auf Stufe 5.', stat:'maxTowerLevel', goal:5, reward:{ gems:25, xp:150 } },
+  { id:'q_up5', name:'Erste Fusion', desc:'Fuse einen Turm auf +1.', stat:'maxPlus', goal:1, reward:{ gems:25, xp:150 } },
   { id:'q_boss1', name:'Bossbezwinger', desc:'Besiege einen Boss.', stat:'bossKills', goal:1, reward:{ gems:30, crystals:3, xp:200 } },
   { id:'q_coins10k', name:'Schatzmeister', desc:'Verdiene 10.000 Münzen.', stat:'coinsEarned', goal:10000, reward:{ gems:25, xp:150 } },
   { id:'q_games3', name:'Stammspieler', desc:'Spiele drei Runden.', stat:'gamesPlayed', goal:3, reward:{ gems:10, xp:80 } },
@@ -244,7 +251,7 @@ const QUESTS = [
   { id:'q_kill1000', name:'Legendärer Jäger', desc:'Besiege 1.000 Gegner.', stat:'kills', goal:1000, reward:{ gems:50, crystals:5, xp:500 } },
   { id:'q_wave50', name:'Unerschütterlich', desc:'Überstehe insgesamt 50 Wellen.', stat:'wavesTotal', goal:50, reward:{ gems:40, crystals:4, xp:400 } },
   { id:'q_deco10', name:'Gartenkünstler', desc:'Platziere 10 Dekorationen.', stat:'decoBuilt', goal:10, reward:{ gems:10, xp:60 } },
-  { id:'q_upg30', name:'Tüftler', desc:'Führe 30 Upgrades durch.', stat:'upgrades', goal:30, reward:{ gems:25, xp:200 } },
+  { id:'q_upg30', name:'Fusionsprofi', desc:'Fuse einen Turm auf +3.', stat:'maxPlus', goal:3, reward:{ gems:25, xp:200 } },
   { id:'q_boss5', name:'Bossjäger', desc:'Besiege 5 Bosse.', stat:'bossKills', goal:5, reward:{ gems:60, crystals:8, xp:600 } },
   { id:'q_skip5', name:'Ungeduldig', desc:'Überspringe 5 Wellen-Pausen.', stat:'skips', goal:5, reward:{ gems:10, xp:80 } },
 ];
@@ -252,7 +259,7 @@ const DAILY_POOL = [
   { id:'d_kill', name:'Tägliche Jagd', desc:'Besiege {g} Gegner.', stat:'kills', goal:150, reward:{ gems:12, xp:100 } },
   { id:'d_wave', name:'Tägliche Wellen', desc:'Überstehe {g} Wellen.', stat:'wavesTotal', goal:8, reward:{ gems:12, xp:100 } },
   { id:'d_build', name:'Täglicher Bau', desc:'Platziere {g} Türme.', stat:'towersBuilt', goal:4, reward:{ gems:8, xp:60 } },
-  { id:'d_upg', name:'Tägliches Training', desc:'Führe {g} Upgrades durch.', stat:'upgrades', goal:8, reward:{ gems:8, xp:60 } },
+  { id:'d_upg', name:'Tägliche Fusion', desc:'Führe {g} Fusion durch.', stat:'fusions', goal:1, reward:{ gems:8, xp:60 } },
   { id:'d_coins', name:'Tägliches Gold', desc:'Verdiene {g} Münzen.', stat:'coinsEarned', goal:4000, reward:{ gems:12, xp:100 } },
   { id:'d_boss', name:'Täglicher Boss', desc:'Besiege {g} Boss.', stat:'bossKills', goal:1, reward:{ gems:20, crystals:2, xp:150 } },
   { id:'d_road', name:'Tägliche Straßen', desc:'Baue {g} Straßenfelder.', stat:'roadsBuilt', goal:6, reward:{ gems:6, xp:40 } },
@@ -275,8 +282,9 @@ const ACHIEVEMENTS = [
   { id:'a_coins1m', name:'Millionär', desc:'Verdiene 1.000.000 Münzen.', stat:'coinsEarned', goal:1000000, gems:120, crystals:20, icon:'🤑' },
   { id:'a_towers25', name:'Turmstadt', desc:'Baue 25 Türme.', stat:'towersBuilt', goal:25, gems:15, icon:'🏙️' },
   { id:'a_towers200', name:'Festungsarchitekt', desc:'Baue 200 Türme.', stat:'towersBuilt', goal:200, gems:50, icon:'🏯' },
-  { id:'a_lvl5', name:'Voll aufgerüstet', desc:'Bringe einen Turm auf Stufe 5.', stat:'maxTowerLevel', goal:5, gems:20, icon:'⬆️' },
-  { id:'a_upg100', name:'Upgrade-Meister', desc:'Führe 100 Upgrades durch.', stat:'upgrades', goal:100, gems:40, icon:'🔧' },
+  { id:'a_lvl5', name:'Fusionsmeister', desc:'Fuse einen Turm auf +5.', stat:'maxPlus', goal:5, gems:60, crystals:5, icon:'⚗️' },
+  { id:'a_plus9', name:'Unaufhaltsam', desc:'Fuse einen Turm auf +9.', stat:'maxPlus', goal:9, gems:300, crystals:50, icon:'💠' },
+  { id:'a_upg100', name:'Fusionsmaschine', desc:'Führe 25 Fusionen durch.', stat:'fusions', goal:25, gems:40, icon:'🔧' },
   { id:'a_legend', name:'Erster legendärer Turm', desc:'Baue einen Turm der Seltenheit Legendary oder höher.', stat:'legendaryBuilt', goal:1, gems:30, icon:'🏅' },
   { id:'a_road100', name:'Straßennetz', desc:'Baue 100 Straßenfelder.', stat:'roadsBuilt', goal:100, gems:20, icon:'🗺️' },
   { id:'a_deco25', name:'Landschaftsgärtner', desc:'Platziere 25 Dekorationen.', stat:'decoBuilt', goal:25, gems:15, icon:'🌸' },

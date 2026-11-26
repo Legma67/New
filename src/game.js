@@ -105,7 +105,7 @@ const Game = (() => {
       Object.assign(R, { wave: snapshot.wave, coins: snapshot.coins, lives: snapshot.lives, maxLives: snapshot.maxLives || snapshot.lives, stats: snapshot.stats });
     }
     loadLayout(); placeCastle();
-    if (snapshot) for (const t of snapshot.towers) { if (!TOWER_BY_ID[t.id] || available('tower', t.id) <= 0 || grid[t.x][t.z]) continue; const tw = spawnTower(TOWER_BY_ID[t.id], t.x, t.z, t.rot, false); tw.level = t.level; tw.invested = t.invested; tw.targeting = t.targeting || 'first'; tw.kills = t.kills || 0; Models.applyTowerLevel(tw.mesh, tw.level); }
+    if (snapshot) for (const t of snapshot.towers) { const pl = t.plus || 0; if (!TOWER_BY_ID[t.id] || available('tower', t.id, pl) <= 0 || grid[t.x][t.z]) continue; const tw = spawnTower(TOWER_BY_ID[t.id], t.x, t.z, t.rot, false, pl); tw.targeting = t.targeting || 'first'; tw.kills = t.kills || 0; }
     if (snapshot && snapshot.traps) for (const [id, x, z] of snapshot.traps) if (TRAP_BY_ID[id] && available('trap', id) > 0 && grid[x][z] && grid[x][z].type === 'road') spawnTrap(TRAP_BY_ID[id], x, z, false);
     if (!snapshot) { Save.addStat('gamesPlayed'); }
     R.pauseTimer = R.tutorial ? 0 : (Save.P.settings.autoStart ? 20 : 0); // erste Welle startet automatisch (im Tutorial erst nach dem Platzieren)
@@ -119,7 +119,7 @@ const Game = (() => {
     if (!R || demo || R.over || R.phase !== 'build') return;
     Save.P.run = {
       mode: R.mode.id, biome: R.biome, wave: R.wave, coins: R.coins, lives: R.lives, maxLives: R.maxLives, stats: R.stats,
-      towers: towers.map(t => ({ id: t.def.id, x: t.x, z: t.z, level: t.level, invested: t.invested, rot: t.rot, targeting: t.targeting, kills: t.kills })),
+      towers: towers.map(t => ({ id: t.def.id, x: t.x, z: t.z, plus: t.plus, rot: t.rot, targeting: t.targeting, kills: t.kills })),
       traps: [...traps.values()].map(t => [t.def.id, t.x, t.z]),
     };
     Save.saveSoon();
@@ -156,7 +156,7 @@ const Game = (() => {
       const [x, z] = route.tiles[i];
       for (const [dx, dz] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
         const nx = x + dx, nz = z + dz;
-        if (inPlot(nx, nz) && !grid[nx][nz]) { const t = spawnTower(TOWER_BY_ID[ids[k]], nx, nz, 0, false); t.level = 1 + (k % 5); Models.applyTowerLevel(t.mesh, t.level); k++; break; }
+        if (inPlot(nx, nz) && !grid[nx][nz]) { spawnTower(TOWER_BY_ID[ids[k]], nx, nz, 0, false, (k * 2) % 10); k++; break; }
       }
     }
     World.setBuildOverlay(false);
@@ -205,6 +205,7 @@ const Game = (() => {
     if (sel.kind === 'erase') {
       if (!c) return { ok: false, why: 'Nichts zum Entfernen' };
       if (c.type === 'tower') return { ok: false, why: 'Türme bitte antippen und AUFHEBEN' };
+      if (c.type === 'tower') return { ok: false, why: 'Türme bitte antippen und AUFHEBEN' };
       if (c.type === 'road' && traps.has(x + ',' + z)) return { ok: true };
       if (c.type === 'road') {
         if (isFixed) return { ok: false, why: 'Start- und Zielfeld sind fest' };
@@ -215,7 +216,7 @@ const Game = (() => {
     }
     if (c) return { ok: false, why: c.type === 'road' ? 'Nicht auf die Straße bauen' : 'Feld ist belegt' };
     if (sel.kind === 'tower') {
-      if (available('tower', sel.id) <= 0) return { ok: false, why: 'Du hast keinen weiteren Turm dieser Art' };
+      if (available('tower', sel.id, sel.plus || 0) <= 0) return { ok: false, why: 'Du hast keinen weiteren Turm dieser Art' };
       return { ok: true };
     }
     if (sel.kind === 'deco') {
@@ -309,12 +310,11 @@ const Game = (() => {
       Particles.emit(pos.x, 0.2, pos.z, 12, '#bbbbbb', { speed: 1.5, life: 0.5 });
     } else if (sel.kind === 'tower') {
       const def = TOWER_BY_ID[sel.id];
-      spawnTower(def, x, z, buildRot, true);
+      spawnTower(def, x, z, buildRot, true, sel.plus || 0);
       ui.tutorialEvent && ui.tutorialEvent('placed', def.id);
-      if (available('tower', def.id) <= 0) setBuild(null);
+      if (available('tower', def.id, sel.plus || 0) <= 0) setBuild(null);
       Save.addStat('towersBuilt'); R.stats.towers = (R.stats.towers || 0) + 1;
       if (RARITIES[def.rarity].order >= 4) Save.addStat('legendaryBuilt');
-      Save.maxStat('maxTowerLevel', 1);
       Audio2.play('place');
       snapshotRun();
     } else if (sel.kind === 'trap') {
@@ -352,10 +352,23 @@ const Game = (() => {
   }
 
   // ---------------- Inventar / Fallen ----------------
-  function available(kind, id) {
-    if (kind === 'tower') return (Save.P.towerInv[id] || 0) - towers.filter(t => t.def.id === id).length;
+  function available(kind, id, pl = 0) {
+    if (kind === 'tower') { return Save.inv(id, pl) - towers.filter(t => t.def.id === id && t.plus === pl).length; }
     if (kind === 'trap') { let n = 0; for (const t of traps.values()) if (t.def.id === id) n++; return (Save.P.trapInv[id] || 0) - n; }
     return 0;
+  }
+  function fuse(id, plus) {
+    if (Save.inv(id, plus) < 3 || plus >= MAX_PLUS) return null;
+    let removed = 0;
+    if (R && !demo) {
+      const placed = towers.filter(t => t.def.id === id && t.plus === plus);
+      const free = Save.inv(id, plus) - placed.length;
+      for (let i = 0; i < Math.max(0, 3 - free); i++) { sell(placed[i], true); removed++; }
+    }
+    if (!Save.fuseTower(id, plus)) return null;
+    Audio2.play('upgrade'); Audio2.play('achievement');
+    snapshotRun();
+    return { removed };
   }
   function buyRoadPieces(n) {
     const cost = ROAD_PIECE_PRICE * n;
@@ -395,16 +408,31 @@ const Game = (() => {
   }
 
   // ---------------- Türme ----------------
-  function spawnTower(def, x, z, rot, animate) {
+  const plusTex = {};
+  function plusLabel(n) {
+    if (!plusTex[n]) {
+      const c = document.createElement('canvas'); c.width = 128; c.height = 64;
+      const g = c.getContext('2d');
+      g.font = 'bold 50px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.lineWidth = 9; g.strokeStyle = '#1b1b2e'; g.strokeText('+' + n, 64, 34);
+      g.fillStyle = PLUS_COLORS[n] || '#fff'; g.fillText('+' + n, 64, 34);
+      plusTex[n] = new THREE.CanvasTexture(c); plusTex[n].colorSpace = THREE.SRGBColorSpace;
+    }
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: plusTex[n], depthWrite: false }));
+    sp.scale.set(1.1, 0.55, 1);
+    return sp;
+  }
+  function spawnTower(def, x, z, rot, animate, plus = 0) {
     const mesh = Models.makeTower(def, rarityColor(def));
     mesh.position.copy(tileToWorld(x, z)); mesh.rotation.y = 0;
     mesh.userData.head.rotation.y = rot * Math.PI / 2;
-    Models.applyTowerLevel(mesh, 1);
+    Models.applyTowerLevel(mesh, plusVisual(plus));
+    if (plus > 0) { const lb = plusLabel(plus); lb.position.y = mesh.userData.topY * mesh.userData.body.scale.y + (plus >= 7 ? 1.05 : 0.8); mesh.add(lb); }
     scene.add(mesh);
     if (animate) { popIn(mesh); Particles.emit(mesh.position.x, 0.3, mesh.position.z, 24, RARITIES[def.rarity].glow, { speed: 2, up: 2, life: 0.7 }); }
-    const t = { def, x, z, rot, level: 1, invested: def.cost, mesh, cd: Math.random() * 0.3, targeting: 'first', kills: 0, dmgDealt: 0, stun: 0,
+    const t = { def, x, z, rot, plus, level: plusVisual(plus), invested: 0, mesh, cd: Math.random() * 0.3, targeting: 'first', kills: 0, dmgDealt: 0, stun: 0,
       buffDmg: 1, buffRate: 1, buffRange: 0, beam: null, beam2: null, drones: [], timer: 0 };
-    if (def.type === 'drone') for (let i = 0; i < def.drones; i++) addDrone(t, i);
+    if (def.type === 'drone') for (let i = 0; i < def.drones + (t.level >= 5 ? 2 : 0); i++) addDrone(t, i);
     grid[x][z] = { type: 'tower', t };
     towers.push(t);
     return t;
@@ -425,27 +453,28 @@ const Game = (() => {
   }
   function towerStats(t) {
     const d = t.def, l = t.level - 1;
+    const pl = t.plus || 0, pm = plusDmg(pl);
     const s = {
-      dmg: d.dmg * LEVEL_DMG[l] * t.buffDmg,
-      range: d.range > 0 ? d.range + LEVEL_RANGE[l] + t.buffRange : 0,
-      rate: d.rate * LEVEL_RATE[l] * t.buffRate,
+      dmg: d.dmg * pm * t.buffDmg,
+      range: d.range > 0 ? d.range + plusRange(pl) + t.buffRange : 0,
+      rate: d.rate * plusRate(pl) * t.buffRate,
       speed: (d.speed || 10) * (1 + 0.08 * l),
       splash: (d.splash || 0) * (1 + 0.08 * l) * (t.level >= 5 && d.id === 'cannon' ? 1.5 : 1),
       slow: d.slow ? Math.min(0.8, d.slow * (1 + 0.1 * l)) : 0,
       chains: d.chains ? d.chains + Math.floor(l / 2) + (t.level >= 5 && d.id === 'tesla' ? 3 : 0) : 0,
       targets: (d.targets || 1) + (t.level >= 5 && (d.id === 'crystal' || d.id === 'multi') ? 2 : 0) + (t.level >= 5 && d.id === 'archer' ? 2 : 0),
-      dot: (d.dot || 0) * LEVEL_DMG[l] * (t.level >= 5 && d.id === 'snake' ? 2 : 1),
-      burn: (d.burn || 0) * LEVEL_DMG[l] * (t.level >= 5 && d.id === 'fire' ? 2 : 1),
+      dot: (d.dot || 0) * pm * (t.level >= 5 && d.id === 'snake' ? 2 : 1),
+      burn: (d.burn || 0) * pm * (t.level >= 5 && d.id === 'fire' ? 2 : 1),
       stun: (d.stun || 0) + (t.level >= 5 && d.id === 'shock' ? 0.6 : 0),
     };
-    if (d.type === 'heal') s.healEvery = d.healEvery * (1 - 0.12 * l);
-    if (d.type === 'gold') s.income = Math.round(d.income * (1 + 0.6 * l) * (t.level >= 5 ? 2 : 1));
-    if (d.type === 'buff') { s.buffDmg = d.buffDmg * (1 + 0.5 * l); s.buffRate = d.buffRate * (1 + 0.5 * l); }
+    if (d.type === 'heal') s.healEvery = d.healEvery * Math.max(0.3, 1 - 0.08 * pl);
+    if (d.type === 'gold') s.income = Math.round(d.income * pm);
+    if (d.type === 'buff') { s.buffDmg = d.buffDmg * (1 + 0.5 * pl); s.buffRate = d.buffRate * (1 + 0.3 * pl); }
     if (d.type === 'aura') s.slow = Math.min(0.7, d.slow * (1 + 0.12 * l));
     return s;
   }
   function upgradeCost(t) { return t.level >= MAX_TOWER_LEVEL ? 0 : Math.round(t.def.cost * UPGRADE_COST[t.level - 1]); }
-  function sellValue(t) { return Math.floor(Math.max(0, t.invested - t.def.cost) * 0.7); } // Upgrade-Münzen teilweise zurück
+  function sellValue(t) { return 0; }
   function upgrade(t) {
     if (!t || t.level >= MAX_TOWER_LEVEL) return false;
     const c = upgradeCost(t);
@@ -462,17 +491,16 @@ const Game = (() => {
     ui.hud && ui.hud(); ui.towerPanel && ui.towerPanel(t);
     return true;
   }
-  function sell(t) {
+  function sell(t, quiet) {
     if (!t) return;
     const v = sellValue(t);
-    if (!R.mode.creative) { R.coins += v; }
     removeTowerMesh(t);
     towers.splice(towers.indexOf(t), 1);
     grid[t.x][t.z] = null;
     Particles.emit(t.mesh.position.x, 0.4, t.mesh.position.z, 20, '#ffd700', { speed: 2, up: 2, life: 0.6 });
     Audio2.play('sell'); Save.addStat('sold');
-    floatText(t.mesh.position, v ? '↩ +' + v + ' 🪙' : '↩ ins Inventar', '#ffd84a');
-    select(null); snapshotRun(); ui.hud && ui.hud();
+    if (!quiet) floatText(t.mesh.position, '↩ ins Inventar', '#ffd84a');
+    if (selected === t) select(null); snapshotRun(); ui.hud && ui.hud();
   }
   function select(t) {
     selected = t;
@@ -587,7 +615,7 @@ const Game = (() => {
     const rw = Save.rollBossReward(R.wave, R.tutorial);
     const apply = it => {
       if (!it) return;
-      if (it.kind === 'tower') Save.addTower(it.id);
+      if (it.kind === 'tower') Save.addTower(it.id, it.n || 1);
       else if (it.kind === 'roads') Save.P.roadPieces += it.n;
       else if (it.kind === 'trap') Save.addTrap(it.id);
       else if (it.kind === 'coins') { R.coins += it.n; R.stats.coins += it.n; }
@@ -651,6 +679,8 @@ const Game = (() => {
     if (!R || R.over || demo) return;
     if (!route) { ui.toast && ui.toast('Kein gültiger Weg vom Spawn zum Ziel!', 'bad'); Audio2.play('error'); return; }
     if (R.hold) { ui.toast && ui.toast('Folge zuerst dem Tutorial 🙂', 'bad'); return; }
+    R.skipCd = Math.max(0, ((R.skipUntil || 0) - performance.now()) / 1000);
+    if (early !== 'auto' && R.skipCd > 0) { ui.toast && ui.toast(`⏳ Noch ${Math.ceil(R.skipCd)} Sekunden warten`, 'bad'); Audio2.play('error'); return; }
     if (R.phase === 'wave' && R.spawnQueue.length > 20) { ui.toast && ui.toast('Warte, bis mehr Gegner der aktuellen Welle erschienen sind', 'bad'); return; }
     const w = ++R.wave;
     const list = makeWave(w);
@@ -661,11 +691,12 @@ const Game = (() => {
       const bonus = Math.round((15 + w * 3) * Math.min(1, R.pauseTimer / 20));
       if (bonus > 0) { R.coins += bonus; R.stats.coins += bonus; Save.P.stats.coinsEarned += bonus; ui.toast && ui.toast(`⏩ Pause übersprungen: +${bonus} Münzen`, 'good'); }
       Save.addStat('skips');
-    } else if (early) {
+    } else if (early === true) {
       const bonus = 20 + w * 4; R.coins += bonus; R.stats.coins += bonus; Save.P.stats.coinsEarned += bonus;
       ui.toast && ui.toast(`⏩ Welle früher gerufen: +${bonus} Münzen`, 'good'); Save.addStat('skips');
     }
     R.phase = 'wave'; R.pauseTimer = 0;
+    R.skipUntil = performance.now() + 4000; R.skipCd = 4;   // erst nach 4 Sekunden wieder überspringen
     if (R.spawnTimer <= 0) R.spawnTimer = 0.5;
     setBuildOverlayForPhase();
     if (buildSel && buildSel.kind === 'road' && !R.mode.creative) setBuild(null);
@@ -1319,6 +1350,7 @@ const Game = (() => {
     const sdt = dt / steps;
     for (let s = 0; s < steps; s++) step(sdt, time);
     if (!demo) R.stats.time += rawDt * R.speed, Save.P.stats.playTime += rawDt;
+    R.skipCd = Math.max(0, ((R.skipUntil || 0) - performance.now()) / 1000);   // echte Sekunden
     updateFloats(rawDt);
     if (shake > 0) { shake -= rawDt; const k = shake * 0.15; World.camera.position.x += (Math.random() - 0.5) * k; World.camera.position.y += (Math.random() - 0.5) * k; }
   }
@@ -1339,7 +1371,7 @@ const Game = (() => {
         }
       } else if (R.phase === 'build' && R.pauseTimer > 0 && !R.hold) {
         R.pauseTimer -= dt;
-        if (R.pauseTimer <= 0) { R.pauseTimer = 0; startWave(false); }
+        if (R.pauseTimer <= 0) { R.pauseTimer = 0; startWave('auto'); }
       }
     }
     // Buffs berechnen
@@ -1397,7 +1429,7 @@ const Game = (() => {
 
   // ---------------- Teilen / Import ----------------
   function exportLayout() {
-    const data = { v: 1, n: Save.P.name, r: Save.P.layout.roads, d: Save.P.layout.decos, t: towers.map(t => [t.def.id, t.x, t.z, t.level]) };
+    const data = { v: 1, n: Save.P.name, r: Save.P.layout.roads, d: Save.P.layout.decos, t: towers.map(t => [t.def.id, t.x, t.z, t.plus]) };
     return 'BYOTD:' + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   }
   function parseLayout(code) {
@@ -1412,7 +1444,7 @@ const Game = (() => {
   }
 
   return {
-    bestSpot, obstacles, available, buyRoadPieces, isBossWave, removeTrap, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
+    fuse, bestSpot, obstacles, available, buyRoadPieces, isBossWave, removeTrap, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
     continueEndless, exportLayout, parseLayout, loadLayout, recalcRoute, placeCastle, snapshotRun, ui,
     get R() { return R; }, get traps() { return traps; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
     get enemies() { return enemies; }, get towers() { return towers; },

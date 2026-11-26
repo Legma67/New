@@ -262,3 +262,12 @@ body.tutorial .side-menu,body.tutorial .hud-tr .shopbtn,body.tutorial .wc-row,bo
 .rl-line{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:#ff3b5a;z-index:2;box-shadow:0 0 8px #ff3b5a}
 .rl-win h3{margin:.3em 0;font-size:1.25em}
 .rl-win .bonus{background:rgba(255,225,77,.15);border:2px dashed #ffe14d;border-radius:10px;padding:.35em .6em;display:inline-block}
+
+/* Fusion */
+.plus{font-weight:900;-webkit-text-stroke:1px #1b1b2e;font-size:1.1em}
+.item .pl,.card .pl{position:absolute;left:4px;top:14px;font-weight:900;font-size:.95em;-webkit-text-stroke:1px #1b1b2e;z-index:2}
+.card .pl{top:4px;left:8px;font-size:1.3em}
+.card.canfuse{box-shadow:0 0 0 3px #b47aff inset;animation:pulse 1.6s infinite}
+.fuse-ok{color:#d3a3ff;font-weight:900}
+.fuse-box .tp-stats{max-width:28em}
+.btn.purple:disabled{filter:grayscale(.6) brightness(.8)}

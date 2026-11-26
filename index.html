@@ -272,6 +272,15 @@ body.tutorial .side-menu,body.tutorial .hud-tr .shopbtn,body.tutorial .wc-row,bo
 .rl-line{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:#ff3b5a;z-index:2;box-shadow:0 0 8px #ff3b5a}
 .rl-win h3{margin:.3em 0;font-size:1.25em}
 .rl-win .bonus{background:rgba(255,225,77,.15);border:2px dashed #ffe14d;border-radius:10px;padding:.35em .6em;display:inline-block}
+
+/* Fusion */
+.plus{font-weight:900;-webkit-text-stroke:1px #1b1b2e;font-size:1.1em}
+.item .pl,.card .pl{position:absolute;left:4px;top:14px;font-weight:900;font-size:.95em;-webkit-text-stroke:1px #1b1b2e;z-index:2}
+.card .pl{top:4px;left:8px;font-size:1.3em}
+.card.canfuse{box-shadow:0 0 0 3px #b47aff inset;animation:pulse 1.6s infinite}
+.fuse-ok{color:#d3a3ff;font-weight:900}
+.fuse-box .tp-stats{max-width:28em}
+.btn.purple:disabled{filter:grayscale(.6) brightness(.8)}
 </style>
 </head>
 <body>
@@ -463,6 +472,13 @@ const TOWERS = [
 ];
 const TOWER_BY_ID = Object.fromEntries(TOWERS.map(t => [t.id, t]));
 const MAX_TOWER_LEVEL = 5;
+// ---------- Fusion: 3 gleiche Türme (+N) -> 1 Turm (+N+1), bis +9 ----------
+const MAX_PLUS = 9;
+const plusDmg = n => Math.pow(3, n);            // ein +1 ist so stark wie die drei Türme, aus denen er entstand
+const plusRate = n => 1 + 0.04 * n;
+const plusRange = n => 0.25 * n;
+const plusVisual = n => [1, 2, 2, 3, 3, 4, 4, 5, 5, 5][n] || 5;   // Aussehen (Ringe, Stacheln, Krone ab +7)
+const PLUS_COLORS = ['#ffffff', '#7dff8a', '#5ad0ff', '#4f8bff', '#b47aff', '#ff6ad5', '#ff8a3a', '#ffd700', '#ff3b5a', '#16f2d6'];
 const LEVEL_DMG = [1, 1.55, 2.3, 3.4, 5.0];
 const LEVEL_RANGE = [0, 0.3, 0.6, 0.9, 1.3];
 const LEVEL_RATE = [1, 1.1, 1.22, 1.36, 1.55];
@@ -514,7 +530,7 @@ const ENEMIES = [
   { id:'magicdragon', name:'Magischer Drache', kind:'Magischer Drache', hp:2800, speed:1.1, reward:120, size:1.0, color:'#8a4dff', shape:'dragon', min:30, w:1, fly:true, resist:{ magic:0.6 }, glow:'#d0a0ff' },
   { id:'colossus', name:'Urzeitkoloss', kind:'Legendärer Boss', hp:9000, speed:0.55, reward:400, size:1.6, color:'#6b4f3a', shape:'golem', min:35, w:0.4, armor:0.5, mini:true },
   // ----- Bosse -----
-  { id:'boss_tut', name:'Kleiner Steinriese', kind:'Tutorial-Boss', hp:420, speed:0.42, reward:120, size:1.4, color:'#9a9282', shape:'golem', boss:true, min:999, glow:'#ffcc33' },
+  { id:'boss_tut', name:'Kleiner Steinriese', kind:'Tutorial-Boss', hp:260, speed:0.4, reward:120, size:1.4, color:'#9a9282', shape:'golem', boss:true, min:999, glow:'#ffcc33' },
   { id:'boss_stone', name:'Steinriese', kind:'Bossgegner', hp:6000, speed:0.5, reward:600, size:1.9, color:'#8d8576', shape:'golem', boss:true, armor:0.4, abilities:['stomp','summon'], summon:'skeleton', min:999 },
   { id:'boss_fire', name:'Feuerdrache', kind:'Bossgegner', hp:16000, speed:0.7, reward:1200, size:1.8, color:'#e8361c', shape:'dragon', boss:true, fly:true, immune:['fire'], abilities:['rage','summon'], summon:'fireimp', min:999, glow:'#ff8800' },
   { id:'boss_ice', name:'Eiskönig', kind:'Bossgegner', hp:30000, speed:0.55, reward:2000, size:1.9, color:'#bfefff', shape:'knight', boss:true, immune:['ice','slow'], armor:0.4, abilities:['freeze','shieldregen'], shield:5000, crown:true, min:999, glow:'#e0fbff' },
@@ -606,7 +622,7 @@ const BOOSTS = [
 // Spielmodi
 // ------------------------------------------------------------
 const MODES = [
-  { id:'endless', name:'Endlos', icon:'♾️', desc:'Unendlich viele Wellen – jede 5. Welle kommt ein Boss.', win:0, hp:1, speed:1, lives:20, bossEvery:5 },
+  { id:'endless', name:'Endlos', icon:'♾️', desc:'Unendlich viele Wellen – jede 5. Welle kommt ein Boss.', win:0, hp:0.5, speed:1, lives:20, bossEvery:5 },
 ];
 const MODE_BY_ID = Object.fromEntries(MODES.map(m => [m.id, m]));
 
@@ -617,7 +633,7 @@ const QUESTS = [
   { id:'q_kill100', name:'Monsterjäger', desc:'Besiege 100 Gegner.', stat:'kills', goal:100, reward:{ gems:15, xp:100 } },
   { id:'q_wave10', name:'Durchhalten', desc:'Überstehe insgesamt 10 Wellen.', stat:'wavesTotal', goal:10, reward:{ gems:15, xp:120 } },
   { id:'q_tower5', name:'Baumeister', desc:'Platziere 5 Türme.', stat:'towersBuilt', goal:5, reward:{ gems:10, xp:60 } },
-  { id:'q_up5', name:'Maximalstufe', desc:'Verbessere einen Turm auf Stufe 5.', stat:'maxTowerLevel', goal:5, reward:{ gems:25, xp:150 } },
+  { id:'q_up5', name:'Erste Fusion', desc:'Fuse einen Turm auf +1.', stat:'maxPlus', goal:1, reward:{ gems:25, xp:150 } },
   { id:'q_boss1', name:'Bossbezwinger', desc:'Besiege einen Boss.', stat:'bossKills', goal:1, reward:{ gems:30, crystals:3, xp:200 } },
   { id:'q_coins10k', name:'Schatzmeister', desc:'Verdiene 10.000 Münzen.', stat:'coinsEarned', goal:10000, reward:{ gems:25, xp:150 } },
   { id:'q_games3', name:'Stammspieler', desc:'Spiele drei Runden.', stat:'gamesPlayed', goal:3, reward:{ gems:10, xp:80 } },
@@ -625,7 +641,7 @@ const QUESTS = [
   { id:'q_kill1000', name:'Legendärer Jäger', desc:'Besiege 1.000 Gegner.', stat:'kills', goal:1000, reward:{ gems:50, crystals:5, xp:500 } },
   { id:'q_wave50', name:'Unerschütterlich', desc:'Überstehe insgesamt 50 Wellen.', stat:'wavesTotal', goal:50, reward:{ gems:40, crystals:4, xp:400 } },
   { id:'q_deco10', name:'Gartenkünstler', desc:'Platziere 10 Dekorationen.', stat:'decoBuilt', goal:10, reward:{ gems:10, xp:60 } },
-  { id:'q_upg30', name:'Tüftler', desc:'Führe 30 Upgrades durch.', stat:'upgrades', goal:30, reward:{ gems:25, xp:200 } },
+  { id:'q_upg30', name:'Fusionsprofi', desc:'Fuse einen Turm auf +3.', stat:'maxPlus', goal:3, reward:{ gems:25, xp:200 } },
   { id:'q_boss5', name:'Bossjäger', desc:'Besiege 5 Bosse.', stat:'bossKills', goal:5, reward:{ gems:60, crystals:8, xp:600 } },
   { id:'q_skip5', name:'Ungeduldig', desc:'Überspringe 5 Wellen-Pausen.', stat:'skips', goal:5, reward:{ gems:10, xp:80 } },
 ];
@@ -633,7 +649,7 @@ const DAILY_POOL = [
   { id:'d_kill', name:'Tägliche Jagd', desc:'Besiege {g} Gegner.', stat:'kills', goal:150, reward:{ gems:12, xp:100 } },
   { id:'d_wave', name:'Tägliche Wellen', desc:'Überstehe {g} Wellen.', stat:'wavesTotal', goal:8, reward:{ gems:12, xp:100 } },
   { id:'d_build', name:'Täglicher Bau', desc:'Platziere {g} Türme.', stat:'towersBuilt', goal:4, reward:{ gems:8, xp:60 } },
-  { id:'d_upg', name:'Tägliches Training', desc:'Führe {g} Upgrades durch.', stat:'upgrades', goal:8, reward:{ gems:8, xp:60 } },
+  { id:'d_upg', name:'Tägliche Fusion', desc:'Führe {g} Fusion durch.', stat:'fusions', goal:1, reward:{ gems:8, xp:60 } },
   { id:'d_coins', name:'Tägliches Gold', desc:'Verdiene {g} Münzen.', stat:'coinsEarned', goal:4000, reward:{ gems:12, xp:100 } },
   { id:'d_boss', name:'Täglicher Boss', desc:'Besiege {g} Boss.', stat:'bossKills', goal:1, reward:{ gems:20, crystals:2, xp:150 } },
   { id:'d_road', name:'Tägliche Straßen', desc:'Baue {g} Straßenfelder.', stat:'roadsBuilt', goal:6, reward:{ gems:6, xp:40 } },
@@ -656,8 +672,9 @@ const ACHIEVEMENTS = [
   { id:'a_coins1m', name:'Millionär', desc:'Verdiene 1.000.000 Münzen.', stat:'coinsEarned', goal:1000000, gems:120, crystals:20, icon:'🤑' },
   { id:'a_towers25', name:'Turmstadt', desc:'Baue 25 Türme.', stat:'towersBuilt', goal:25, gems:15, icon:'🏙️' },
   { id:'a_towers200', name:'Festungsarchitekt', desc:'Baue 200 Türme.', stat:'towersBuilt', goal:200, gems:50, icon:'🏯' },
-  { id:'a_lvl5', name:'Voll aufgerüstet', desc:'Bringe einen Turm auf Stufe 5.', stat:'maxTowerLevel', goal:5, gems:20, icon:'⬆️' },
-  { id:'a_upg100', name:'Upgrade-Meister', desc:'Führe 100 Upgrades durch.', stat:'upgrades', goal:100, gems:40, icon:'🔧' },
+  { id:'a_lvl5', name:'Fusionsmeister', desc:'Fuse einen Turm auf +5.', stat:'maxPlus', goal:5, gems:60, crystals:5, icon:'⚗️' },
+  { id:'a_plus9', name:'Unaufhaltsam', desc:'Fuse einen Turm auf +9.', stat:'maxPlus', goal:9, gems:300, crystals:50, icon:'💠' },
+  { id:'a_upg100', name:'Fusionsmaschine', desc:'Führe 25 Fusionen durch.', stat:'fusions', goal:25, gems:40, icon:'🔧' },
   { id:'a_legend', name:'Erster legendärer Turm', desc:'Baue einen Turm der Seltenheit Legendary oder höher.', stat:'legendaryBuilt', goal:1, gems:30, icon:'🏅' },
   { id:'a_road100', name:'Straßennetz', desc:'Baue 100 Straßenfelder.', stat:'roadsBuilt', goal:100, gems:20, icon:'🗺️' },
   { id:'a_deco25', name:'Landschaftsgärtner', desc:'Platziere 25 Dekorationen.', stat:'decoBuilt', goal:25, gems:15, icon:'🌸' },
@@ -2397,9 +2414,9 @@ const Save = (() => {
 
   function defaults() {
     return {
-      v: 2,
+      v: 3,
       tutorialDone: false,
-      towerInv: { crossbow: 1 },               // Türme im Besitz (Anzahl) – nur von Bossen
+      towerInv: { crossbow: [1] },             // Türme im Besitz: id -> Anzahl je Fusionsstufe [+0, +1, … +9]
       trapInv: {},                             // Fallen im Besitz (Anzahl)
       roadPieces: 4,                           // freie Wegstücke
       name: 'Spieler' + Math.floor(1000 + Math.random() * 9000),
@@ -2410,7 +2427,7 @@ const Save = (() => {
       boosts: { boost_coins: 0, boost_lives: 0, boost_xp: 0 },
       stats: { kills: 0, bossKills: 0, titanKills: 0, wavesTotal: 0, bestWave: 0, towersBuilt: 0, roadsBuilt: 0, decoBuilt: 0, upgrades: 0, maxTowerLevel: 0,
         coinsEarned: 0, gamesPlayed: 0, skips: 0, victories: 0, hardVictories: 0, perfectWaves: 0, legendaryBuilt: 0, damage: 0, purchases: 0,
-        playTime: 0, livesLost: 0, trapsBuilt: 0, sold: 0, gemsEarned: 0, bestStreak: 0 },
+        playTime: 0, livesLost: 0, trapsBuilt: 0, fusions: 0, maxPlus: 0, sold: 0, gemsEarned: 0, bestStreak: 0 },
       seen: {}, killsBy: {},
       achievements: {},                       // id -> Zeitstempel
       quests: {},                             // id -> 'claimed'
@@ -2436,8 +2453,13 @@ const Save = (() => {
     } catch (e) { P = defaults(); }
     // Umstieg auf das neue System (Türme nur von Bossen)
     if (P.v < 2) {
-      Object.assign(P, { v: 2, tutorialDone: false, towerInv: { crossbow: 1 }, trapInv: {}, roadPieces: 4, unlocked: ['crossbow'], run: null, pendingPicks: null, records: {} });
+      Object.assign(P, { v: 2, tutorialDone: false, towerInv: { crossbow: [1] }, trapInv: {}, roadPieces: 4, unlocked: ['crossbow'], run: null, pendingPicks: null, records: {} });
       P.stats.bestWave = 0;
+    }
+    // v3: Fusion statt Upgrades – Inventar je Fusionsstufe
+    if (P.v < 3) {
+      for (const k in P.towerInv) if (typeof P.towerInv[k] === 'number') P.towerInv[k] = [P.towerInv[k]];
+      P.run = null; P.v = 3;
     }
     if (!P.layout) P.layout = { roads: DEFAULT_ROADS.map(([x, z]) => [x, z, 'road_stone']), decos: [[2, 7, 'tree', 0], [3, 12, 'flowers', 0], [10, 1, 'lantern', 0], [16, 12, 'bush', 0], [20, 1, 'house', 1]] };
     refreshDaily();
@@ -2456,7 +2478,7 @@ const Save = (() => {
   // ---------- Stats ----------
   function stat(key) {
     if (key === 'playerLevel') return P.level;
-    if (key === 'towersUnlocked') return Object.keys(P.towerInv).filter(k => P.towerInv[k] > 0).length;
+    if (key === 'towersUnlocked') return Object.keys(P.towerInv).filter(k => invTotal(k) > 0).length;
     if (key === 'tutorial') return P.tutorialDone ? 1 : 0;
     if (key === 'enemiesSeen') return Object.keys(P.seen).length;
     return P.stats[key] || 0;
@@ -2538,11 +2560,29 @@ const Save = (() => {
   }
 
   // ---------- Inventar ----------
-  function addTower(id, n = 1) { P.towerInv[id] = (P.towerInv[id] || 0) + n; if (!P.unlocked.includes(id)) P.unlocked.push(id); checkAchievements(); }
+  function inv(id, plus = 0) { const a = P.towerInv[id]; return (a && a[plus]) || 0; }
+  function invTotal(id) { const a = P.towerInv[id]; return a ? a.reduce((s, n) => s + (n || 0), 0) : 0; }
+  function addTower(id, n = 1, plus = 0) {
+    const a = P.towerInv[id] || (P.towerInv[id] = []);
+    a[plus] = (a[plus] || 0) + n;
+    if (!P.unlocked.includes(id)) P.unlocked.push(id);
+    checkAchievements();
+  }
+  // 3 gleiche Türme derselben Stufe -> 1 Turm eine Stufe höher
+  function fuseTower(id, plus) {
+    if (plus >= MAX_PLUS || inv(id, plus) < 3) return false;
+    P.towerInv[id][plus] -= 3;
+    addTower(id, 1, plus + 1);
+    P.stats.fusions = (P.stats.fusions || 0) + 1;
+    maxStat('maxPlus', plus + 1);
+    checkAchievements(); save();
+    return true;
+  }
   function addTrap(id, n = 1) { P.trapInv[id] = (P.trapInv[id] || 0) + n; }
   // Zufälliger Turm, je höher die Welle desto seltener
   function rollTower(wave, exclude = []) {
-    const weight = t => ({ common: 10, uncommon: 9, rare: 3 + wave / 6, epic: 0.5 + wave / 12, legendary: wave / 25, mythic: wave / 45, secret: wave / 60 })[t.rarity];
+    // Türme, die man schon hat, kommen öfter – damit man sie fusen kann
+    const weight = t => ({ common: 10, uncommon: 9, rare: 3 + wave / 6, epic: 0.5 + wave / 12, legendary: wave / 25, mythic: wave / 45, secret: wave / 60 })[t.rarity] * (invTotal(t.id) ? 2.5 : 1);
     const pool = TOWERS.filter(t => !exclude.includes(t.id) && weight(t) > 0);
     let tot = pool.reduce((a, t) => a + weight(t), 0), r = Math.random() * tot;
     for (const t of pool) { r -= weight(t); if (r <= 0) return t.id; }
@@ -2564,7 +2604,7 @@ const Save = (() => {
     if (r < 0.3) bonus = { kind: 'roads', n: 4 + Math.floor(wave / 5) };
     else if (r < 0.6) { const pool = wave < 15 ? TRAPS.slice(0, 3) : TRAPS; bonus = { kind: 'trap', id: pool[Math.floor(Math.random() * pool.length)].id }; }
     else if (r < 0.8) bonus = { kind: 'coins', n: 100 + wave * 20 };
-    return { kind: 'tower', id: rollTower(wave), bonus };
+    return { kind: 'tower', id: rollTower(wave), n: wave >= 30 ? 3 : wave >= 15 ? 2 : 1, bonus };
   }
 
   // ---------- Turm-Belohnung nach einer Runde ----------
@@ -2601,7 +2641,7 @@ const Save = (() => {
   const openPicks = () => !!(P.pendingPicks && P.pendingPicks.some(q => !q.done));
   function tidyPicks() { if (P.pendingPicks && !openPicks()) P.pendingPicks = null; }
   return {
-    makeTowerPicks, choosePick, openPicks, tidyPicks, addTower, addTrap, rollTower, rollBossReward, rollFake,
+    makeTowerPicks, choosePick, openPicks, tidyPicks, inv, invTotal, fuseTower, addTower, addTrap, rollTower, rollBossReward, rollFake,
     load, save, saveSoon, reset, on, emit, stat, addStat, maxStat, addXP, grant, checkAchievements,
     questProgress, claimQuest, refreshDaily, dailyDef, dailyProgress, claimDaily, dailyRewardAvailable, claimDailyReward,
     get P() { return P; },
@@ -2716,7 +2756,7 @@ const Game = (() => {
       Object.assign(R, { wave: snapshot.wave, coins: snapshot.coins, lives: snapshot.lives, maxLives: snapshot.maxLives || snapshot.lives, stats: snapshot.stats });
     }
     loadLayout(); placeCastle();
-    if (snapshot) for (const t of snapshot.towers) { if (!TOWER_BY_ID[t.id] || available('tower', t.id) <= 0 || grid[t.x][t.z]) continue; const tw = spawnTower(TOWER_BY_ID[t.id], t.x, t.z, t.rot, false); tw.level = t.level; tw.invested = t.invested; tw.targeting = t.targeting || 'first'; tw.kills = t.kills || 0; Models.applyTowerLevel(tw.mesh, tw.level); }
+    if (snapshot) for (const t of snapshot.towers) { const pl = t.plus || 0; if (!TOWER_BY_ID[t.id] || available('tower', t.id, pl) <= 0 || grid[t.x][t.z]) continue; const tw = spawnTower(TOWER_BY_ID[t.id], t.x, t.z, t.rot, false, pl); tw.targeting = t.targeting || 'first'; tw.kills = t.kills || 0; }
     if (snapshot && snapshot.traps) for (const [id, x, z] of snapshot.traps) if (TRAP_BY_ID[id] && available('trap', id) > 0 && grid[x][z] && grid[x][z].type === 'road') spawnTrap(TRAP_BY_ID[id], x, z, false);
     if (!snapshot) { Save.addStat('gamesPlayed'); }
     R.pauseTimer = R.tutorial ? 0 : (Save.P.settings.autoStart ? 20 : 0); // erste Welle startet automatisch (im Tutorial erst nach dem Platzieren)
@@ -2730,7 +2770,7 @@ const Game = (() => {
     if (!R || demo || R.over || R.phase !== 'build') return;
     Save.P.run = {
       mode: R.mode.id, biome: R.biome, wave: R.wave, coins: R.coins, lives: R.lives, maxLives: R.maxLives, stats: R.stats,
-      towers: towers.map(t => ({ id: t.def.id, x: t.x, z: t.z, level: t.level, invested: t.invested, rot: t.rot, targeting: t.targeting, kills: t.kills })),
+      towers: towers.map(t => ({ id: t.def.id, x: t.x, z: t.z, plus: t.plus, rot: t.rot, targeting: t.targeting, kills: t.kills })),
       traps: [...traps.values()].map(t => [t.def.id, t.x, t.z]),
     };
     Save.saveSoon();
@@ -2767,7 +2807,7 @@ const Game = (() => {
       const [x, z] = route.tiles[i];
       for (const [dx, dz] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
         const nx = x + dx, nz = z + dz;
-        if (inPlot(nx, nz) && !grid[nx][nz]) { const t = spawnTower(TOWER_BY_ID[ids[k]], nx, nz, 0, false); t.level = 1 + (k % 5); Models.applyTowerLevel(t.mesh, t.level); k++; break; }
+        if (inPlot(nx, nz) && !grid[nx][nz]) { spawnTower(TOWER_BY_ID[ids[k]], nx, nz, 0, false, (k * 2) % 10); k++; break; }
       }
     }
     World.setBuildOverlay(false);
@@ -2816,6 +2856,7 @@ const Game = (() => {
     if (sel.kind === 'erase') {
       if (!c) return { ok: false, why: 'Nichts zum Entfernen' };
       if (c.type === 'tower') return { ok: false, why: 'Türme bitte antippen und AUFHEBEN' };
+      if (c.type === 'tower') return { ok: false, why: 'Türme bitte antippen und AUFHEBEN' };
       if (c.type === 'road' && traps.has(x + ',' + z)) return { ok: true };
       if (c.type === 'road') {
         if (isFixed) return { ok: false, why: 'Start- und Zielfeld sind fest' };
@@ -2826,7 +2867,7 @@ const Game = (() => {
     }
     if (c) return { ok: false, why: c.type === 'road' ? 'Nicht auf die Straße bauen' : 'Feld ist belegt' };
     if (sel.kind === 'tower') {
-      if (available('tower', sel.id) <= 0) return { ok: false, why: 'Du hast keinen weiteren Turm dieser Art' };
+      if (available('tower', sel.id, sel.plus || 0) <= 0) return { ok: false, why: 'Du hast keinen weiteren Turm dieser Art' };
       return { ok: true };
     }
     if (sel.kind === 'deco') {
@@ -2920,12 +2961,11 @@ const Game = (() => {
       Particles.emit(pos.x, 0.2, pos.z, 12, '#bbbbbb', { speed: 1.5, life: 0.5 });
     } else if (sel.kind === 'tower') {
       const def = TOWER_BY_ID[sel.id];
-      spawnTower(def, x, z, buildRot, true);
+      spawnTower(def, x, z, buildRot, true, sel.plus || 0);
       ui.tutorialEvent && ui.tutorialEvent('placed', def.id);
-      if (available('tower', def.id) <= 0) setBuild(null);
+      if (available('tower', def.id, sel.plus || 0) <= 0) setBuild(null);
       Save.addStat('towersBuilt'); R.stats.towers = (R.stats.towers || 0) + 1;
       if (RARITIES[def.rarity].order >= 4) Save.addStat('legendaryBuilt');
-      Save.maxStat('maxTowerLevel', 1);
       Audio2.play('place');
       snapshotRun();
     } else if (sel.kind === 'trap') {
@@ -2963,10 +3003,23 @@ const Game = (() => {
   }
 
   // ---------------- Inventar / Fallen ----------------
-  function available(kind, id) {
-    if (kind === 'tower') return (Save.P.towerInv[id] || 0) - towers.filter(t => t.def.id === id).length;
+  function available(kind, id, pl = 0) {
+    if (kind === 'tower') { return Save.inv(id, pl) - towers.filter(t => t.def.id === id && t.plus === pl).length; }
     if (kind === 'trap') { let n = 0; for (const t of traps.values()) if (t.def.id === id) n++; return (Save.P.trapInv[id] || 0) - n; }
     return 0;
+  }
+  function fuse(id, plus) {
+    if (Save.inv(id, plus) < 3 || plus >= MAX_PLUS) return null;
+    let removed = 0;
+    if (R && !demo) {
+      const placed = towers.filter(t => t.def.id === id && t.plus === plus);
+      const free = Save.inv(id, plus) - placed.length;
+      for (let i = 0; i < Math.max(0, 3 - free); i++) { sell(placed[i], true); removed++; }
+    }
+    if (!Save.fuseTower(id, plus)) return null;
+    Audio2.play('upgrade'); Audio2.play('achievement');
+    snapshotRun();
+    return { removed };
   }
   function buyRoadPieces(n) {
     const cost = ROAD_PIECE_PRICE * n;
@@ -3006,16 +3059,31 @@ const Game = (() => {
   }
 
   // ---------------- Türme ----------------
-  function spawnTower(def, x, z, rot, animate) {
+  const plusTex = {};
+  function plusLabel(n) {
+    if (!plusTex[n]) {
+      const c = document.createElement('canvas'); c.width = 128; c.height = 64;
+      const g = c.getContext('2d');
+      g.font = 'bold 50px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.lineWidth = 9; g.strokeStyle = '#1b1b2e'; g.strokeText('+' + n, 64, 34);
+      g.fillStyle = PLUS_COLORS[n] || '#fff'; g.fillText('+' + n, 64, 34);
+      plusTex[n] = new THREE.CanvasTexture(c); plusTex[n].colorSpace = THREE.SRGBColorSpace;
+    }
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: plusTex[n], depthWrite: false }));
+    sp.scale.set(1.1, 0.55, 1);
+    return sp;
+  }
+  function spawnTower(def, x, z, rot, animate, plus = 0) {
     const mesh = Models.makeTower(def, rarityColor(def));
     mesh.position.copy(tileToWorld(x, z)); mesh.rotation.y = 0;
     mesh.userData.head.rotation.y = rot * Math.PI / 2;
-    Models.applyTowerLevel(mesh, 1);
+    Models.applyTowerLevel(mesh, plusVisual(plus));
+    if (plus > 0) { const lb = plusLabel(plus); lb.position.y = mesh.userData.topY * mesh.userData.body.scale.y + (plus >= 7 ? 1.05 : 0.8); mesh.add(lb); }
     scene.add(mesh);
     if (animate) { popIn(mesh); Particles.emit(mesh.position.x, 0.3, mesh.position.z, 24, RARITIES[def.rarity].glow, { speed: 2, up: 2, life: 0.7 }); }
-    const t = { def, x, z, rot, level: 1, invested: def.cost, mesh, cd: Math.random() * 0.3, targeting: 'first', kills: 0, dmgDealt: 0, stun: 0,
+    const t = { def, x, z, rot, plus, level: plusVisual(plus), invested: 0, mesh, cd: Math.random() * 0.3, targeting: 'first', kills: 0, dmgDealt: 0, stun: 0,
       buffDmg: 1, buffRate: 1, buffRange: 0, beam: null, beam2: null, drones: [], timer: 0 };
-    if (def.type === 'drone') for (let i = 0; i < def.drones; i++) addDrone(t, i);
+    if (def.type === 'drone') for (let i = 0; i < def.drones + (t.level >= 5 ? 2 : 0); i++) addDrone(t, i);
     grid[x][z] = { type: 'tower', t };
     towers.push(t);
     return t;
@@ -3036,27 +3104,28 @@ const Game = (() => {
   }
   function towerStats(t) {
     const d = t.def, l = t.level - 1;
+    const pl = t.plus || 0, pm = plusDmg(pl);
     const s = {
-      dmg: d.dmg * LEVEL_DMG[l] * t.buffDmg,
-      range: d.range > 0 ? d.range + LEVEL_RANGE[l] + t.buffRange : 0,
-      rate: d.rate * LEVEL_RATE[l] * t.buffRate,
+      dmg: d.dmg * pm * t.buffDmg,
+      range: d.range > 0 ? d.range + plusRange(pl) + t.buffRange : 0,
+      rate: d.rate * plusRate(pl) * t.buffRate,
       speed: (d.speed || 10) * (1 + 0.08 * l),
       splash: (d.splash || 0) * (1 + 0.08 * l) * (t.level >= 5 && d.id === 'cannon' ? 1.5 : 1),
       slow: d.slow ? Math.min(0.8, d.slow * (1 + 0.1 * l)) : 0,
       chains: d.chains ? d.chains + Math.floor(l / 2) + (t.level >= 5 && d.id === 'tesla' ? 3 : 0) : 0,
       targets: (d.targets || 1) + (t.level >= 5 && (d.id === 'crystal' || d.id === 'multi') ? 2 : 0) + (t.level >= 5 && d.id === 'archer' ? 2 : 0),
-      dot: (d.dot || 0) * LEVEL_DMG[l] * (t.level >= 5 && d.id === 'snake' ? 2 : 1),
-      burn: (d.burn || 0) * LEVEL_DMG[l] * (t.level >= 5 && d.id === 'fire' ? 2 : 1),
+      dot: (d.dot || 0) * pm * (t.level >= 5 && d.id === 'snake' ? 2 : 1),
+      burn: (d.burn || 0) * pm * (t.level >= 5 && d.id === 'fire' ? 2 : 1),
       stun: (d.stun || 0) + (t.level >= 5 && d.id === 'shock' ? 0.6 : 0),
     };
-    if (d.type === 'heal') s.healEvery = d.healEvery * (1 - 0.12 * l);
-    if (d.type === 'gold') s.income = Math.round(d.income * (1 + 0.6 * l) * (t.level >= 5 ? 2 : 1));
-    if (d.type === 'buff') { s.buffDmg = d.buffDmg * (1 + 0.5 * l); s.buffRate = d.buffRate * (1 + 0.5 * l); }
+    if (d.type === 'heal') s.healEvery = d.healEvery * Math.max(0.3, 1 - 0.08 * pl);
+    if (d.type === 'gold') s.income = Math.round(d.income * pm);
+    if (d.type === 'buff') { s.buffDmg = d.buffDmg * (1 + 0.5 * pl); s.buffRate = d.buffRate * (1 + 0.3 * pl); }
     if (d.type === 'aura') s.slow = Math.min(0.7, d.slow * (1 + 0.12 * l));
     return s;
   }
   function upgradeCost(t) { return t.level >= MAX_TOWER_LEVEL ? 0 : Math.round(t.def.cost * UPGRADE_COST[t.level - 1]); }
-  function sellValue(t) { return Math.floor(Math.max(0, t.invested - t.def.cost) * 0.7); } // Upgrade-Münzen teilweise zurück
+  function sellValue(t) { return 0; }
   function upgrade(t) {
     if (!t || t.level >= MAX_TOWER_LEVEL) return false;
     const c = upgradeCost(t);
@@ -3073,17 +3142,16 @@ const Game = (() => {
     ui.hud && ui.hud(); ui.towerPanel && ui.towerPanel(t);
     return true;
   }
-  function sell(t) {
+  function sell(t, quiet) {
     if (!t) return;
     const v = sellValue(t);
-    if (!R.mode.creative) { R.coins += v; }
     removeTowerMesh(t);
     towers.splice(towers.indexOf(t), 1);
     grid[t.x][t.z] = null;
     Particles.emit(t.mesh.position.x, 0.4, t.mesh.position.z, 20, '#ffd700', { speed: 2, up: 2, life: 0.6 });
     Audio2.play('sell'); Save.addStat('sold');
-    floatText(t.mesh.position, v ? '↩ +' + v + ' 🪙' : '↩ ins Inventar', '#ffd84a');
-    select(null); snapshotRun(); ui.hud && ui.hud();
+    if (!quiet) floatText(t.mesh.position, '↩ ins Inventar', '#ffd84a');
+    if (selected === t) select(null); snapshotRun(); ui.hud && ui.hud();
   }
   function select(t) {
     selected = t;
@@ -3198,7 +3266,7 @@ const Game = (() => {
     const rw = Save.rollBossReward(R.wave, R.tutorial);
     const apply = it => {
       if (!it) return;
-      if (it.kind === 'tower') Save.addTower(it.id);
+      if (it.kind === 'tower') Save.addTower(it.id, it.n || 1);
       else if (it.kind === 'roads') Save.P.roadPieces += it.n;
       else if (it.kind === 'trap') Save.addTrap(it.id);
       else if (it.kind === 'coins') { R.coins += it.n; R.stats.coins += it.n; }
@@ -3262,6 +3330,8 @@ const Game = (() => {
     if (!R || R.over || demo) return;
     if (!route) { ui.toast && ui.toast('Kein gültiger Weg vom Spawn zum Ziel!', 'bad'); Audio2.play('error'); return; }
     if (R.hold) { ui.toast && ui.toast('Folge zuerst dem Tutorial 🙂', 'bad'); return; }
+    R.skipCd = Math.max(0, ((R.skipUntil || 0) - performance.now()) / 1000);
+    if (early !== 'auto' && R.skipCd > 0) { ui.toast && ui.toast(`⏳ Noch ${Math.ceil(R.skipCd)} Sekunden warten`, 'bad'); Audio2.play('error'); return; }
     if (R.phase === 'wave' && R.spawnQueue.length > 20) { ui.toast && ui.toast('Warte, bis mehr Gegner der aktuellen Welle erschienen sind', 'bad'); return; }
     const w = ++R.wave;
     const list = makeWave(w);
@@ -3272,11 +3342,12 @@ const Game = (() => {
       const bonus = Math.round((15 + w * 3) * Math.min(1, R.pauseTimer / 20));
       if (bonus > 0) { R.coins += bonus; R.stats.coins += bonus; Save.P.stats.coinsEarned += bonus; ui.toast && ui.toast(`⏩ Pause übersprungen: +${bonus} Münzen`, 'good'); }
       Save.addStat('skips');
-    } else if (early) {
+    } else if (early === true) {
       const bonus = 20 + w * 4; R.coins += bonus; R.stats.coins += bonus; Save.P.stats.coinsEarned += bonus;
       ui.toast && ui.toast(`⏩ Welle früher gerufen: +${bonus} Münzen`, 'good'); Save.addStat('skips');
     }
     R.phase = 'wave'; R.pauseTimer = 0;
+    R.skipUntil = performance.now() + 4000; R.skipCd = 4;   // erst nach 4 Sekunden wieder überspringen
     if (R.spawnTimer <= 0) R.spawnTimer = 0.5;
     setBuildOverlayForPhase();
     if (buildSel && buildSel.kind === 'road' && !R.mode.creative) setBuild(null);
@@ -3930,6 +4001,7 @@ const Game = (() => {
     const sdt = dt / steps;
     for (let s = 0; s < steps; s++) step(sdt, time);
     if (!demo) R.stats.time += rawDt * R.speed, Save.P.stats.playTime += rawDt;
+    R.skipCd = Math.max(0, ((R.skipUntil || 0) - performance.now()) / 1000);   // echte Sekunden
     updateFloats(rawDt);
     if (shake > 0) { shake -= rawDt; const k = shake * 0.15; World.camera.position.x += (Math.random() - 0.5) * k; World.camera.position.y += (Math.random() - 0.5) * k; }
   }
@@ -3950,7 +4022,7 @@ const Game = (() => {
         }
       } else if (R.phase === 'build' && R.pauseTimer > 0 && !R.hold) {
         R.pauseTimer -= dt;
-        if (R.pauseTimer <= 0) { R.pauseTimer = 0; startWave(false); }
+        if (R.pauseTimer <= 0) { R.pauseTimer = 0; startWave('auto'); }
       }
     }
     // Buffs berechnen
@@ -4008,7 +4080,7 @@ const Game = (() => {
 
   // ---------------- Teilen / Import ----------------
   function exportLayout() {
-    const data = { v: 1, n: Save.P.name, r: Save.P.layout.roads, d: Save.P.layout.decos, t: towers.map(t => [t.def.id, t.x, t.z, t.level]) };
+    const data = { v: 1, n: Save.P.name, r: Save.P.layout.roads, d: Save.P.layout.decos, t: towers.map(t => [t.def.id, t.x, t.z, t.plus]) };
     return 'BYOTD:' + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   }
   function parseLayout(code) {
@@ -4023,7 +4095,7 @@ const Game = (() => {
   }
 
   return {
-    bestSpot, obstacles, available, buyRoadPieces, isBossWave, removeTrap, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
+    fuse, bestSpot, obstacles, available, buyRoadPieces, isBossWave, removeTrap, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
     continueEndless, exportLayout, parseLayout, loadLayout, recalcRoute, placeCastle, snapshotRun, ui,
     get R() { return R; }, get traps() { return traps; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
     get enemies() { return enemies; }, get towers() { return towers; },
@@ -4224,10 +4296,11 @@ const UI = (() => {
     const nb = Game.isBossWave(nxt);
     $('#wpNext').textContent = R.phase === 'build' && R.pauseTimer > 0 ? `Nächste: ${nxt}${nb ? ' 👑' : ''} in ${Math.ceil(R.pauseTimer)}s` : `Nächste: ${nxt}${nb ? ' 👑 BOSS' : ''}`;
     const wb = $('#waveBtn');
-    const label = R.phase === 'build' ? (R.wave === 0 ? '▶ WELLE STARTEN' : R.pauseTimer > 0 ? '⏩ WELLE ÜBERSPRINGEN' : '▶ NÄCHSTE WELLE') : '⏩ WELLE ÜBERSPRINGEN';
+    let label = R.phase === 'build' ? (R.wave === 0 ? '▶ WELLE STARTEN' : R.pauseTimer > 0 ? '⏩ WELLE ÜBERSPRINGEN' : '▶ NÄCHSTE WELLE') : '⏩ WELLE ÜBERSPRINGEN';
+    if (R.skipCd > 0) label = `⏳ Warten … ${Math.ceil(R.skipCd)}`;
     if (wb.textContent !== label) wb.textContent = label;
     wb.classList.toggle('skip', R.phase !== 'build' || R.pauseTimer > 0);
-    wb.disabled = R.over || R.hold;
+    wb.disabled = R.over || R.hold || R.skipCd > 0;
     wb.classList.toggle('hidden', !!R.tutorial && (R.hold || R.wave === 0));
     $('#speedBtn').textContent = R.speed + 'x';
     $('#pauseBtn').textContent = R.paused ? '▶' : '❚❚';
@@ -4246,7 +4319,7 @@ const UI = (() => {
     $$('#bbItems .item[data-cost]').forEach(el => { const c = +el.dataset.cost; const pr = el.querySelector('.pr'); if (pr) pr.classList.toggle('no', R.coins < c); });
     const rp = $('#roadCount'); if (rp && rp.textContent !== String(P.roadPieces)) rp.textContent = P.roadPieces;
     if (Game.selected && !$('#towerPanel').classList.contains('hidden')) {
-      const key = Game.selected.level + ':' + (R.coins >= Game.upgradeCost(Game.selected)) + ':' + Game.selected.kills;
+      const key = Game.selected.plus + ':' + Game.selected.kills;
       if (lastHud.tp !== key) { towerPanel(Game.selected); }
     }
   }
@@ -4259,14 +4332,18 @@ const UI = (() => {
     let h = '';
     const isSel = (k, id) => sel && sel.kind === k && sel.id === id ? ' sel' : '';
     if (curTab === 'towers') {
-      const list = TOWERS.filter(t => (P.towerInv[t.id] || 0) > 0).sort((a, b) => RARITIES[a.rarity].order - RARITIES[b.rarity].order || a.cost - b.cost);
+      const list = TOWERS.filter(t => Save.invTotal(t.id) > 0).sort((a, b) => RARITIES[a.rarity].order - RARITIES[b.rarity].order || a.cost - b.cost);
       list.forEach(t => {
-        const av = Game.available('tower', t.id), tot = P.towerInv[t.id];
-        h += `<button class="item${av > 0 ? '' : ' locked'}${isSel('tower', t.id)}" data-kind="tower" data-id="${t.id}" title="${esc(t.name)}">
-          <i class="rar" style="background:${RARITIES[t.rarity].color}"></i>
-          ${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div><div class="pr">${av} / ${tot} frei</div></button>`;
+        for (let pl = MAX_PLUS; pl >= 0; pl--) {
+          const tot = Save.inv(t.id, pl); if (!tot) continue;
+          const av = Game.available('tower', t.id, pl);
+          const on = sel && sel.kind === 'tower' && sel.id === t.id && (sel.plus || 0) === pl ? ' sel' : '';
+          h += `<button class="item${av > 0 ? '' : ' locked'}${on}" data-kind="tower" data-id="${t.id}" data-plus="${pl}" title="${esc(t.name)}">
+            <i class="rar" style="background:${RARITIES[t.rarity].color}"></i>${pl ? `<span class="pl" style="color:${PLUS_COLORS[pl]}">+${pl}</span>` : ''}
+            ${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div><div class="pr">${av} / ${tot} frei</div></button>`;
+        }
       });
-      if (!tut) h += `<div class="item info">🎁 Neue Türme gibt es nur von <b>Bossen</b> (jede 5. Welle) und nach einer verlorenen Runde.</div>`;
+      if (!tut) h += `<div class="item info">🎁 Neue Türme gibt es von <b>Bossen</b>. ⚗️ 3 gleiche Türme kannst du im <b>Inventar</b> zu einem stärkeren +1 fusen!</div>`;
     } else if (curTab === 'traps') {
       const list = TRAPS.filter(t => (P.trapInv[t.id] || 0) > 0);
       list.forEach(t => {
@@ -4312,17 +4389,18 @@ const UI = (() => {
     }
     const kind = el.dataset.kind, id = el.dataset.id;
     if (!kind) return;
-    if ((kind === 'tower' || kind === 'trap') && Game.available(kind, id) <= 0) { toast('Schon alle platziert – tippe einen Turm an und hebe ihn auf, um ihn umzustellen', 'bad'); return; }
+    const plus = +(el.dataset.plus || 0);
+    if ((kind === 'tower' || kind === 'trap') && Game.available(kind, id, plus) <= 0) { toast('Schon alle platziert – tippe einen Turm an und hebe ihn auf, um ihn umzustellen', 'bad'); return; }
     Audio2.play('click');
     const s = Game.buildSel;
-    if (s && s.kind === kind && s.id === id) Game.setBuild(null);
-    else Game.setBuild({ kind, id });
+    if (s && s.kind === kind && s.id === id && (s.plus || 0) === plus) Game.setBuild(null);
+    else Game.setBuild({ kind, id, plus });
   }
   function buildChanged(sel) {
     renderBuildBar();
     const h = $('#buildHint');
     if (!sel) { h.classList.add('hidden'); return; }
-    let name = sel.kind === 'tower' ? TOWER_BY_ID[sel.id].name : sel.kind === 'trap' ? TRAP_BY_ID[sel.id].name : sel.kind === 'road' ? ROAD_BY_ID[sel.id].name : sel.kind === 'deco' ? DECO_BY_ID[sel.id].name : sel.kind === 'move' ? 'Turm verschieben' : 'Abreißen';
+    let name = sel.kind === 'tower' ? TOWER_BY_ID[sel.id].name + (sel.plus ? ' +' + sel.plus : '') : sel.kind === 'trap' ? TRAP_BY_ID[sel.id].name : sel.kind === 'road' ? ROAD_BY_ID[sel.id].name : sel.kind === 'deco' ? DECO_BY_ID[sel.id].name : sel.kind === 'move' ? 'Turm verschieben' : 'Abreißen';
     const touch = matchMedia('(pointer:coarse)').matches;
     const how = sel.kind === 'road' || sel.kind === 'erase' || sel.kind === 'trap' ? (touch ? 'Tippen oder Finger ziehen' : 'Klicken oder ziehen') : (touch ? 'Aufs Feld tippen zum Platzieren' : 'Klicken zum Platzieren · R: drehen');
     h.innerHTML = `<b>${esc(name)}</b><span>${how}</span>${sel.kind !== 'road' && sel.kind !== 'erase' ? '<button class="btn small" data-tool="rotate">🔄</button>' : ''}<button class="btn small red" data-tool="cancel">✕</button>`;
@@ -4330,45 +4408,46 @@ const UI = (() => {
   }
 
   // ---------------- Turm-Panel ----------------
+  // Werte eines Turms bei Fusionsstufe pl (für Panel & Inventar)
+  function statRows(def, pl, cmp) {
+    const fake = { def, plus: pl, level: plusVisual(pl), buffDmg: 1, buffRate: 1, buffRange: 0 };
+    const s = Game.towerStats(fake);
+    let n = null; if (cmp && pl < MAX_PLUS) n = Game.towerStats({ ...fake, plus: pl + 1, level: plusVisual(pl + 1) });
+    const up = (a, b, dec = 0) => n && b > a + 1e-6 ? ` <span class="up">▲${dec ? b.toFixed(dec) : fmt(b)}</span>` : '';
+    const rows = [];
+    if (def.dmg) rows.push(`<div>💥 Schaden${def.type === 'beam' ? '/s' : ''}<br><b>${fmt(s.dmg)}</b>${n ? up(s.dmg, n.dmg) : ''}</div>`);
+    if (s.range) rows.push(`<div>🎯 Reichweite<br><b>${s.range.toFixed(1)}</b>${n ? up(s.range, n.range, 1) : ''}</div>`);
+    if (def.rate && def.type !== 'beam') rows.push(`<div>⚡ Tempo<br><b>${s.rate.toFixed(2)}/s</b>${n ? up(s.rate, n.rate, 2) : ''}</div>`);
+    if (s.splash) rows.push(`<div>💣 Explosion<br><b>${s.splash.toFixed(1)}</b></div>`);
+    if (s.slow) rows.push(`<div>🧊 Verlangsamt<br><b>${Math.round(s.slow * 100)}%</b></div>`);
+    if (s.chains) rows.push(`<div>⛓️ Sprünge<br><b>${s.chains}</b></div>`);
+    if (s.targets > 1) rows.push(`<div>🎯 Ziele<br><b>${s.targets}</b></div>`);
+    if (s.dot || s.burn) rows.push(`<div>${s.dot ? '☠️ Gift' : '🔥 Brand'}/s<br><b>${fmt(s.dot || s.burn)}</b></div>`);
+    if (s.income) rows.push(`<div>🪙 Pro Welle<br><b>${fmt(s.income)}</b>${n ? up(s.income, n.income) : ''}</div>`);
+    if (s.healEvery) rows.push(`<div>❤️ Heilt alle<br><b>${s.healEvery.toFixed(0)}s</b></div>`);
+    if (s.buffDmg) rows.push(`<div>📯 Verstärkung<br><b>+${Math.round(s.buffDmg * 100)}%</b></div>`);
+    return rows.join('');
+  }
+  const plusTag = pl => pl > 0 ? `<span class="plus" style="color:${PLUS_COLORS[pl]}">+${pl}</span>` : '';
   function towerPanel(t) {
     const el = $('#towerPanel');
     document.body.classList.toggle('tp-open', !!(t && Game.R));
     if (!t || !Game.R) { el.classList.add('hidden'); return; }
-    const R = Game.R;
-    const s = Game.towerStats(t), d = t.def;
-    const maxed = t.level >= MAX_TOWER_LEVEL;
-    const cost = Game.upgradeCost(t);
-    let nextS = null;
-    if (!maxed) { t.level++; nextS = Game.towerStats(t); t.level--; }
-    lastHud.tp = t.level + ':' + (R.coins >= cost) + ':' + t.kills;
-    const up = (a, b, f = 1) => nextS && b > a + 0.001 ? ` <span class="up">▲${(+(b * f)).toFixed(f === 1 && b < 10 ? 1 : 0)}</span>` : '';
-    const dmgLbl = d.type === 'beam' ? 'Schaden/s' : 'Schaden';
-    const rows = [];
-    if (d.dmg) rows.push(`<div>${dmgLbl}<br><b>${fmt(s.dmg)}</b>${nextS ? up(s.dmg, nextS.dmg) : ''}</div>`);
-    if (s.range) rows.push(`<div>Reichweite<br><b>${s.range.toFixed(1)}</b>${nextS ? up(s.range, nextS.range) : ''}</div>`);
-    if (d.rate && d.type !== 'beam') rows.push(`<div>Angriffe/s<br><b>${s.rate.toFixed(2)}</b>${nextS ? up(s.rate, nextS.rate) : ''}</div>`);
-    if (s.splash) rows.push(`<div>Explosion<br><b>${s.splash.toFixed(1)}</b></div>`);
-    if (s.slow) rows.push(`<div>Verlangsamung<br><b>${Math.round(s.slow * 100)}%</b></div>`);
-    if (s.chains) rows.push(`<div>Sprünge<br><b>${s.chains}</b></div>`);
-    if (s.targets > 1) rows.push(`<div>Ziele<br><b>${s.targets}</b></div>`);
-    if (s.dot || s.burn) rows.push(`<div>${s.dot ? 'Gift' : 'Brand'}/s<br><b>${fmt(s.dot || s.burn)}</b></div>`);
-    if (s.income) rows.push(`<div>Einkommen/Welle<br><b>🪙${s.income}</b></div>`);
-    if (s.healEvery) rows.push(`<div>Heilung alle<br><b>${s.healEvery.toFixed(0)}s</b></div>`);
-    if (s.buffDmg) rows.push(`<div>Verstärkung<br><b>+${Math.round(s.buffDmg * 100)}%</b></div>`);
-    rows.push(`<div>Besiegt<br><b>${t.kills}</b></div>`);
-    if (t.buffDmg > 1) rows.push(`<div>Verstärkt<br><b>+${Math.round((t.buffDmg - 1) * 100)}%</b></div>`);
+    const R = Game.R, d = t.def, pl = t.plus || 0;
+    lastHud.tp = pl + ':' + t.kills;
     const hasTarget = !['heal', 'buff', 'aura', 'gold', 'mine', 'shock'].includes(d.type);
+    const own = Save.inv(d.id, pl);
     el.innerHTML = `<button class="tp-close" data-tp="close">✕</button>
-      <div class="tp-head">${Thumbs.img('tower', d.id)}<div><div class="tp-name">${esc(d.name)}</div>
+      <div class="tp-head">${Thumbs.img('tower', d.id)}<div><div class="tp-name">${esc(d.name)} ${plusTag(pl)}</div>
       <div style="font-size:.75em;color:${RARITIES[d.rarity].color};font-weight:900">${RARITIES[d.rarity].name}</div>
-      <div class="tp-lv">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= t.level ? 'on' : ''}"></i>`).join('')}</div><div style="font-size:.78em">Stufe ${t.level} / ${MAX_TOWER_LEVEL}</div></div></div>
-      <div class="tp-stats">${rows.join('')}</div>
-      <div class="tp-spec">✨ ${esc(d.desc)}<br>${t.level >= 5 ? '👑 <b>' + esc(d.lv5) + '</b> (aktiv)' : '🔒 Stufe 5: ' + esc(d.lv5)}</div>
+      <div style="font-size:.78em">Besiegt: <b>${t.kills}</b>${t.buffDmg > 1 ? ` · Verstärkt +${Math.round((t.buffDmg - 1) * 100)}%` : ''}</div></div></div>
+      <div class="tp-stats">${statRows(d, pl, false)}</div>
+      <div class="tp-spec">✨ ${esc(d.desc)}<br>${t.level >= 5 ? '👑 <b>' + esc(d.lv5) + '</b> (aktiv)' : '🔒 Ab +7: ' + esc(d.lv5)}</div>
       ${hasTarget ? `<div class="tp-target">${[['first', 'Erster'], ['last', 'Letzter'], ['strong', 'Stärkster'], ['close', 'Nächster']].map(([k, n]) => `<button data-tp="tg" data-v="${k}" class="${t.targeting === k ? 'on' : ''}">${n}</button>`).join('')}</div>` : ''}
       <div class="tp-btns">
-        <button class="btn green${R.tutorial && t.level === 1 ? ' tut-hl' : ''}" data-tp="up" ${maxed || R.coins < cost ? 'disabled' : ''}>${maxed ? 'MAX' : 'UPGRADE<br>🪙' + fmt(cost)}</button>
-        <button class="btn red" data-tp="sell">AUFHEBEN<br>${Game.sellValue(t) ? '↩ +🪙' + fmt(Game.sellValue(t)) : '↩ Inventar'}</button>
-        ${R.tutorial ? '' : '<button class="btn small wide gray" data-tp="move">↔ Verschieben</button>'}
+        ${R.tutorial ? '' : `<button class="btn purple wide" data-tp="fuse">⚗️ FUSE ${own >= 3 && pl < MAX_PLUS ? '– jetzt möglich!' : `(${own}/3 gleiche)`}</button>`}
+        <button class="btn red" data-tp="sell">↩ AUFHEBEN</button>
+        ${R.tutorial ? '' : '<button class="btn gray" data-tp="move">↔ Verschieben</button>'}
       </div>`;
     el.classList.remove('hidden');
   }
@@ -4408,23 +4487,22 @@ const UI = (() => {
 
   // ---------------- Inventar / Türme / Sammlung ----------------
   function towerDetail(t) {
-    const P = Save.P; const own = P.towerInv[t.id] || 0;
-    const rows = [1, 2, 3, 4, 5].map(l => {
-      const d = t.dmg * LEVEL_DMG[l - 1], r = t.range ? t.range + LEVEL_RANGE[l - 1] : 0, s = t.rate * LEVEL_RATE[l - 1];
-      const cost = l === 1 ? 0 : Math.round(t.cost * UPGRADE_COST[l - 2]);
-      return `<tr><td>Stufe ${l}</td><td>${t.dmg ? fmt(d) : '–'}</td><td>${r ? r.toFixed(1) : '–'}</td><td>${t.rate && t.type !== 'beam' ? s.toFixed(2) : '–'}</td><td>${cost ? '🪙' + fmt(cost) : '–'}</td></tr>`;
+    const P = Save.P; const own = Save.invTotal(t.id);
+    const rows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(pl => {
+      const d = t.dmg * plusDmg(pl), r = t.range ? t.range + plusRange(pl) : 0, s = t.rate * plusRate(pl);
+      return `<tr><td>+${pl}</td><td>${t.dmg ? fmt(d) : '–'}</td><td>${r ? r.toFixed(1) : '–'}</td><td>${t.rate && t.type !== 'beam' ? s.toFixed(2) : '–'}</td><td>${Save.inv(t.id, pl) || '–'}</td></tr>`;
     }).join('');
     const tags = [t.air ? '✈️ Trifft Flieger' : '', t.ground ? '🦶 Nur Boden' : '', t.detect ? '👁️ Erkennt Unsichtbare' : '', t.pierce ? '🛡️ Durchschlägt Rüstung' : ''].filter(Boolean).join(' · ');
-    return `<div class="detail">${Thumbs.img('tower5', t.id)}<div style="flex:1"><h3>${esc(t.name)} ${rarityBadge(t.rarity)}</h3><p>${esc(t.desc)}</p><p>👑 Stufe 5: ${esc(t.lv5)}</p><p style="opacity:.8">${tags || ''}</p>
+    return `<div class="detail">${Thumbs.img('tower5', t.id)}<div style="flex:1"><h3>${esc(t.name)} ${rarityBadge(t.rarity)}</h3><p>${esc(t.desc)}</p><p>👑 Ab +7: ${esc(t.lv5)}</p><p style="opacity:.8">${tags || ''}</p>
       <p>${own ? `✅ Im Besitz: ${own}x` : '🔒 Noch nicht erhalten – Bosse geben dir neue Türme!'}</p>
-      <table class="lvt"><tr><th></th><th>Schaden</th><th>Reichw.</th><th>Rate</th><th>Upgrade</th></tr>${rows}</table></div></div>`;
+      <table class="lvt"><tr><th></th><th>Schaden</th><th>Reichw.</th><th>Rate</th><th>Besitz</th></tr>${rows}</table></div></div>`;
   }
   function towersScreen(title = '🏰 TOWERS') {
     const P = Save.P;
     let q = '', rar = 'all', sort = 'cost', own = 'all', det = null;
     openModal(title, '');
     const render = () => {
-      let list = TOWERS.filter(t => (!q || t.name.toLowerCase().includes(q)) && (rar === 'all' || t.rarity === rar) && (own === 'all' || (own === 'own') === !!P.towerInv[t.id]));
+      let list = TOWERS.filter(t => (!q || t.name.toLowerCase().includes(q)) && (rar === 'all' || t.rarity === rar) && (own === 'all' || (own === 'own') === !!Save.invTotal(t.id)));
       const sorters = { cost: (a, b) => a.cost - b.cost, name: (a, b) => a.name.localeCompare(b.name), rarity: (a, b) => RARITIES[b.rarity].order - RARITIES[a.rarity].order, dmg: (a, b) => b.dmg * b.rate - a.dmg * a.rate, range: (a, b) => b.range - a.range };
       list.sort(sorters[sort]);
       let h = `<div class="filters"><input id="fq" placeholder="🔍 Suchen…" value="${esc(q)}"><select id="fr"><option value="all">Alle Seltenheiten</option>${Object.entries(RARITIES).map(([k, r]) => `<option value="${k}" ${rar === k ? 'selected' : ''}>${r.name}</option>`).join('')}</select>
@@ -4432,7 +4510,7 @@ const UI = (() => {
         <select id="fs">${[['cost', 'Kosten'], ['name', 'Name'], ['rarity', 'Seltenheit'], ['dmg', 'Schaden'], ['range', 'Reichweite']].map(([k, n]) => `<option value="${k}" ${sort === k ? 'selected' : ''}>Sortieren: ${n}</option>`).join('')}</select></div>
         <div style="font-size:.85em;margin-bottom:.5em">Im Besitz: <b>${Save.stat('towersUnlocked')} / ${TOWERS.length}</b> verschiedene Türme · Neue Türme gibt es von Bossen.</div>`;
       if (det) h += towerDetail(TOWER_BY_ID[det]);
-      h += `<div class="cards">${list.map(t => { const n = P.towerInv[t.id] || 0; return `<div class="card${n ? '' : ' locked'}" data-t="${t.id}" style="border-color:${RARITIES[t.rarity].color}"><span class="tag">${n ? n + 'x' : '🔒'}</span>${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}</div>`; }).join('') || '<p>Keine Türme gefunden.</p>'}</div>`;
+      h += `<div class="cards">${list.map(t => { const n = Save.invTotal(t.id); return `<div class="card${n ? '' : ' locked'}" data-t="${t.id}" style="border-color:${RARITIES[t.rarity].color}"><span class="tag">${n ? n + 'x' : '🔒'}</span>${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}</div>`; }).join('') || '<p>Keine Türme gefunden.</p>'}</div>`;
       $('#modalBody').innerHTML = h;
       const fq = $('#fq'); fq.oninput = () => { q = fq.value.toLowerCase(); const pos = fq.selectionStart; render(); const n = $('#fq'); n.focus(); n.setSelectionRange(pos, pos); };
       $('#fr').onchange = e => { rar = e.target.value; render(); };
@@ -4442,9 +4520,20 @@ const UI = (() => {
     };
     render();
   }
-  function inventoryScreen() {
+  // Detailansicht mit FUSE-Knopf
+  function fuseDetail(id, pl) {
+    const t = TOWER_BY_ID[id], n = Save.inv(id, pl), can = n >= 3 && pl < MAX_PLUS;
+    const placed = Game.R && !Game.demo ? Game.towers.filter(x => x.def.id === id && x.plus === pl).length : 0;
+    return `<div class="detail fuse-box">${Thumbs.img('tower', id)}<div style="flex:1"><h3>${esc(t.name)} ${plusTag(pl)} ${rarityBadge(t.rarity)}</h3>
+      <p>Du hast <b>${n}x</b> ${esc(t.name)} ${pl ? '+' + pl : ''}${placed ? ` (${placed} davon stehen auf dem Feld)` : ''}.</p>
+      <div class="tp-stats">${statRows(t, pl, can)}</div>
+      ${pl >= MAX_PLUS ? '<p>💠 Höchste Stufe erreicht!</p>' : `<p>⚗️ <b>Fuse:</b> 3x ${esc(t.name)}${pl ? ' +' + pl : ''} ➜ 1x ${esc(t.name)} <b style="color:${PLUS_COLORS[pl + 1]}">+${pl + 1}</b> (grüne Werte)${placed && can ? '<br><small>Türme auf dem Feld werden dafür automatisch aufgehoben.</small>' : ''}</p>`}
+      <div class="row" style="justify-content:flex-start">${pl < MAX_PLUS ? `<button class="btn purple big" id="fuseBtn" ${can ? '' : 'disabled'}>⚗️ FUSE${can ? '' : ` (${n}/3)`}</button>` : ''}<button class="btn gray" id="fuseNo">Nicht fusen</button></div></div></div>`;
+  }
+  function inventoryScreen(focus) {
     const P = Save.P;
     let tab = 'towers', q = '', rar = 'all';
+    let det = focus || null;
     openModal('🎒 INVENTORY', '');
     const render = () => {
       const tabs = [['towers', '🏰 Türme'], ['traps', '🪤 Fallen & Wege'], ['skins', '🛣️ Straßen-Skins'], ['effects', '✨ Effekte'], ['castles', '🏯 Burgen'], ['biomes', '🌍 Biome'], ['decos', '🗿 Spezialgebäude'], ['boosts', '⚡ Boosts']];
@@ -4453,7 +4542,16 @@ const UI = (() => {
       const match = (name, r) => (!q || name.toLowerCase().includes(q)) && (rar === 'all' || r === rar);
       let cards = '';
       if (tab === 'towers') {
-        cards = TOWERS.filter(t => P.towerInv[t.id] && match(t.name, t.rarity)).map(t => `<div class="card" style="border-color:${RARITIES[t.rarity].color}"><span class="tag">${P.towerInv[t.id]}x</span>${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}</div>`).join('');
+        if (det) h += fuseDetail(det.id, det.plus);
+        cards = '';
+        TOWERS.filter(t => Save.invTotal(t.id) && match(t.name, t.rarity)).forEach(t => {
+          for (let pl = MAX_PLUS; pl >= 0; pl--) {
+            const n = Save.inv(t.id, pl); if (!n) continue;
+            const can = n >= 3 && pl < MAX_PLUS;
+            const on = det && det.id === t.id && det.plus === pl;
+            cards += `<div class="card${on ? ' eq' : ''}${can ? ' canfuse' : ''}" data-inv="${t.id}" data-plus="${pl}" style="border-color:${RARITIES[t.rarity].color}"><span class="tag">${n}x</span>${pl ? `<span class="pl" style="color:${PLUS_COLORS[pl]}">+${pl}</span>` : ''}${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}${can ? '<div class="sub fuse-ok">⚗️ Fuse möglich!</div>' : `<div class="sub">${n}/3 zum Fusen</div>`}</div>`;
+          }
+        });
         cards += `<div class="card" data-go="towers"><div class="ic">📚</div><div class="nm">Alle Türme ansehen</div><div class="sub">${Save.stat('towersUnlocked')}/${TOWERS.length}</div></div>`;
       } else if (tab === 'traps') {
         cards = `<div class="card"><div class="ic">🛣️</div><div class="nm">Wegstücke</div><div class="sub">${P.roadPieces} Stück</div></div>`;
@@ -4479,6 +4577,17 @@ const UI = (() => {
       const iq = $('#iq'); iq.oninput = () => { q = iq.value.toLowerCase(); const p = iq.selectionStart; render(); const n = $('#iq'); n.focus(); n.setSelectionRange(p, p); };
       $('#ir').onchange = e => { rar = e.target.value; render(); };
       $$('[data-eq]').forEach(b => b.onclick = () => { equip(b.dataset.eq, b.dataset.id); render(); });
+      $$('[data-inv]').forEach(c => c.onclick = () => { det = { id: c.dataset.inv, plus: +c.dataset.plus }; Audio2.play('click'); render(); $('#modalBody').scrollTop = 0; });
+      const fb = $('#fuseBtn');
+      if (fb) fb.onclick = () => {
+        const r = Game.fuse(det.id, det.plus);
+        if (!r) return;
+        toast(`⚗️ Fusion! ${esc(TOWER_BY_ID[det.id].name)} <b>+${det.plus + 1}</b>${r.removed ? ` (${r.removed} vom Feld aufgehoben)` : ''}`, 'gold');
+        Particles.emit(Player.pos.x, 2, Player.pos.z, 60, PLUS_COLORS[det.plus + 1], { speed: 4, up: 5, life: 1.2, size: 0.3, tint: false });
+        det = Save.inv(det.id, det.plus) >= 3 ? det : { id: det.id, plus: det.plus + 1 };
+        render(); $('#modalBody').scrollTop = 0;
+      };
+      const fn = $('#fuseNo'); if (fn) fn.onclick = () => { det = null; render(); };
       $$('[data-go="towers"]').forEach(b => b.onclick = () => towersScreen());
     };
     render();
@@ -4594,8 +4703,8 @@ const UI = (() => {
     const P = Save.P, s = P.stats;
     const t = s.playTime; const pt = `${Math.floor(t / 3600)}h ${Math.floor(t / 60) % 60}m`;
     const rows = [['Besiegte Gegner', fmt(s.kills)], ['Besiegte Bosse', fmt(s.bossKills)], ['Überstandene Wellen', fmt(s.wavesTotal)], ['Beste Welle', s.bestWave], ['Gebaute Türme', fmt(s.towersBuilt)], ['Gebaute Straßen', fmt(s.roadsBuilt)],
-      ['Dekorationen', fmt(s.decoBuilt)], ['Upgrades', fmt(s.upgrades)], ['Verdiente Münzen', fmt(s.coinsEarned)], ['Verursachter Schaden', fmt(s.damage)], ['Gespielte Runden', s.gamesPlayed], ['Siege', s.victories],
-      ['Verlorene Leben', fmt(s.livesLost)], ['Perfekte Wellen', s.perfectWaves], ['Spielzeit', pt], ['Edelsteine verdient', fmt(s.gemsEarned)], ['Entdeckte Gegner', Object.keys(P.seen).length + ' / ' + ENEMIES.length], ['Verschiedene Türme', Save.stat('towersUnlocked') + ' / ' + TOWERS.length], ['Türme insgesamt', Object.values(P.towerInv).reduce((a, b) => a + b, 0)], ['Wegstücke', P.roadPieces]];
+      ['Dekorationen', fmt(s.decoBuilt)], ['Fusionen', fmt(s.fusions || 0)], ['Höchste Fusion', '+' + (s.maxPlus || 0)], ['Verdiente Münzen', fmt(s.coinsEarned)], ['Verursachter Schaden', fmt(s.damage)], ['Gespielte Runden', s.gamesPlayed], ['Siege', s.victories],
+      ['Verlorene Leben', fmt(s.livesLost)], ['Perfekte Wellen', s.perfectWaves], ['Spielzeit', pt], ['Edelsteine verdient', fmt(s.gemsEarned)], ['Entdeckte Gegner', Object.keys(P.seen).length + ' / ' + ENEMIES.length], ['Verschiedene Türme', Save.stat('towersUnlocked') + ' / ' + TOWERS.length], ['Türme insgesamt', Object.keys(P.towerInv).reduce((a, k) => a + Save.invTotal(k), 0)], ['Wegstücke', P.roadPieces]];
     let h = `<div class="statgrid">${rows.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join('')}</div><h4 class="sec">🏅 Rekord</h4><div class="statgrid"><div><span>♾️ Beste Welle</span><b>Welle ${P.records.endless || 0}</b></div></div>`;
     const R = Game.R;
     if (R && !Game.demo) h += `<h4 class="sec">⚔️ Aktuelle Runde</h4><div class="statgrid"><div><span>Welle</span><b>${R.wave}</b></div><div><span>Besiegt</span><b>${R.stats.kills}</b></div><div><span>Münzen verdient</span><b>${fmt(R.stats.coins)}</b></div><div><span>Bosse</span><b>${R.stats.bosses}</b></div><div><span>Türme</span><b>${Game.towers.length}</b></div></div>`;
@@ -4725,18 +4834,8 @@ const UI = (() => {
         say('Super! Deine Armbrust schießt <b>ganz von allein</b>. Gleich kommt Welle 1 …');
         R.hold = false; setTimeout(() => { if (step === 'wave1' && Game.R && Game.R.phase === 'build') Game.startWave(false); }, 2500);
       } else if (s === 'fighting') {
-        say('Pass auf die Gegner auf! 💪 Jede besiegte Kreatur gibt dir <b>Münzen</b>.');
+        say('Pass auf die Gegner auf! 💪 Wenn du 3 gleiche Türme hast, kannst du sie später <b>fusen</b> – dann werden sie viel stärker.');
         setTimeout(() => { if (step === 'fighting') hide(); }, 4500);
-      } else if (s === 'upgrade') {
-        R.hold = true; R.pauseTimer = 0;
-        const t = Game.towers[0];
-        if (t) { R.coins = Math.max(R.coins, Game.upgradeCost(t)); showMarker(true, { x: t.x, z: t.z }); }
-        say(`Du hast Münzen verdient! 🪙 Tippe auf deine <b>Armbrust</b> und drücke <b>UPGRADE</b>, damit sie stärker wird.`);
-        pollT = setInterval(() => { const t = Game.towers[0]; if (t && t.level >= 2) go('cont'); else if (t && !Game.selected) { hl(null); } }, 300);
-      } else if (s === 'cont') {
-        Game.select(null); hl(null); showMarker(false); R.hold = false; R.pauseTimer = 6;
-        say('Stark! ⬆️ Upgrades machen Türme stärker – und man sieht es am Turm. Weiter geht\'s!');
-        setTimeout(() => { if (step === 'cont') hide(); }, 4000);
       } else if (s === 'bosswarn') {
         R.hold = true; R.pauseTimer = 0;
         say('⚠️ <b>Achtung!</b> Jede <b>5. Welle</b> kommt ein <b>BOSS</b>. Besiege ihn – dann bekommst du eine <b>neue Waffe</b>!', 'Los geht\'s! ▶', () => { R.hold = false; hide(); step = 'boss'; Game.startWave(false); });
@@ -4746,7 +4845,7 @@ const UI = (() => {
         pollT = setInterval(() => { hl(document.body.classList.contains('build-open') ? '#bbItems .item:not(.locked)' : '#buildToggle'); }, 400);
       } else if (s === 'done') {
         hl(null); showMarker(false); setBuildOpen(!touch);
-        say('<b>Perfekt – Tutorial geschafft!</b> 🎓<br>Ab jetzt kommen die Wellen <b>automatisch</b>. Jede 5. Welle kommt ein Boss. Bosse geben dir <b>Türme, Wege und Fallen</b>. Mit Wegstücken kannst du den Weg der Gegner umbauen!', 'Spielen! ▶', () => {
+        say('<b>Perfekt – Tutorial geschafft!</b> 🎓<br>Ab jetzt kommen die Wellen <b>automatisch</b>. Jede 5. Welle kommt ein Boss. Bosse geben dir <b>Türme, Wege und Fallen</b>.<br>⚗️ Hast du <b>3 gleiche Türme</b>, kannst du sie im <b>Inventar</b> zu einem starken <b>+1</b> fusen!', 'Spielen! ▶', () => {
           Save.P.tutorialDone = true; R.tutorial = false; R.hold = false; R.pauseTimer = 15;
           Save.checkAchievements(); Save.save(); hide(); step = null;
           document.body.classList.remove('tutorial'); renderBuildBar(); Game.snapshotRun();
@@ -4758,7 +4857,6 @@ const UI = (() => {
       if (name === 'placed' && step === 'place') go('wave1');
       else if (name === 'placed' && step === 'place2') { clearInterval(pollT); go('done'); }
       else if (name === 'waveStart' && step === 'wave1') go('fighting');
-      else if (name === 'waveCleared' && data === 2) go('upgrade');
       else if (name === 'waveCleared' && data === 4) go('bosswarn');
       else if (name === 'rewardClosed') go('place2');
     }
@@ -4769,7 +4867,7 @@ const UI = (() => {
 
   // ---------------- Boss-Truhe (Belohnung mit Glücksrad-Streifen) ----------------
   function rewardCard(rw) {
-    if (rw.kind === 'tower') { const t = TOWER_BY_ID[rw.id]; return { html: Thumbs.img('tower', rw.id), name: t.name, color: RARITIES[t.rarity].color, sub: RARITIES[t.rarity].name }; }
+    if (rw.kind === 'tower') { const t = TOWER_BY_ID[rw.id]; return { html: Thumbs.img('tower', rw.id), name: (rw.n > 1 ? rw.n + 'x ' : '') + t.name, color: RARITIES[t.rarity].color, sub: RARITIES[t.rarity].name }; }
     if (rw.kind === 'trap') { const t = TRAP_BY_ID[rw.id]; return { html: `<div class="ic">${t.icon}</div>`, name: t.name, color: RARITIES[t.rarity].color, sub: 'Falle' }; }
     if (rw.kind === 'roads') return { html: '<div class="ic">🛣️</div>', name: `${rw.n} Wegstücke`, color: '#9b9a94', sub: 'Wege' };
     return { html: '<div class="ic">💰</div>', name: `${rw.n} Münzen`, color: '#ffd700', sub: 'Münzen' };
@@ -4913,7 +5011,7 @@ const UI = (() => {
         const t = Game.selected; const k = tp.dataset.tp;
         if (k === 'close') Game.select(null);
         if (!t) return;
-        if (k === 'up') Game.upgrade(t);
+        if (k === 'fuse') { const tt = t; Game.select(null); inventoryScreen({ id: tt.def.id, plus: tt.plus || 0 }); }
         if (k === 'sell') Game.sell(t);
         if (k === 'move') Game.startMove(t);
         if (k === 'tg') { t.targeting = tp.dataset.v; Audio2.play('click'); towerPanel(t); Game.snapshotRun(); }
@@ -4943,7 +5041,6 @@ const UI = (() => {
       if (k === 'enter') { e.preventDefault(); $('#waveBtn').click(); }
       if (k === 'b') setBuildOpen(!document.body.classList.contains('build-open'));
       if (k === 'c') setCamMode(CamCtl.mode === 'follow' ? 'free' : 'follow');
-      if (k === 'u' && Game.selected) Game.upgrade(Game.selected);
       if (k === 'x' && Game.selected) Game.sell(Game.selected);
       if (k === 'm' && Game.selected) Game.startMove(Game.selected);
       if (k === 'p') $('#pauseBtn').click();

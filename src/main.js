@@ -64,7 +64,7 @@
     CamCtl.update(dt);
     Game.update(dt, t);
     World.update(dt, t);
-    UI.Tut.tick(t);
+    UI.Tut.tick(t); UI.tickConfirm();
     hudT -= dt;
     if (hudT <= 0) { hudT = 0.1; UI.hud(); }
     World.renderer.render(World.scene, World.camera);

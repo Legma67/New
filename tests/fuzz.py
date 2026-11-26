@@ -1,28 +1,25 @@
 import asyncio, json, sys
 from playwright.async_api import async_playwright
-import os
-INDEX = 'file://' + os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'index.html'))
-CHROME = os.environ.get('CHROME', '/usr/bin/google-chrome')
 SEED = int(sys.argv[1]) if len(sys.argv) > 1 else 1
 ROUNDS = int(sys.argv[2]) if len(sys.argv) > 2 else 3000
 VIEW = sys.argv[3] if len(sys.argv) > 3 else 'pc'
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path=CHROME, args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+        b = await p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
         if VIEW == 'mobile': ctx = await b.new_context(viewport={'width':844,'height':390}, is_mobile=True, has_touch=True)
         elif VIEW == 'portrait': ctx = await b.new_context(viewport={'width':390,'height':844}, is_mobile=True, has_touch=True)
         else: ctx = await b.new_context(viewport={'width':1100,'height':620})
         pg = await ctx.new_page(); errs=[]
         pg.on('pageerror', lambda e: errs.append('PAGEERR '+str(e)))
         pg.on('console', lambda m: errs.append('CONSOLE '+m.text) if m.type=='error' else None)
-        await pg.goto(INDEX); await pg.wait_for_timeout(3000)
+        await pg.goto('file:///home/claude/new/index.html'); await pg.wait_for_timeout(3000)
         res = await pg.evaluate('''async ([seed, rounds]) => {
           let s = seed; const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
           const pick = a => a[Math.floor(rnd() * a.length)];
           const problems = []; const counts = {};
           const bad = (m) => { if (problems.length < 40) problems.push(m); };
           UI.Tut.stop(); Save.P.tutorialDone = true;
-          Save.P.towerInv = { crossbow:[5,2], cannon:[4,1], ice:[3], laser:[2], tesla:[1], drone:[1], meteor:[1], blackhole:[1], heal:[1], gold:[1], buff:[1], mortar:[2], water:[1], dragon:[1] };
+          Save.P.towerInv = { crossbow:[5,2], cannon:[4,1], ice:[3], laser:[2], tesla:[1], drone:[1], meteor:[1], blackhole:[1], heal:[1], gold:[1], buff:[1], mortar:[2], water:[1], dragon:[1], catapult:[3,1], snowman:[2], ballista:[2], acid:[1], beehive:[1], ninja:[1], harpoon:[1], mushroom:[2], quake:[1], storm:[1], tornado:[1], mirror:[1], lava:[1], mech:[1], sun:[1], totem:[1], phoenix:[1], cosmic:[1] };
           Save.P.trapInv = { trap_spike:2, trap_glue:1, trap_fire:1, trap_bomb:1, trap_frost:1 }; Save.P.roadPieces = 20;
           UI.startGame('endless','grass');
           const check = (where) => {
@@ -44,13 +41,13 @@ async def main():
             try { JSON.parse(JSON.stringify(Save.P)); } catch (e) { bad(where+': Speichern kaputt'); }
           };
           const acts = {
-            buildTower(){ const ids = Object.keys(Save.P.towerInv); const id = pick(ids); const pl = Math.floor(rnd()*3); Game.setBuild({kind:'tower', id, plus: pl}); Game.tap(tileToWorld(Math.floor(rnd()*(GW+2))-1, Math.floor(rnd()*(GH+2))-1)); if (rnd()<0.5) Game.setBuild(null); },
+            buildTower(){ const ids = Object.keys(Save.P.towerInv); const id = pick(ids); const pl = Math.floor(rnd()*3); Game.setBuild({kind:'tower', id, plus: pl}); Game.tap(tileToWorld(Math.floor(rnd()*(GW+2))-1, Math.floor(rnd()*(GH+2))-1)); if (rnd()<0.7) Game.confirmPlace(); else if (rnd()<0.5) Game.cancelPending(); if (rnd()<0.5) Game.setBuild(null); },
             buildTrap(){ Game.setBuild({kind:'trap', id: pick(TRAPS).id}); const t = pick(Game.route ? Game.route.tiles : [[3,3]]); Game.tap(tileToWorld(t[0], t[1])); Game.setBuild(null); },
             road(){ Game.setBuild({kind:'road', id: pick(ROADS).id}); let x = Math.floor(rnd()*GW), z = Math.floor(rnd()*GH); for (let k=0;k<6;k++){ Game.paint(tileToWorld(x,z)); x += Math.floor(rnd()*3)-1; z += Math.floor(rnd()*3)-1; } Game.paintEnd(tileToWorld(x,z), false); Game.setBuild(null); },
             erase(){ Game.setBuild({kind:'erase', id:'erase'}); for (let k=0;k<4;k++) Game.tap(tileToWorld(Math.floor(rnd()*GW), Math.floor(rnd()*GH))); Game.setBuild(null); },
-            deco(){ Game.R.coins += 50; Game.setBuild({kind:'deco', id: pick(DECOS.filter(d=>!d.shop)).id}); Game.tap(tileToWorld(Math.floor(rnd()*GW), Math.floor(rnd()*GH))); Game.setBuild(null); },
+            deco(){ Game.R.coins += 50; Game.setBuild({kind:'deco', id: pick(DECOS.filter(d=>!d.shop)).id}); Game.tap(tileToWorld(Math.floor(rnd()*GW), Math.floor(rnd()*GH))); Game.confirmPlace(); Game.setBuild(null); },
             sell(){ if (Game.towers.length) Game.sell(pick(Game.towers)); },
-            move(){ if (!Game.towers.length) return; Game.startMove(pick(Game.towers)); Game.tap(tileToWorld(Math.floor(rnd()*GW), Math.floor(rnd()*GH))); Game.setBuild(null); },
+            move(){ if (!Game.towers.length) return; Game.startMove(pick(Game.towers)); Game.tap(tileToWorld(Math.floor(rnd()*GW), Math.floor(rnd()*GH))); Game.confirmPlace(); Game.setBuild(null); },
             fuse(){ const ids = Object.keys(Save.P.towerInv); const id = pick(ids); for (let pl=0; pl<9; pl++) if (Save.inv(id,pl) >= 3) { Game.fuse(id, pl); break; } },
             select(){ if (Game.towers.length) { const t = pick(Game.towers); Game.select(t); const b = document.querySelector('[data-tp=tg]'); if (b) b.click(); } },
             wave(){ Game.startWave(rnd()<0.5); },

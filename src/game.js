@@ -19,6 +19,8 @@ const Game = (() => {
   let selected = null;
   let shake = 0;
   let lastHoverTile = null;
+  let pending = null;   // gewähltes Feld, wartet auf ✓
+  const CONFIRM_KINDS = ['tower', 'move', 'deco'];
   const ui = {}; // Callbacks zur UI
 
   // ---------------- Hilfen ----------------
@@ -202,7 +204,7 @@ const Game = (() => {
 
   // ---------------- Bauen ----------------
   function setBuild(sel) {
-    buildSel = sel;
+    buildSel = sel; pending = null; ui.pendingChanged && ui.pendingChanged(null);
     if (ghost) { scene.remove(ghost); ghost = null; ghostKey = ''; }
     rangeRing.visible = false;
     if (sel) select(null);
@@ -290,6 +292,7 @@ const Game = (() => {
   }
   function hover(p) {
     if (!buildSel) { lastHoverTile = null; return; }
+    if (pending) return;   // Vorschau bleibt auf dem gewählten Feld, bis ✓ oder ✕
     const t = worldToTile(p);
     if (!t || !inPlot(t.x, t.z)) { if (ghost) ghost.visible = false; rangeRing.visible = false; return; }
     lastHoverTile = t;
@@ -319,15 +322,33 @@ const Game = (() => {
   function paintEnd(p, wasTap) {
     if (!buildSel) return;
     if (buildSel.kind === 'road' || buildSel.kind === 'erase' || buildSel.kind === 'trap') { if (painted === 0 && wasTap) { const t = worldToTile(p); if (t) tryPlace(t.x, t.z, false); } }
-    else if (wasTap || true) { const t = worldToTile(p); if (t) tryPlace(t.x, t.z, false); }
+    else if (wasTap) { const t = worldToTile(p); if (t) choose(t.x, t.z); }
     paintLast = null;
   }
   function tap(p) {
-    if (buildSel) { const t = worldToTile(p); if (t) tryPlace(t.x, t.z, false); return; }
+    if (buildSel) { const t = worldToTile(p); if (t) { if (CONFIRM_KINDS.includes(buildSel.kind)) choose(t.x, t.z); else tryPlace(t.x, t.z, false); } return; }
     const t = worldToTile(p);
     if (t && inPlot(t.x, t.z) && grid[t.x][t.z] && grid[t.x][t.z].type === 'tower') { select(grid[t.x][t.z].t); Audio2.play('click'); }
     else select(null);
   }
+
+  // Feld wählen – gesetzt wird erst mit ✓
+  function choose(x, z) {
+    if (!buildSel) return false;
+    const chk = canPlace(buildSel, x, z);
+    if (!chk.ok) { if (chk.why) { ui.toast && ui.toast(chk.why, 'bad'); Audio2.play('error'); } return false; }
+    pending = null; hover(tileToWorld(x, z)); pending = { x, z };
+    Audio2.play('click'); ui.pendingChanged && ui.pendingChanged(pending);
+    return true;
+  }
+  function confirmPlace() {
+    if (!pending || !buildSel) return false;
+    const { x, z } = pending; pending = null;
+    const ok = tryPlace(x, z, false);
+    ui.pendingChanged && ui.pendingChanged(pending);
+    return ok;
+  }
+  function cancelPending() { if (!pending) return; pending = null; if (ghost) ghost.visible = false; rangeRing.visible = false; ui.pendingChanged && ui.pendingChanged(null); }
 
   function tryPlace(x, z, silent) {
     const sel = buildSel; if (!sel || demo) return false;
@@ -1680,7 +1701,7 @@ const Game = (() => {
   }
 
   return {
-    fuse, bestSpot, obstacles, available, buyRoadPieces, isBossWave, removeTrap, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
+    fuse, bestSpot, choose, confirmPlace, cancelPending, get pending() { return pending; }, obstacles, available, buyRoadPieces, isBossWave, removeTrap, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
     continueEndless, exportLayout, parseLayout, loadLayout, recalcRoute, placeCastle, snapshotRun, ui,
     get R() { return R; }, get traps() { return traps; }, get _grid() { return grid; }, get _floats() { return floats.length; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
     get enemies() { return enemies; }, get towers() { return towers; },

@@ -163,19 +163,22 @@ const UI = (() => {
     const float = document.createElement('div'); float.id = 'dragFloat'; float.className = 'hidden'; $('#root').appendChild(float);
     const inBar = (x, y) => { const el = document.elementFromPoint(x, y); return !!(el && el.closest('#buildBar')); };
     document.addEventListener('pointerdown', e => {
+      d = null;
       const it = e.target.closest('#bbItems .item[data-kind]');
       if (!it || it.classList.contains('locked') || !['tower', 'trap', 'deco'].includes(it.dataset.kind)) return;
-      d = { id: e.pointerId, x0: e.clientX, y0: e.clientY, it, on: false };
+      d = { id: e.pointerId, type: e.pointerType, x0: e.clientX, y0: e.clientY, it, on: false };
       if (e.pointerType === 'mouse') e.preventDefault();
     }, true);
     document.addEventListener('dragstart', e => { if (e.target.closest && e.target.closest('#buildBar')) e.preventDefault(); }, true);
     document.addEventListener('pointermove', e => {
-      if (!d || e.pointerId !== d.id) return;
+      if (!d || e.pointerId !== d.id || e.pointerType !== d.type) return;
+      if (e.pointerType === 'mouse' && !(e.buttons & 1)) { d = null; return; }
       const a = View.toLocal(d.x0, d.y0), b = View.toLocal(e.clientX, e.clientY);
       if (!d.on) {
         if (Math.hypot(b.x - a.x, b.y - a.y) < 14 || inBar(e.clientX, e.clientY) && Math.abs(b.y - a.y) > Math.abs(b.x - a.x)) return;
         d.on = true;
         const k = d.it.dataset.kind, id = d.it.dataset.id, plus = +d.it.dataset.plus || 0;
+        Game.cancelPending();
         const sel = Game.buildSel;
         if (!sel || sel.kind !== k || sel.id !== id || (sel.plus || 0) !== plus) Game.setBuild(k === 'tower' ? { kind: k, id, plus } : { kind: k, id });
         float.innerHTML = d.it.querySelector('.pic').innerHTML; float.classList.remove('hidden');
@@ -185,7 +188,7 @@ const UI = (() => {
       if (!inBar(e.clientX, e.clientY)) Game.hover(CamCtl.groundAt(b.x, b.y));
     }, true);
     const end = e => {
-      if (!d || e.pointerId !== d.id) return;
+      if (!d || e.pointerId !== d.id || e.pointerType !== d.type) return;
       const was = d; d = null;
       if (!was.on) return;
       float.classList.add('hidden'); document.body.classList.remove('dragging');
@@ -358,6 +361,21 @@ const UI = (() => {
   }
   function buildChanged(sel) {
     renderBuildBar();
+  }
+  // ✓/✕ über dem gewählten Feld
+  function pendingChanged(p) {
+    const el = $('#placeConfirm'); if (!el) return;
+    el.classList.toggle('hidden', !p);
+    if (p) tickConfirm();
+  }
+  const _cv = new THREE.Vector3();
+  function tickConfirm() {
+    const p = Game.pending, el = $('#placeConfirm');
+    if (!p || !el || el.classList.contains('hidden')) return;
+    _cv.copy(tileToWorld(p.x, p.z)); _cv.y += 1.9; _cv.project(World.camera);
+    const x = (_cv.x * 0.5 + 0.5) * View.w, y = (-_cv.y * 0.5 + 0.5) * View.h;
+    el.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px) translate(-50%,-100%)`;
+    el.style.visibility = _cv.z > 1 ? 'hidden' : '';
   }
 
   // Werte eines Turms bei Fusionsstufe pl (für Panel & Inventar)
@@ -786,10 +804,10 @@ const UI = (() => {
         pollT = setInterval(() => { if (Player.pos.distanceTo(moveStart) > 2.5) go('place'); }, 200);
       } else if (s === 'place') {
         if (!touch) setBuildOpen(true);
-        say(`Du hast genau <b>eine Armbrust</b>. ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle die Armbrust und tippe' : 'Wähle unten die Armbrust und klicke'} auf das <b>leuchtende Feld</b> neben dem Weg.`);
+        say(`Du hast genau <b>eine Armbrust</b>. ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle die Armbrust und tippe' : 'Wähle links die Armbrust und klicke'} auf das <b>leuchtende Feld</b> neben dem Weg – oder zieh sie dorthin. Dann bestätige mit <b>✓</b>.`);
         hl(document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle');
         showMarker(true);
-        pollT = setInterval(() => { if (step === 'place') hl(document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle'); }, 400);
+        pollT = setInterval(() => { if (step === 'place') hl(Game.pending ? '#placeConfirm .ok' : document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle'); }, 400);
       } else if (s === 'wave1') {
         showMarker(false); if (touch) setBuildOpen(false);
         say('Super! Deine Armbrust schießt <b>ganz von allein</b>. Drück jetzt unten rechts auf <b>▶ WELLE STARTEN</b>!');
@@ -806,8 +824,8 @@ const UI = (() => {
         say('⚠️ <b>Achtung!</b> Jede <b>5. Welle</b> kommt ein <b>BOSS</b>. Besiege ihn – dann bekommst du eine <b>neue Waffe</b>!', 'Verstanden ▶', () => { R.hold = false; step = 'boss'; say('Drück <b>▶ WELLE STARTEN</b>, wenn du bereit für den Boss bist!'); setTimeout(() => hl('#waveBtn'), 50); });
       } else if (s === 'place2') {
         R.hold = true; R.pauseTimer = 0; showMarker(true);
-        say(`Deine neue Waffe ist da! 🎁 ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle sie aus' : 'Wähle sie unten aus'} und stelle sie neben den Weg.`);
-        pollT = setInterval(() => { hl(document.body.classList.contains('build-open') ? '#bbItems .item:not(.locked)' : '#buildToggle'); }, 400);
+        say(`Deine neue Waffe ist da! 🎁 ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle sie aus' : 'Wähle sie links aus'} und stelle sie neben den Weg. Bestätige mit <b>✓</b>.`);
+        pollT = setInterval(() => { hl(Game.pending ? '#placeConfirm .ok' : document.body.classList.contains('build-open') ? '#bbItems .item:not(.locked)' : '#buildToggle'); }, 400);
       } else if (s === 'done') {
         hl(null); showMarker(false); setBuildOpen(!touch);
         say('<b>Perfekt – Tutorial geschafft!</b> 🎓<br>Du startest jede Welle selbst mit <b>▶ WELLE STARTEN</b>. Jede 5. Welle kommt ein Boss. Bosse geben dir <b>Türme, Wege und Fallen</b>.<br>⚗️ Hast du <b>3 gleiche Türme</b>, kannst du sie im <b>Inventar</b> zu einem starken <b>+1</b> fusen!', 'Spielen! ▶', () => {
@@ -975,6 +993,7 @@ const UI = (() => {
       const b = e.target.closest('[data-act]'); if (b) { action(b.dataset.act); return; }
       const it = e.target.closest('#bbItems .item, #bbHead .hb'); if (it) { onBuildItem(it); return; }
       const tool = e.target.closest('[data-tool]'); if (tool) { onBuildItem(tool); return; }
+      const pc = e.target.closest('[data-pc]'); if (pc) { if (pc.dataset.pc === 'ok') Game.confirmPlace(); else { Audio2.play('click'); Game.cancelPending(); } return; }
       if (e.target.closest('[data-bbclose]')) { Audio2.play('click'); setBuildOpen(false); return; }
       if (e.target.closest('#buildToggle')) { Audio2.init(); Audio2.play('click'); setBuildOpen(true); return; }
       const tab = e.target.closest('#bbTabs button'); if (tab) { curTab = tab.dataset.tab; Audio2.play('click'); renderBuildBar(); return; }
@@ -1008,7 +1027,8 @@ const UI = (() => {
     window.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const k = e.key.toLowerCase();
-      if (k === 'escape') { if (!$('#modal').classList.contains('hidden')) closeModal(); else if (Game.buildSel) Game.setBuild(null); else if (Game.selected) Game.select(null); else if (screen === 'game') pauseMenu(); }
+      if ((k === 'enter' || k === ' ') && Game.pending && $('#modal').classList.contains('hidden')) { e.preventDefault(); Game.confirmPlace(); return; }
+      if (k === 'escape') { if (!$('#modal').classList.contains('hidden')) closeModal(); else if (Game.pending) Game.cancelPending(); else if (Game.buildSel) Game.setBuild(null); else if (Game.selected) Game.select(null); else if (screen === 'game') pauseMenu(); }
       if (screen !== 'game' || !$('#modal').classList.contains('hidden')) return;
       if (k === 'r') Game.rotateBuild();
       if (k === ' ') e.preventDefault(); // Springen (Player)
@@ -1030,7 +1050,7 @@ const UI = (() => {
   // Callbacks aus dem Spiel
   function hookGame() {
     Object.assign(Game.ui, {
-      toast, hud: () => {}, towerPanel, buildChanged,
+      toast, hud: () => {}, towerPanel, buildChanged, pendingChanged,
       routeChanged: ok => { if (!ok && screen === 'game') toast('⚠️ Kein Weg vom Spawn zum Ziel!', 'bad'); },
       waveBanner: (w, boss) => banner(boss ? '👑 BOSSWELLE ' + w : 'WELLE ' + w, boss ? 'Ein mächtiger Boss naht!' : '', boss ? 'boss' : '', 1800),
       waveCleared: (w, bonus, income) => toast(`✅ Welle ${w} geschafft! +${bonus}${income ? ' +' + income + ' (Gold)' : ''} 🪙`, 'good'),
@@ -1050,5 +1070,5 @@ const UI = (() => {
     Save.on('achievement', a => { Audio2.play('achievement'); toast(`🏆 Erfolg: <b>${esc(a.name)}</b> +💎${a.gems}${a.crystals ? ' 🔮' + a.crystals : ''}`, 'gold'); });
   }
 
-  return { Tut, show, toast, banner, hud, goMenu, startGame, renderBuildBar, bindEvents, hookGame, refreshMenu, closeModal, get screen() { return screen; } };
+  return { Tut, tickConfirm, show, toast, banner, hud, goMenu, startGame, renderBuildBar, bindEvents, hookGame, refreshMenu, closeModal, get screen() { return screen; } };
 })();

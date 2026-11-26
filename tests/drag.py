@@ -26,15 +26,34 @@ async def run(p, vw, vh, label, mobile=True):
             for i in range(1,steps+1): await pg.mouse.move(a[0]+(bpt[0]-a[0])*i/steps, a[1]+(bpt[1]-a[1])*i/steps); await pg.wait_for_timeout(20)
             await pg.mouse.up()
         await pg.wait_for_timeout(400)
+    async def tapc(sel):
+        c = await center(sel)
+        if not c: print(label,'NICHT SICHTBAR',sel); return
+        if mobile:
+            await cdp.send('Input.dispatchTouchEvent', {'type':'touchStart','touchPoints':[{'x':c[0],'y':c[1]}]}); await cdp.send('Input.dispatchTouchEvent', {'type':'touchEnd','touchPoints':[]})
+        else: await pg.mouse.click(*c)
+        await pg.wait_for_timeout(300)
     if mobile:
         c = await center('#buildToggle'); await cdp.send('Input.dispatchTouchEvent', {'type':'touchStart','touchPoints':[{'x':c[0],'y':c[1]}]}); await cdp.send('Input.dispatchTouchEvent', {'type':'touchEnd','touchPoints':[]}); await pg.wait_for_timeout(300)
     # freies Feld suchen, das sichtbar und rechts vom Menü liegt
     spots = await pg.evaluate('''()=>{const g=Game._grid,out=[]; for(let x=0;x<GW;x++)for(let z=0;z<GH;z++){ if(g[x][z]) continue; const v=tileToWorld(x,z).clone(); v.project(World.camera); const sx=(v.x*0.5+0.5)*innerWidth, sy=(-v.y*0.5+0.5)*innerHeight; const r=document.querySelector('#buildBar').getBoundingClientRect(); if(sx>r.right+40 && sx<innerWidth-260 && sy>120 && sy<innerHeight-120) out.push([x,z,sx,sy]);} return out}''')
     print(label,'spots',len(spots))
+    await pg.evaluate("window.PLOG=[]; for (const t of ['pointerdown','pointerup','pointercancel']) document.addEventListener(t,e=>PLOG.push(t+e.pointerId+e.pointerType),true)")
+    await pg.evaluate("window.PCLOG=[]; const o=Game.ui.pendingChanged; Game.ui.pendingChanged=p=>{PCLOG.push(JSON.stringify(p)+' '+new Error().stack.split('\\n').slice(2,7).map(x=>x.trim().replace('file:///home/claude/new/index.html','')).join(' | ')); o(p)}")
     t0 = await pg.evaluate('Game.towers.length')
     await drag(await center('#bbItems .item[data-id=crossbow]'), spots[0][2:])
-    print(label,'nach Ziehen Türme', t0,'->', await pg.evaluate('Game.towers.length'), 'sel', await pg.evaluate('JSON.stringify(Game.buildSel)'))
+    print(label,'nach Ziehen (vor ✓) Türme', t0,'->', await pg.evaluate('Game.towers.length'), 'pending', await pg.evaluate('JSON.stringify(Game.pending)'))
+    await pg.screenshot(path=f'drag_{label}_confirm.png')
+    print(label,'OK-Knopf', await center('#placeConfirm .ok'), await pg.evaluate("(()=>{const b=document.querySelector('#placeConfirm .ok').getBoundingClientRect(); const h=document.elementFromPoint(b.left+b.width/2,b.top+b.height/2); return h.className+' / '+h.parentElement.className})()"))
+    await tapc('#placeConfirm .ok')
+    print(label,'nach ✓ Türme', await pg.evaluate('Game.towers.length'), 'pending', await pg.evaluate('JSON.stringify(Game.pending)'), 'sel', await pg.evaluate('JSON.stringify(Game.buildSel)'))
+
+    print(label,'confirm-el', await pg.evaluate("document.querySelector('#placeConfirm').className"), await center('#placeConfirm .no'))
+    await tapc('#placeConfirm .no')
+    print(label,'nach ✕ Türme (soll gleich bleiben)', await pg.evaluate('Game.towers.length'), 'pending', await pg.evaluate('JSON.stringify(Game.pending)'))
     await drag(await center('#bbItems .item[data-id=cannon]'), spots[len(spots)//2][2:])
+    print(label,'Kanone pending', await pg.evaluate('JSON.stringify(Game.pending)'), await center('#placeConfirm .ok'))
+    await tapc('#placeConfirm .ok')
     print(label,'zweiter Turm', await pg.evaluate('Game.towers.length'))
     await pg.screenshot(path=f'drag_{label}.png')
     # in Leiste zurückziehen = abbrechen ohne Platzieren

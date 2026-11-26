@@ -140,6 +140,9 @@ const World = (() => {
     scene.fog = new THREE.Fog(b.fog, 50, 140);
     hemi.color.set(new THREE.Color(b.sky).lerp(new THREE.Color('#ffffff'), 0.55)); hemi.groundColor.set(b.ground2);
     envObstacles.length = 0;
+    const L = b.light || { sun: '#fff0d0', si: 1, hi: 1, ex: 0.92 };
+    sun.color.set(L.sun); sun.intensity = (pbr ? 2.4 : 2.1) * L.si; hemi.intensity = (pbr ? 0.55 : 1.2) * L.hi;
+    renderer.toneMappingExposure = L.ex;
     buildSky(b);
     const rnd = mulberry(1234);
 
@@ -586,7 +589,7 @@ const World = (() => {
       else if (Math.random() < 0.4) Particles.emit(x, 0.8 + Math.random() * 2, z, 1, '#fff6c8', { speed: 0.3, up: 0.1, life: 4, size: 0.08, gravity: 0, tint: false });
     }
     if (arrowMat) arrowMat.opacity = 0.35 + 0.3 * Math.sin(t * 3);
-    if (World.portal) { World.portal.userData.disc.rotation.z = t; World.portal.userData.swirl.rotation.z = -t * 2; }
+    if (World.portal) { World.portal.userData.disc.rotation.z = t; World.portal.userData.swirl.rotation.z = -t * 2; if (World.portal.userData.glow) World.portal.userData.glow.material.opacity = 0.55 + 0.2 * Math.sin(t * 3); }
     if (World.clouds) for (const c of World.clouds) { c.position.x += dt * 0.6; if (c.position.x > 70) c.position.x = -70; }
     Particles.update(dt);
   }

@@ -16,7 +16,9 @@ Ein 3D-Tower-Defense-Spiel für Browser, Smartphone und Tablet (Querformat). Du 
 - **Immer Querformat:** Hältst du das Handy hochkant, dreht sich das Spiel automatisch mit.
 - **Grafik:** Filmisches Licht (Tonemapping), Himmelskuppel mit Sonne, Spiegelungen auf Gold/Metall, wehende Grashalme, Wasser mit Schaumrand, Stimmungs-Partikel je Biom. Statische Objekte werden zusammengefasst, damit es auch auf dem Handy flüssig läuft.
 - **Baumenü (Hotbar):** Kategorien links, große Karten mit Seltenheitsfarbe, +Stufe, Anzahl und Fuse-Hinweis; oben die Werte der Auswahl. Freie Felder leuchten beim Bauen.
-- Außerdem: 31 Türme mit Fusionsstufen +0 bis +9, 44 Gegnertypen, 8 Biome, Shop (Kosmetik, Wegstücke), Aufgaben, Erfolge, Bestiarium und automatisches Speichern.
+- **Neue Türme:** Katapult, Schneemann, Balliste (durchbohrt mehrere Gegner), Säureturm (senkt Rüstung), Bienenstock, Ninja, Harpune (holt Flieger), Pilzturm und Lavaturm (Giftfelder/Lavafelder), Erdbebenturm, Gewitterwolke, Wirbelsturmturm, Spiegelturm (mehrere Strahlen), Kampf-Mech, Sonnenturm, Totempfahl (mehr Reichweite für Nachbarn), Phönixhorst und Kosmosturm.
+- **Grafik:** Leuchteffekte an Türmen, Geschossen, Laternen und Portal, Mündungsfeuer, Schatten unter Fliegern, Lichtstimmung je Biom, Lebensbalken mit Rauch und Feuer an der Burg, rote Bildrand-Warnung im Bosskampf, Türme drehen sich im Leerlauf.
+- Außerdem: 49 Türme mit Fusionsstufen +0 bis +9, 44 Gegnertypen, 8 Biome, Shop (Kosmetik, Wegstücke), Aufgaben, Erfolge, Bestiarium und automatisches Speichern.
 
 > Hinweis: Echter Online-Multiplayer bräuchte einen Server. Dieses Spiel läuft komplett lokal, deshalb funktionieren Teilen und Besuchen über Codes.
 

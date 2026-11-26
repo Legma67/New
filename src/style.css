@@ -296,3 +296,6 @@ body.tutorial .side-menu,body.tutorial .hud-tr .shopbtn,body.tutorial .wc-row,bo
 @container root (max-width:700px){.build-bar{right:calc(30cqw + 14px)}}
 body.tut-on #toasts{top:calc(190px + env(safe-area-inset-top,0px))}
 @container root (max-height:430px){body.tut-on #toasts{top:auto;bottom:calc(150px + var(--safe-b))}}
+#vignette{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 55%,rgba(10,15,40,.38) 100%)}
+body.bossfight #vignette{background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 45%,rgba(120,0,20,.45) 100%);animation:vigpulse 1.6s infinite}
+@keyframes vigpulse{50%{opacity:.6}}

@@ -34,6 +34,22 @@ const Models = (() => {
   const ico = (r, d = 0) => geo(`i${r},${d}`, () => new THREE.IcosahedronGeometry(r, d));
   const dod = (r) => geo(`d${r}`, () => new THREE.DodecahedronGeometry(r, 0));
 
+  let glowTex = null;
+  const glowMats = new Map();
+  function glow(color, size = 0.6, opacity = 0.8) {
+    if (!glowTex) {
+      const c = document.createElement('canvas'); c.width = c.height = 64;
+      const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+      glowTex = new THREE.CanvasTexture(c);
+    }
+    const key = color + '|' + opacity;
+    let mat = glowMats.get(key);
+    if (!mat) { mat = new THREE.SpriteMaterial({ map: glowTex, color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false }); glowMats.set(key, mat); }
+    const s = new THREE.Sprite(mat); s.scale.setScalar(size); s.userData.glow = true;
+    return s;
+  }
   function mesh(g, m, x = 0, y = 0, z = 0, parent, shadow = true) {
     const o = new THREE.Mesh(g, m);
     o.position.set(x, y, z);
@@ -314,6 +330,142 @@ const Models = (() => {
         }
         tip.position.set(0, 0.14, 0.42); break;
       }
+      case 'catapult': {
+        mesh(box(0.42, 0.08, 0.3), M(c2), 0, 0.05, 0, h);
+        for (const x of [-0.15, 0.15]) mesh(box(0.05, 0.28, 0.05), M(c2), x, 0.2, -0.02, h);
+        const arm = new THREE.Group(); arm.position.set(0, 0.3, -0.02); h.add(arm);
+        mesh(box(0.06, 0.06, 0.5), M(c1), 0, 0, 0.1, arm);
+        mesh(geo('cup', () => new THREE.SphereGeometry(0.1, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2)), M(c2, { side: 1 }), 0, 0.03, 0.35, arm).rotation.x = Math.PI;
+        mesh(dod(0.07), M(c3), 0, 0.07, 0.35, arm);
+        arm.rotation.x = -0.5; ud.recoil = arm; tip.position.set(0, 0.45, 0.25); break;
+      }
+      case 'snowman': {
+        mesh(sph(0.19, 14), M(c1), 0, 0.16, 0, h); mesh(sph(0.14, 14), M(c1), 0, 0.42, 0, h);
+        mesh(cone(0.03, 0.14, 6), M(c3), 0, 0.43, 0.15, h).rotation.x = Math.PI / 2;
+        for (const x of [-0.05, 0.05]) mesh(sph(0.022, 6), M('#111'), x, 0.48, 0.12, h, false);
+        mesh(cyl(0.1, 0.1, 0.12, 12), M('#222'), 0, 0.59, 0, h); mesh(cyl(0.15, 0.15, 0.02, 12), M('#222'), 0, 0.53, 0, h);
+        mesh(tor(0.13, 0.03, 6, 14), M('#d93a3a'), 0, 0.32, 0, h).rotation.x = Math.PI / 2;
+        tip.position.set(0.15, 0.35, 0.15); break;
+      }
+      case 'ballista': {
+        mesh(box(0.14, 0.12, 0.6), M(c1), 0, 0.12, 0.05, h);
+        const bow = mesh(tor(0.32, 0.03, 5, 18, Math.PI), M(c2), 0, 0.15, 0.22, h); bow.rotation.x = Math.PI / 2; bow.rotation.z = Math.PI;
+        mesh(box(0.62, 0.012, 0.012), M('#eeeeee'), 0, 0.15, 0.2, h, false);
+        const b = mesh(cyl(0.025, 0.025, 0.6, 6), M(c3), 0, 0.19, 0.12, h); b.rotation.x = Math.PI / 2;
+        mesh(cone(0.05, 0.12, 4), M('#aaaaaa'), 0, 0.19, 0.46, h).rotation.x = Math.PI / 2;
+        tip.position.set(0, 0.19, 0.5); ud.recoil = b; break;
+      }
+      case 'acid': {
+        mesh(cyl(0.18, 0.2, 0.26, 12), M(c2), 0, 0.13, 0, h);
+        const l = mesh(cyl(0.16, 0.16, 0.04, 12), M(c3, { e: c3, ei: 0.8 }), 0, 0.27, 0, h, false); ud.orb = l;
+        for (let i = 0; i < 3; i++) mesh(sph(0.04, 6), M(c3, { e: c3, ei: 1 }), (i - 1) * 0.07, 0.31 + (i % 2) * 0.04, 0.02, h, false);
+        const n = mesh(cyl(0.04, 0.06, 0.3, 8), M(c1), 0, 0.2, 0.2, h); n.rotation.x = Math.PI / 2 - 0.3;
+        tip.position.set(0, 0.24, 0.36); break;
+      }
+      case 'beehive': {
+        for (let i = 0; i < 4; i++) mesh(cyl(0.2 - i * 0.035, 0.2 - i * 0.03, 0.1, 12), M(i % 2 ? c1 : '#c98a1a'), 0, 0.06 + i * 0.09, 0, h);
+        mesh(cyl(0.04, 0.04, 0.02, 10), M('#2a1a0a'), 0, 0.12, 0.19, h).rotation.x = Math.PI / 2;
+        const bees = new THREE.Group(); bees.position.y = 0.3; h.add(bees);
+        for (let i = 0; i < 3; i++) { const bb = mesh(sph(0.03, 6), M('#ffd000'), Math.cos(i * 2.1) * 0.28, 0, Math.sin(i * 2.1) * 0.28, bees, false); mesh(box(0.06, 0.005, 0.02), M('#ffffff', { o: 0.7 }), 0, 0.03, 0, bb, false); }
+        bees.userData.spin = 3; ud.bees = bees; tip.position.set(0, 0.3, 0); ud.noAim = true; break;
+      }
+      case 'ninja': {
+        mesh(box(0.16, 0.22, 0.12), M(c1), 0, 0.13, 0, h); mesh(sph(0.08), M(c1), 0, 0.3, 0, h);
+        mesh(box(0.15, 0.03, 0.02), M('#d93a3a'), 0, 0.31, 0.07, h, false);
+        for (const x of [-0.03, 0.03]) mesh(box(0.02, 0.012, 0.01), M('#ffffff'), x, 0.3, 0.08, h, false);
+        const s = mesh(geo('shuri', () => new THREE.OctahedronGeometry(0.09, 0)), M(c3), 0.14, 0.2, 0.08, h); s.scale.set(1, 0.15, 1); s.userData.spinY = 6; ud.shuri = s;
+        tip.position.set(0.14, 0.2, 0.12); break;
+      }
+      case 'harpoon': {
+        mesh(box(0.28, 0.2, 0.3), M(c1), 0, 0.12, -0.02, h);
+        const b = mesh(cyl(0.05, 0.06, 0.4, 8), M(c2), 0, 0.15, 0.2, h); b.rotation.x = Math.PI / 2;
+        const sp = mesh(cyl(0.015, 0.015, 0.4, 4), M(c3), 0, 0.15, 0.35, h, false); sp.rotation.x = Math.PI / 2;
+        mesh(cone(0.05, 0.12, 4), M(c3), 0, 0.15, 0.58, h, false).rotation.x = Math.PI / 2;
+        mesh(tor(0.08, 0.015, 4, 10), M('#8a8a8a'), 0.16, 0.15, 0, h).rotation.y = Math.PI / 2;
+        tip.position.set(0, 0.15, 0.6); ud.recoil = b; break;
+      }
+      case 'mushroom': {
+        mesh(cyl(0.07, 0.1, 0.3, 8), M(c2), 0, 0.15, 0, h);
+        const cap = mesh(geo('mcap2', () => new THREE.SphereGeometry(0.26, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2)), M(c1), 0, 0.28, 0, h);
+        for (let i = 0; i < 6; i++) { const a = i * 1.05; mesh(sph(0.035, 6), M('#ffffff'), Math.cos(a) * 0.17, 0.42 + (i % 2) * 0.03, Math.sin(a) * 0.17, h, false); }
+        mesh(sph(0.06), M(c3, { e: c3, ei: 0.8 }), 0, 0.52, 0, h, false);
+        tip.position.set(0, 0.5, 0); ud.noAim = true; ud.puff = cap; break;
+      }
+      case 'quake': {
+        const ham = new THREE.Group(); ham.position.set(0, 0.25, 0); h.add(ham);
+        mesh(cyl(0.03, 0.03, 0.5, 6), M('#6a4a2a'), 0, 0.15, 0, ham);
+        mesh(box(0.3, 0.16, 0.16), M(c2), 0, 0.42, 0, ham);
+        mesh(box(0.31, 0.04, 0.17), M(c3), 0, 0.42, 0, ham, false);
+        ud.hammer = ham; tip.position.set(0, 0.1, 0); ud.noAim = true; break;
+      }
+      case 'cloud': {
+        const cl = new THREE.Group(); cl.position.y = 0.55; h.add(cl);
+        for (const [x, y, z, r] of [[0, 0, 0, 0.17], [0.15, -0.02, 0, 0.13], [-0.15, -0.02, 0, 0.13], [0.06, 0.08, 0.05, 0.12], [-0.06, 0.06, -0.06, 0.12]]) mesh(sph(r, 10), M(c1), x, y, z, cl, false);
+        for (let i = 0; i < 3; i++) { const z = mesh(cone(0.025, 0.14, 4), M(c3, { e: c3, ei: 1 }), (i - 1) * 0.1, -0.2, 0, cl, false); z.rotation.z = 0.3; }
+        mesh(cyl(0.02, 0.02, 0.4, 4), M(c2), 0, 0.2, 0, h);
+        ud.cloud = cl; tip.position.set(0, 0.45, 0); ud.noAim = true; break;
+      }
+      case 'fan': {
+        mesh(cyl(0.06, 0.09, 0.3, 8), M(c2), 0, 0.15, 0, h);
+        const f = new THREE.Group(); f.position.y = 0.4; h.add(f);
+        for (let i = 0; i < 4; i++) { const bl = mesh(box(0.08, 0.02, 0.3), M(c1, { o: 0.9 }), 0, 0, 0.15, new THREE.Group(), false); bl.parent.rotation.y = i * Math.PI / 2; bl.rotation.z = 0.4; f.add(bl.parent); }
+        mesh(cone(0.12, 0.3, 10, 1), M('#ffffff', { o: 0.5 }), 0, 0.7, 0, h, false).rotation.x = Math.PI;
+        f.userData.spinY = 8; ud.fan = f; tip.position.set(0, 0.4, 0); ud.noAim = true; break;
+      }
+      case 'mirror': {
+        for (let i = 0; i < 3; i++) {
+          const a = i / 3 * Math.PI * 2;
+          const p = mesh(box(0.14, 0.24, 0.02), M(c1, { e: c3, ei: 0.35 }), Math.cos(a) * 0.14, 0.26, Math.sin(a) * 0.14, h);
+          p.rotation.y = -a + Math.PI / 2;
+        }
+        const c = mesh(oct(0.08), M(c3, { e: c3, ei: 1 }), 0, 0.45, 0, h, false); c.userData.spin = 2; h.parent.userData.spinners.push(c); ud.orb = c;
+        tip.position.set(0, 0.45, 0); ud.noAim = true; break;
+      }
+      case 'lavabowl': {
+        mesh(cyl(0.24, 0.14, 0.2, 10), M(c1), 0, 0.1, 0, h);
+        const lv = mesh(cyl(0.22, 0.22, 0.03, 12), M(c3, { e: '#ff3a00', ei: 1 }), 0, 0.2, 0, h, false); ud.orb = lv;
+        for (let i = 0; i < 4; i++) { const a = i * 1.57; mesh(cone(0.04, 0.15, 4), M('#2a1a14'), Math.cos(a) * 0.22, 0.24, Math.sin(a) * 0.22, h); }
+        tip.position.set(0, 0.25, 0); ud.noAim = true; break;
+      }
+      case 'mech': {
+        mesh(box(0.3, 0.22, 0.24), M(c1), 0, 0.14, 0, h);
+        mesh(box(0.16, 0.08, 0.02), M('#38c6ff', { e: '#38c6ff', ei: 1 }), 0, 0.2, 0.13, h, false);
+        for (const x of [-0.2, 0.2]) {
+          mesh(box(0.08, 0.1, 0.12), M(c2), x, 0.14, 0, h);
+          const b = mesh(cyl(0.025, 0.025, 0.34, 6), M('#222'), x, 0.14, 0.2, h); b.rotation.x = Math.PI / 2;
+        }
+        mesh(box(0.12, 0.08, 0.1), M(c3), 0, 0.3, -0.06, h);
+        tip.position.set(0.2, 0.14, 0.38); break;
+      }
+      case 'sun': {
+        mesh(cyl(0.05, 0.08, 0.3, 8), M(c2), 0, 0.15, 0, h);
+        const s = mesh(sph(0.16, 16), M(c1, { e: '#ffb000', ei: 1 }), 0, 0.48, 0, h, false); ud.orb = s;
+        const rays = new THREE.Group(); rays.position.y = 0.48; h.add(rays);
+        for (let i = 0; i < 8; i++) { const r = mesh(cone(0.035, 0.14, 4), M(c3, { e: '#ffd000', ei: 1 }), 0, 0.24, 0, new THREE.Group(), false); r.parent.rotation.z = i * Math.PI / 4; rays.add(r.parent); }
+        rays.userData.spinZ = 0.8; ud.rays = rays; tip.position.set(0, 0.48, 0); ud.noAim = true; break;
+      }
+      case 'totem': {
+        const cols = [c1, '#d4553a', '#3a8fd6'];
+        for (let i = 0; i < 3; i++) {
+          mesh(box(0.22, 0.2, 0.22), M(cols[i]), 0, 0.1 + i * 0.2, 0, h);
+          for (const x of [-0.05, 0.05]) mesh(box(0.04, 0.04, 0.02), M('#ffffff', { e: c3, ei: 0.6 }), x, 0.14 + i * 0.2, 0.115, h, false);
+        }
+        for (const x of [-1, 1]) mesh(box(0.18, 0.05, 0.08), M(c3), x * 0.18, 0.52, 0, h);
+        tip.position.set(0, 0.6, 0); ud.noAim = true; break;
+      }
+      case 'nest': {
+        mesh(tor(0.2, 0.06, 6, 16), M('#7a4a22'), 0, 0.08, 0, h).rotation.x = Math.PI / 2;
+        for (let i = 0; i < 3; i++) mesh(sph(0.05, 8), M('#fff1d0'), (i - 1) * 0.06, 0.1, 0.02 * i, h, false);
+        const f = mesh(cone(0.14, 0.3, 8), M(c3, { e: '#ff6a00', ei: 1, o: 0.85 }), 0, 0.3, 0, h, false); ud.flames = [f, f];
+        tip.position.set(0, 0.3, 0); ud.noAim = true; break;
+      }
+      case 'star': {
+        const st = mesh(geo('star', () => { const s = new THREE.Shape(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 0.09 : 0.22, a = i / 10 * Math.PI * 2 + Math.PI / 2; i ? s.lineTo(Math.cos(a) * r, Math.sin(a) * r) : s.moveTo(Math.cos(a) * r, Math.sin(a) * r); } return new THREE.ExtrudeGeometry(s, { depth: 0.06, bevelEnabled: false }); }), M('#ffe3ff', { e: c3, ei: 0.9 }), 0, 0.5, -0.03, h, false);
+        st.userData.spinY = 1.5; ud.starM = st;
+        const r = mesh(tor(0.3, 0.015, 4, 30), M('#ffffff', { e: '#c08cff', ei: 1 }), 0, 0.5, 0, h, false); r.rotation.x = 1.2; r.userData.spin = 1.5; h.parent.userData.spinners.push(r);
+        for (let i = 0; i < 5; i++) { const a = i * 1.26; mesh(sph(0.025, 6), M('#ffffff', { e: '#ffffff', ei: 1 }), Math.cos(a) * 0.3, 0.5 + Math.sin(a * 2) * 0.1, Math.sin(a) * 0.3, h, false); }
+        tip.position.set(0, 0.5, 0); ud.noAim = true; break;
+      }
       default: {
         mesh(sph(0.18), M(c3), 0, 0.15, 0, h); tip.position.set(0, 0.15, 0.2);
       }
@@ -336,6 +488,11 @@ const Models = (() => {
     head.parent.userData.spinners = g.userData.spinners;
     towerHead(def.head, head, def, ud);
     const lvl = new THREE.Group(); g.add(lvl);
+    // Leuchten an Kugeln, Kristallen & Mündungen
+    const glowHeads = { orb: 0.7, coil: 0.5, plasma: 0.6, void: 0.9, sun: 1.3, star: 1.0, lavabowl: 0.8, acid: 0.55, mirror: 0.6, nest: 0.9, crystal: 0.6, crystal_big: 0.7, prism: 0.8, obelisk: 0.6, dish: 0.35, cross: 0.6, ring: 0.6, brazier: 0.7, cloud: 0.5 };
+    if (glowHeads[def.head]) { const gl = glow(def.c3, glowHeads[def.head]); gl.position.copy(ud.tip.position); head.add(gl); ud.glowSprite = gl; }
+    // seltene Türme schimmern an der Basis
+    if (RARITIES[def.rarity].order >= 3) { const gb = glow(RARITIES[def.rarity].glow, 1.5, 0.35); gb.position.y = 0.25; g.add(gb); }
     Object.assign(g.userData, ud, { head, body, lvlGroup: lvl, topY: top, def });
     return g;
   }
@@ -384,6 +541,7 @@ const Models = (() => {
       mesh(sph(0.025 * s * 1.6, 6), M('#111111'), sx * x * s * 1.6, y, z + 0.035 * s * 1.6, parent, false);
     }
   }
+  function glowSprite(c, s, o) { return glow(c, s, o); }
   function makeEnemy(def) {
     const g = new THREE.Group();
     const s = def.size;
@@ -539,6 +697,9 @@ const Models = (() => {
       for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; mesh(cone(0.03 * s, 0.1 * s, 4), M('#ffd700', { e: '#ffaa00', ei: 0.5 }), Math.cos(a) * 0.1 * s, 0.07 * s, Math.sin(a) * 0.1 * s, cr, false); }
       A.topY += 0.15 * s;
     }
+    if (glow && def.glow) { const gl = glowSprite(def.glow, s * 1.6, 0.5); gl.position.y = A.topY * 0.5 + (A.float || 0); body.add(gl); }
+    // Schatten-Fleck für Flieger (zeigt, wo sie über dem Boden sind)
+    if (def.fly) { const sh = new THREE.Mesh(geo('blob', () => { const c = new THREE.CircleGeometry(0.5, 20); c.rotateX(-Math.PI / 2); return c; }), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.25, depthWrite: false })); sh.scale.setScalar(s * 1.2); g.add(sh); A.blob = sh; }
     if (def.boss || def.mini) {
       const aura = mesh(cyl(0.7 * s, 0.7 * s, 0.02, 24), M(def.glow || '#ff3030', { e: def.glow || '#ff3030', ei: 1, o: 0.3 }), 0, 0.03, 0, g, false);
       A.aura = aura;
@@ -633,6 +794,7 @@ const Models = (() => {
       case 'lantern':
         mesh(cyl(0.03, 0.04, 0.9, 6), M('#2a2a2a'), 0, 0.45, 0, g);
         mesh(box(0.14, 0.18, 0.14), M('#ffe9a0', { e: '#ffcc55', ei: 1 }), 0, 0.95, 0, g, false);
+        { const gl = glow('#ffd27a', 0.9, 0.7); gl.position.y = 0.95; g.add(gl); }
         mesh(cone(0.12, 0.1, 4), M('#2a2a2a'), 0, 1.09, 0, g).rotation.y = Math.PI / 4;
         break;
       case 'fence':
@@ -730,6 +892,7 @@ const Models = (() => {
     mesh(oct(0.1), M('#ff3df0', { e: '#ff3df0', ei: 1 }), 0, 1.25, 0, g, false);
     const disc = mesh(geo('portal', () => new THREE.CircleGeometry(0.38, 24)), M('#a040ff', { e: '#7a20ff', ei: 1, o: 0.85, side: 1 }), 0, 0.5, 0, g, false);
     disc.scale.y = 1.25; g.userData.disc = disc;
+    { const gl = glow('#c060ff', 2.2, 0.7); gl.position.set(0, 0.5, 0.1); g.add(gl); g.userData.glow = gl; }
     const sw = mesh(tor(0.3, 0.03, 4, 20), M('#ffb3ff', { e: '#ff80ff', ei: 1 }), 0, 0.5, 0.01, g, false);
     sw.scale.y = 1.25; g.userData.swirl = sw;
     return g;
@@ -780,5 +943,5 @@ const Models = (() => {
     return g;
   }
 
-  return { setPBR, makeTrap, makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
+  return { glow, setPBR, makeTrap, makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
 })();

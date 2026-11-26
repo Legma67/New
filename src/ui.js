@@ -102,14 +102,14 @@ const UI = (() => {
     db.classList.toggle('done', !av); db.textContent = av ? '🎁 Tagesbelohnung abholen!' : '✅ Belohnung abgeholt';
   }
   function goMenu() {
-    closeModal(true); Tut.stop(); Game.quit(); visiting = null; $('.visit-bar')?.remove();
+    closeModal(true); Tut.stop(); Game.quit(); visiting = null; document.body.classList.remove('bossfight'); $('.visit-bar')?.remove();
     Player.remove(); CamCtl.setMode('free');
     show('menu'); refreshMenu();
     Game.startDemo(); CamCtl.setAuto(true); Audio2.setMood('menu');
     if (Save.openPicks()) setTimeout(picksScreen, 400); else Save.tidyPicks();
   }
   function startGame(modeId, biomeId, snapshot) {
-    closeModal(true); Save.tidyPicks();
+    closeModal(true); Save.tidyPicks(); document.body.classList.remove('bossfight');
     Game.stopDemo(); CamCtl.setAuto(false);
     const b = BIOME_BY_ID[biomeId] || BIOMES[0];
     Save.P.equipped.biome = b.id;
@@ -992,7 +992,7 @@ const UI = (() => {
       routeChanged: ok => { if (!ok && screen === 'game') toast('⚠️ Kein Weg vom Spawn zum Ziel!', 'bad'); },
       waveBanner: (w, boss) => banner(boss ? '👑 BOSSWELLE ' + w : 'WELLE ' + w, boss ? 'Ein mächtiger Boss naht!' : '', boss ? 'boss' : '', 1800),
       waveCleared: (w, bonus, income) => toast(`✅ Welle ${w} geschafft! +${bonus}${income ? ' +' + income + ' (Gold)' : ''} 🪙`, 'good'),
-      bossAppear: e => { if (e) banner('👑 ' + e.def.name, 'Besiege ihn für eine Belohnung!', 'boss', 2200); },
+      bossAppear: e => { document.body.classList.toggle('bossfight', !!e); if (e) banner('👑 ' + e.def.name, 'Besiege ihn für eine Belohnung!', 'boss', 2200); },
       newEnemy: def => toast(`📖 Neuer Gegner entdeckt: <b>${esc(def.name)}</b>`, ''),
       gameOver: s => { Tut.stop(); resultScreen(s, false); },
       tutorialEvent: (n, d) => Tut.event(n, d),

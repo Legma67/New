@@ -11,7 +11,8 @@ const Game = (() => {
   let R = null;                // laufende Runde
   let demo = false, demoTimer = 0;
   const towers = [], enemies = [], projectiles = [], mines = [], holes = [], bolts = [], rings = [], drones = [];
-  const traps = new Map();     // "x,z" -> {def, x, z, mesh, cd}
+  const traps = new Map();
+  const zones = [];            // Giftwolken, Lavapfützen, Tornados     // "x,z" -> {def, x, z, mesh, cd}
   let castle = null;
   let ghost = null, ghostKey = '', rangeRing = null, selRing = null;
   let buildSel = null, buildRot = 0;
@@ -66,6 +67,32 @@ const Game = (() => {
     m.position.copy(tileToWorld(x, z)); m.rotation.y = c.rot * Math.PI / 2;
     if (animate) popIn(m);
     scene.add(m); decoMeshes.set(x + ',' + z, m);
+  }
+  let castleBar = null, castleBarKey = '';
+  function updateCastleBar(time) {
+    if (!castle || !R || demo) { if (castleBar) castleBar.visible = false; return; }
+    if (!castleBar) {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 48;
+      castleBar = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthWrite: false }));
+      castleBar.userData.c = c; castleBar.scale.set(2.2, 0.42, 1); scene.add(castleBar);
+    }
+    castleBar.visible = true;
+    castleBar.position.set(castle.position.x, 3.6, castle.position.z);
+    const f = Math.max(0, Math.min(1, R.lives / R.maxLives)), key = R.lives + '/' + R.maxLives;
+    if (key !== castleBarKey) {
+      castleBarKey = key;
+      const c = castleBar.userData.c, g2 = c.getContext('2d');
+      g2.clearRect(0, 0, 256, 48);
+      const rr = (x, y, w, h, r) => { g2.beginPath(); if (g2.roundRect) g2.roundRect(x, y, w, h, r); else g2.rect(x, y, w, h); g2.fill(); };
+      g2.fillStyle = 'rgba(15,20,40,0.85)'; rr(2, 2, 252, 44, 14);
+      g2.fillStyle = f > 0.5 ? '#4cd964' : f > 0.25 ? '#ffcc33' : '#ff3b30'; if (f > 0) rr(8, 8, 240 * f, 32, 10);
+      g2.fillStyle = '#fff'; g2.font = 'bold 26px system-ui,sans-serif'; g2.textAlign = 'center'; g2.textBaseline = 'middle';
+      g2.fillText('❤ ' + R.lives + ' / ' + R.maxLives, 128, 25);
+      castleBar.material.map.needsUpdate = true;
+    }
+    // Rauch & Feuer, wenn die Burg schwer beschädigt ist
+    if (f < 0.5 && Math.random() < 0.25) Particles.emit(castle.position.x + (Math.random() - 0.5), 1.6, castle.position.z + (Math.random() - 0.5), 1, '#555555', { speed: 0.2, up: 1.2, life: 1.6, size: 0.6, gravity: -0.6, tint: false });
+    if (f < 0.25 && Math.random() < 0.3) Particles.emit(castle.position.x + (Math.random() - 0.5) * 0.8, 1.2, castle.position.z + (Math.random() - 0.5) * 0.8, 1, '#ff7a00', { speed: 0.2, up: 1, life: 0.6, size: 0.4, gravity: -0.8 });
   }
   function placeCastle() {
     if (castle) scene.remove(castle);
@@ -138,6 +165,7 @@ const Game = (() => {
     for (const r of rings) scene.remove(r.mesh); rings.length = 0;
     for (const c of pickups) scene.remove(c.mesh); pickups.length = 0;
     for (const t of traps.values()) scene.remove(t.mesh); traps.clear();
+    for (const z of zones) scene.remove(z.mesh); zones.length = 0;
     Particles.clear();
     if (grid.length) for (let x = 0; x < GW; x++) for (let z = 0; z < GH; z++) if (grid[x][z] && grid[x][z].type === 'tower') grid[x][z] = null;
     select(null); setBuild(null);
@@ -453,6 +481,19 @@ const Game = (() => {
     return t;
   }
   function addDrone(t, i) {
+    if (t.def.id === 'phoenix') {
+      const b = new THREE.Group();
+      Models.mesh(Models.sph(0.12, 10), Models.M('#ff8a1a', { e: '#ff5a00', ei: 1 }), 0, 0, 0, b, false).scale.set(0.8, 0.8, 1.4);
+      Models.mesh(Models.sph(0.08, 8), Models.M('#ffd000', { e: '#ffb000', ei: 1 }), 0, 0.05, 0.15, b, false);
+      Models.mesh(Models.cone(0.03, 0.08, 4), Models.M('#ffe14d'), 0, 0.05, 0.25, b, false).rotation.x = Math.PI / 2;
+      const tail = Models.mesh(Models.cone(0.08, 0.3, 5), Models.M('#ff3b1a', { e: '#ff2a00', ei: 1 }), 0, 0, -0.22, b, false); tail.rotation.x = -Math.PI / 2;
+      const wings = [];
+      for (const sx of [-1, 1]) { const w = new THREE.Group(); b.add(w); const wm = Models.mesh(Models.geo('phw', () => new THREE.ConeGeometry(0.2, 0.45, 3)), Models.M('#ffb000', { e: '#ff6a00', ei: 0.9, side: 1 }), sx * 0.22, 0, 0, w, false); wm.rotation.z = sx * Math.PI / 2; wm.scale.z = 0.12; wings.push(w); }
+      b.position.copy(t.mesh.position).add(new V3(0, 1.5, 0));
+      scene.add(b);
+      t.drones.push({ mesh: b, phase: i * Math.PI, cd: 0, target: null, bird: wings });
+      return;
+    }
     const d = new THREE.Group();
     Models.mesh(Models.box(0.16, 0.06, 0.16), Models.M('#d0d6de'), 0, 0, 0, d, false);
     for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) Models.mesh(Models.cyl(0.07, 0.07, 0.01, 8), Models.M('#38c6ff', { e: '#38c6ff', ei: 0.6, o: 0.7 }), x * 0.11, 0.04, z * 0.11, d, false);
@@ -464,6 +505,7 @@ const Game = (() => {
   function removeTowerMesh(t) {
     scene.remove(t.mesh);
     if (t.beam) scene.remove(t.beam); if (t.beam2) scene.remove(t.beam2);
+    if (t.beams) t.beams.forEach(b => scene.remove(b));
     for (const d of t.drones) scene.remove(d.mesh);
   }
   function towerStats(t) {
@@ -476,8 +518,8 @@ const Game = (() => {
       speed: (d.speed || 10) * (1 + 0.08 * l),
       splash: (d.splash || 0) * (1 + 0.08 * l) * (t.level >= 5 && d.id === 'cannon' ? 1.5 : 1),
       slow: d.slow ? Math.min(0.8, d.slow * (1 + 0.1 * l)) : 0,
-      chains: d.chains ? d.chains + Math.floor(l / 2) + (t.level >= 5 && d.id === 'tesla' ? 3 : 0) : 0,
-      targets: (d.targets || 1) + (t.level >= 5 && (d.id === 'crystal' || d.id === 'multi') ? 2 : 0) + (t.level >= 5 && d.id === 'archer' ? 2 : 0),
+      chains: d.chains ? d.chains + Math.floor(l / 2) + (t.level >= 5 && (d.id === 'tesla' || d.id === 'ninja') ? 3 : 0) : 0,
+      targets: (d.targets || 1) + (t.level >= 5 && ['crystal', 'multi', 'mirror', 'cosmic'].includes(d.id) ? 2 : 0) + (t.level >= 5 && d.id === 'archer' ? 2 : 0) + (t.level >= 5 && d.id === 'beehive' ? 3 : 0) + (t.level >= 5 && d.id === 'crossbow' ? 1 : 0),
       dot: (d.dot || 0) * pm * (t.level >= 5 && d.id === 'snake' ? 2 : 1),
       burn: (d.burn || 0) * pm * (t.level >= 5 && d.id === 'fire' ? 2 : 1),
       stun: (d.stun || 0) + (t.level >= 5 && d.id === 'shock' ? 0.6 : 0),
@@ -563,8 +605,9 @@ const Game = (() => {
     const def = e.def;
     if (def.immune && def.immune.includes(dt) && !(opt.ignoreImmune)) amount *= 0.1;
     if (def.resist && def.resist[dt]) amount *= 1 - def.resist[dt];
-    if (def.armor && !opt.pierce) amount *= 1 - def.armor * (dt === 'explosive' ? 0.6 : 1);
+    if (def.armor && !opt.pierce) amount *= 1 - def.armor * (dt === 'explosive' ? 0.6 : 1) * (e.shredT > 0 ? 1 - e.shredF : 1);
     if (e.curseT > 0) amount *= 1 + e.curseF;
+    if (e.shredT > 0) amount *= 1 + 0.3 * e.shredF;
     if (e.shield > 0) { const ab = Math.min(e.shield, amount); e.shield -= ab; amount -= ab; if (e.shield <= 0 && e.A.shieldMesh) e.A.shieldMesh.visible = false; }
     e.hp -= amount; e.hitFlash = 0.08;
     if (tower) tower.dmgDealt += amount;
@@ -773,15 +816,21 @@ const Game = (() => {
     if (!p) {
       let g;
       switch (kind) {
+        case 'bolt': g = new THREE.Group(); Models.mesh(Models.cyl(0.025, 0.025, 0.6, 5), Models.M('#8a6a3a'), 0, 0, 0, g, false).rotation.x = Math.PI / 2; Models.mesh(Models.cone(0.06, 0.16, 4), Models.M('#cfd6e0'), 0, 0, 0.36, g, false).rotation.x = Math.PI / 2; break;
+        case 'rock': g = new THREE.Group(); Models.mesh(Models.dod(0.13), Models.M('#8d8f99'), 0, 0, 0, g, false); break;
+        case 'snow': g = new THREE.Group(); Models.mesh(Models.sph(0.1, 8), Models.M('#ffffff'), 0, 0, 0, g, false); break;
+        case 'bee': g = new THREE.Group(); Models.mesh(Models.sph(0.04, 6), Models.M('#ffd000'), 0, 0, 0, g, false); Models.mesh(Models.sph(0.025, 5), Models.M('#222'), 0, 0, -0.04, g, false); break;
         case 'arrow': g = new THREE.Group(); Models.mesh(Models.cyl(0.015, 0.015, 0.35, 4), Models.M('#8a5a2a'), 0, 0, 0, g, false).rotation.x = Math.PI / 2; Models.mesh(Models.cone(0.04, 0.1, 4), Models.M('#cccccc'), 0, 0, 0.2, g, false).rotation.x = Math.PI / 2; break;
         case 'rocket': g = new THREE.Group(); Models.mesh(Models.cyl(0.05, 0.05, 0.3, 6), Models.M('#dddddd'), 0, 0, 0, g, false).rotation.x = Math.PI / 2; Models.mesh(Models.cone(0.05, 0.12, 6), Models.M('#ff3b2b'), 0, 0, 0.21, g, false).rotation.x = Math.PI / 2; break;
         case 'meteor': g = new THREE.Group(); Models.mesh(Models.dod(0.35), Models.M('#5a2a1a', { e: '#ff5a00', ei: 0.8 }), 0, 0, 0, g, false); break;
         case 'bullet': g = new THREE.Group(); Models.mesh(Models.sph(0.04, 6), Models.M('#ffd24a', { e: '#ffaa00', ei: 1 }), 0, 0, 0, g, false); break;
         default: g = new THREE.Group(); g.userData.ball = Models.mesh(Models.sph(0.1, 10), new THREE.MeshBasicMaterial({ color }), 0, 0, 0, g, false);
+          g.userData.gl = new THREE.Sprite(Models.glow('#ffffff', 0.55, 0.85).material.clone()); g.userData.gl.scale.setScalar(0.55); g.add(g.userData.gl);
       }
       g.userData.kind = kind; scene.add(g); projPool.push(g); p = g;
     }
     if (p.userData.ball) p.userData.ball.material.color.set(color);
+    if (p.userData.gl) p.userData.gl.material.color.set(color);
     p.visible = true;
     return p;
   }
@@ -789,7 +838,10 @@ const Game = (() => {
     const d = t.def;
     const from = new V3(); t.mesh.userData.tip.getWorldPosition(from);
     let kind = 'ball', color = d.c3, size = 1;
-    if (d.id === 'archer') kind = 'arrow';
+    if (d.id === 'archer' || d.id === 'crossbow') kind = 'arrow';
+    else if (d.id === 'catapult') kind = 'rock';
+    else if (d.id === 'snowman') kind = 'snow';
+    else if (d.id === 'beehive') kind = 'bee';
     else if (d.id === 'rocket') kind = 'rocket';
     else if (d.id === 'gatling') kind = 'bullet';
     else if (d.id === 'cannon' || d.id === 'multi' || d.id === 'bomb') { color = '#222222'; size = d.id === 'bomb' ? 2 : 1.3; }
@@ -798,11 +850,24 @@ const Game = (() => {
     mesh.scale.setScalar(size * (1 + (t.level - 1) * 0.08));
     if (opt.meteor) { from.set(target.pos.x + 3, 12, target.pos.z - 2); }
     mesh.position.copy(from);
+    if (!opt.meteor && !demo) Particles.emit(from.x, from.y, from.z, 3, d.dt === 'fire' ? '#ffb000' : d.dt === 'ice' ? '#dff8ff' : '#fff3c0', { speed: 0.9, up: 0.4, life: 0.12, size: 0.32, gravity: 0, tint: false });
     projectiles.push({ mesh, tower: t, target, tp: target.pos.clone(), pos: from.clone(), start: from.clone(), speed: opt.meteor ? 11 : s.speed, dmg: opt.dmg ?? s.dmg, splash: s.splash, homing: true, lob: d.lob || d.id === 'mortar', t: 0, kind, color: d.c3, meteor: opt.meteor, dt: d.dt });
   }
   function updateProjectiles(dt) {
     for (let i = projectiles.length - 1; i >= 0; i--) {
       const p = projectiles[i];
+      if (p.pierceDir) {
+        p.pos.addScaledVector(p.pierceDir, p.speed * dt); p.mesh.position.copy(p.pos); p.mesh.lookAt(p.pos.clone().add(p.pierceDir));
+        for (const e of enemies) if (e.alive && !p.hit.has(e) && (!e.invis || e.revealed)) {
+          const ey = e.pos.y + 0.4 + (e.fly ? 0.8 : 0);
+          if ((e.pos.x - p.pos.x) ** 2 + (e.pos.z - p.pos.z) ** 2 < 0.5 * 0.5 && Math.abs(ey - p.pos.y) < 1.2) {
+            p.hit.add(e); damage(e, p.dmg, p.dt, p.tower, { pierce: true });
+            Particles.emit(e.pos.x, ey, e.pos.z, 6, '#dddddd', { speed: 1.5, life: 0.3, size: 0.18 }); Audio2.play('hit');
+          }
+        }
+        if (p.pos.distanceTo(p.start) > p.maxDist || p.pos.y < 0) { p.mesh.visible = false; projectiles.splice(i, 1); }
+        continue;
+      }
       if (p.target && p.target.alive) p.tp.set(p.target.pos.x, p.target.pos.y + 0.35 + (p.target.fly ? 0.8 : 0), p.target.pos.z);
       const to = p.tp.clone().sub(p.pos);
       const dist = to.length();
@@ -841,9 +906,11 @@ const Game = (() => {
       let dmg = p.dmg;
       damage(e, dmg, p.dt, t, { pierce: d.pierce });
       if (d.slow) { applySlow(e, s.slow, d.slowDur); if (t.level >= 5 && d.id === 'ice' && Math.random() < 0.2) applyStun(e, 0.8); }
-      if (d.dot) { e.poisonDps = Math.max(e.poisonDps * (e.poisonT > 0 ? 1 : 0), s.dot); e.poisonT = d.dotDur; }
-      if (d.burn && p.meteor) { e.burnDps = Math.max(e.burnDps, s.burn); e.burnT = d.burnDur; }
+      if (d.dot) { e.poisonDps = Math.max(e.poisonDps * (e.poisonT > 0 ? 1 : 0), s.dot); e.poisonT = d.dotDur; e.poisonSrc = t; }
+      if (d.burn && p.meteor) { e.burnDps = Math.max(e.burnDps, s.burn); e.burnT = d.burnDur; e.burnSrc = t; }
       if (d.curse) { e.curseF = d.curse + (t.level >= 5 ? 0.25 : 0); e.curseT = d.curseDur; }
+      if (d.shred) { e.shredT = d.shredDur; e.shredF = t.level >= 5 ? 1 : d.shred; }
+      if (d.id === 'snowman' && t.level >= 5 && Math.random() < 0.15) applyStun(e, 0.7);
       if (d.id === 'gatling' && t.level >= 5) { e.burnDps = Math.max(e.burnDps, 8 * LEVEL_DMG[4]); e.burnT = 2; }
     }
     if (!p.splash && p.target) Particles.emit(pos.x, pos.y, pos.z, 6, p.color, { speed: 1.2, up: 1, life: 0.3, size: 0.18 });
@@ -921,25 +988,37 @@ const Game = (() => {
     if (ud.lvlGroup) for (const c of ud.lvlGroup.children) if (c.userData.lvSpin) c.rotation.z += dt * 1.4;
     if (ud.crown) ud.crown.position.y = ud.topY * ud.body.scale.y + 0.62 + Math.sin(time * 2) * 0.05, ud.crown.rotation.y += dt;
     if (ud.aura) ud.aura.material.opacity = 0.2 + 0.15 * Math.sin(time * 3);
-    if (ud.orb) ud.orb.position.y += Math.sin(time * 3 + t.x) * 0.002;
     if (ud.flames) { const s = 1 + Math.sin(time * 20 + t.z) * 0.15; ud.flames[0].scale.set(s, 1 + Math.sin(time * 15) * 0.2, s); }
     if (ud.flag) ud.flag.rotation.y = Math.sin(time * 3) * 0.3;
     if (ud.coin) ud.coin.rotation.z += dt * 2;
     if (ud.hands) { ud.hands[0].rotation.z -= dt * 0.5; ud.hands[1].rotation.z -= dt * 3; }
     if (ud.wings) ud.wings.forEach((w, i) => w.rotation.z = (i ? -1 : 1) * (1.3 + Math.sin(time * 4) * 0.2));
+    if (ud.bees) ud.bees.rotation.y += dt * 4;
+    if (ud.fan) ud.fan.rotation.y += dt * 9;
+    if (ud.rays) ud.rays.rotation.z += dt * 0.8;
+    if (ud.shuri) ud.shuri.rotation.y += dt * 6;
+    if (ud.starM) ud.starM.rotation.y += dt * 1.5;
+    if (ud.hammer) ud.hammer.rotation.x += (0 - ud.hammer.rotation.x) * Math.min(1, dt * 4);
+    if (ud.orb && ud.orbBase === undefined) ud.orbBase = ud.orb.position.y;
+    if (ud.orb) ud.orb.position.y = ud.orbBase + Math.sin(time * 3 + t.x) * 0.03;
     if (t.stun > 0) { t.stun -= dt; if (Math.random() < 0.1) Particles.emit(t.mesh.position.x, 1, t.mesh.position.z, 1, '#9fd8ff', { speed: 0.3, up: 0.5, life: 0.5 }); if (t.beam) t.beam.visible = false; return; }
-    if (!R || (R.phase !== 'wave' && !demo && enemies.length === 0)) { if (t.beam) t.beam.visible = false; if (t.beam2) t.beam2.visible = false; return; }
+    if (!R || (R.phase !== 'wave' && !demo && enemies.length === 0)) {
+      if (t.beam) t.beam.visible = false; if (t.beam2) t.beam2.visible = false; if (t.beams) t.beams.forEach(b => b.visible = false);
+      // Leerlauf: Turm schaut sich langsam um
+      if (!ud.noAim) ud.head.rotation.y += Math.sin(time * 0.6 + t.x * 1.7) * dt * 0.5;
+      return;
+    }
     const s = towerStats(t);
     t.cd -= dt;
     switch (d.type) {
       case 'bullet': case 'splash': case 'slow': case 'poison': case 'multi': {
-        const n = d.type === 'multi' ? s.targets : (d.id === 'archer' ? s.targets : 1);
+        const n = d.type === 'multi' ? s.targets : (d.id === 'archer' || d.id === 'crossbow' ? s.targets : 1);
         const ts = findTargets(t, s.range, n);
         if (ts.length) aimHead(t, ts[0], dt);
         if (t.cd <= 0 && ts.length) {
           t.cd = 1 / s.rate;
           for (const e of ts) fire(t, e, s);
-          if (d.id === 'rocket' && t.level >= 5) setTimeout(() => { if (ts[0].alive) fire(t, ts[0], s); }, 150);
+          if ((d.id === 'rocket' || d.id === 'catapult') && t.level >= 5) setTimeout(() => { if (ts[0].alive && towers.includes(t)) fire(t, ts[0], s); }, 180);
           playShot(d);
           if (ud.recoil) ud.recoil.scale.set(1, 0.7, 1);
           const tip = new V3(); ud.tip.getWorldPosition(tip);
@@ -950,14 +1029,22 @@ const Game = (() => {
         break;
       }
       case 'sniper': {
+        if (t.beamT > 0) { t.beamT -= dt; if (t.beamT <= 0 && t.beam) t.beam.visible = false; else if (t.beam) t.beam.scale.x = t.beam.scale.y = 0.12 * t.beamT * 4; }
         const ts = findTargets(t, s.range, 1);
         if (ts.length) aimHead(t, ts[0], dt);
         if (t.cd <= 0 && ts.length) {
           t.cd = 1 / s.rate;
           const e = ts[0]; const tip = new V3(); ud.tip.getWorldPosition(tip);
           const crit = t.level >= 5 && Math.random() < 0.15;
-          damage(e, s.dmg * (crit ? 4 : 1), 'phys', t, { pierce: true });
-          tracer(tip, e.pos.clone().setY(e.pos.y + 0.4 + (e.fly ? 0.8 : 0)), crit ? '#ff3040' : '#ffffff', 0.12);
+          damage(e, s.dmg * (crit ? 4 : 1), d.dt, t, { pierce: true });
+          if (s.splash) {
+            const r = s.splash * (d.id === 'sun' && t.level >= 5 ? 1.8 : 1);
+            for (const o of enemies) if (o !== e && canTarget(t, o) && dist2(o.pos, e.pos) <= r * r) damage(o, s.dmg * 0.5, d.dt, t, { pierce: true });
+            ring(e.pos, r, d.c3, 0.4); Particles.emit(e.pos.x, 0.5, e.pos.z, 40, '#ffd54a', { speed: r * 3, up: 2, life: 0.6, size: 0.35 });
+            if (!t.beam) t.beam = beamMesh('#fff2a8', 0.12);
+            setBeam(t.beam, tip, e.pos.clone().setY(e.pos.y + 0.4), time); t.beamT = 0.25;
+          }
+          else tracer(tip, e.pos.clone().setY(e.pos.y + 0.4 + (e.fly ? 0.8 : 0)), crit ? '#ff3040' : '#ffffff', 0.12);
           Particles.emit(e.pos.x, 0.5, e.pos.z, 8, crit ? '#ff3040' : '#ffffff', { speed: 1.5, life: 0.3 });
           if (crit) floatText(e.pos, 'KRIT!', '#ff3040');
           playShot(d);
@@ -965,6 +1052,22 @@ const Game = (() => {
         break;
       }
       case 'beam': {
+        if (d.targets) {   // Spiegel- & Kosmosturm: mehrere eigene Strahlen
+          const ts = findTargets(t, s.range, s.targets);
+          t.beams = t.beams || [];
+          const tip = new V3(); ud.tip.getWorldPosition(tip);
+          for (let i = 0; i < Math.max(ts.length, t.beams.length); i++) {
+            const e = ts[i];
+            if (!e) { if (t.beams[i]) t.beams[i].visible = false; continue; }
+            if (!t.beams[i]) t.beams[i] = beamMesh(d.c3, d.id === 'cosmic' ? 0.07 : 0.04);
+            const ep = e.pos.clone().setY(e.pos.y + 0.4 + (e.fly ? 0.8 : 0));
+            setBeam(t.beams[i], tip, ep, time + i);
+            damage(e, s.dmg * dt, d.dt, t, { pierce: d.pierce });
+            if (Math.random() < 0.3) Particles.emit(ep.x, ep.y, ep.z, 1, d.c3, { speed: 1, up: 0.8, life: 0.3, size: 0.2 });
+          }
+          if (ts.length && t.cd <= 0) { t.cd = 0.6; playShot(d); }
+          break;
+        }
         const n = d.id === 'laser' && t.level >= 5 ? 2 : 1;
         const ts = findTargets(t, s.range, n);
         if (ts.length) {
@@ -999,7 +1102,7 @@ const Game = (() => {
             for (const e of enemies) if (canTarget(t, e) && dist2(e.pos, e0.pos) <= r2 && dist2(e.pos, t.mesh.position) <= (s.range + 0.5) ** 2) {
               const ign = d.id === 'dragon' && t.level >= 5;
               damage(e, s.dmg, 'fire', t, { ignoreImmune: ign });
-              if (!(e.def.immune && e.def.immune.includes('fire')) || ign) { e.burnDps = Math.max(e.burnT > 0 ? e.burnDps : 0, s.burn); e.burnT = d.burnDur; }
+              if (!(e.def.immune && e.def.immune.includes('fire')) || ign) { e.burnDps = Math.max(e.burnT > 0 ? e.burnDps : 0, s.burn); e.burnT = d.burnDur; e.burnSrc = t; }
             }
             playShot(d);
           }
@@ -1014,11 +1117,12 @@ const Game = (() => {
             const tip = new V3(); ud.tip.getWorldPosition(tip);
             let prev = tip, cur = ts[0], dmg = s.dmg; const hit = [];
             const col = d.dt === 'poison' ? '#c6ff3d' : d.c3;
+            if (ud.shuri) ud.shuri.rotation.y += 3;
             for (let i = 0; i < s.chains && cur; i++) {
               const cp = cur.pos.clone().setY(cur.pos.y + 0.4 + (cur.fly ? 0.8 : 0));
               bolt(prev, cp, col, 0.18);
               damage(cur, dmg, d.dt, t);
-              if (s.dot) { cur.poisonDps = Math.max(cur.poisonT > 0 ? cur.poisonDps : 0, s.dot); cur.poisonT = d.dotDur; }
+              if (s.dot) { cur.poisonDps = Math.max(cur.poisonT > 0 ? cur.poisonDps : 0, s.dot); cur.poisonT = d.dotDur; cur.poisonSrc = t; }
               Particles.emit(cp.x, cp.y, cp.z, 5, col, { speed: 1.5, life: 0.25, size: 0.18 });
               hit.push(cur); prev = cp; dmg *= 0.85;
               let best = null, bd = 1.8 * 1.8;
@@ -1056,11 +1160,12 @@ const Game = (() => {
           const e = ts[0]; aimHead(t, e, dt);
           const tip = new V3(); ud.tip.getWorldPosition(tip);
           const dir = e.pos.clone().sub(tip).normalize();
-          Particles.emit(tip.x, tip.y, tip.z, 2, '#a8e6ff', { speed: 0.2, up: 0.2, life: 0.35, size: 0.25, gravity: 2, dir: dir.multiplyScalar(6) });
+          if (d.id === 'water') Particles.emit(tip.x, tip.y, tip.z, 2, '#a8e6ff', { speed: 0.2, up: 0.2, life: 0.35, size: 0.25, gravity: 2, dir: dir.multiplyScalar(6) });
           if (t.cd <= 0) {
             t.cd = 1 / s.rate;
-            if (!e.fly) {
+            if (!e.fly || d.hitsFly) {
               damage(e, s.dmg, 'phys', t);
+              if (d.id === 'harpoon') { const tip2 = new V3(); ud.tip.getWorldPosition(tip2); tracer(tip2, e.pos.clone().setY(e.pos.y + 0.4 + (e.fly ? 0.8 : 0)), '#dddddd', 0.25); }
               const push = d.push * (t.level >= 5 ? 1.8 : 1) * (1 + 0.1 * (t.level - 1)) * (e.def.boss ? 0.15 : e.def.mini ? 0.4 : 1);
               e.d = Math.max(0, e.d - push);
               applySlow(e, d.slow, d.slowDur);
@@ -1079,23 +1184,88 @@ const Game = (() => {
           }
           const goal = dr.target ? dr.target.pos.clone().add(new V3(Math.cos(dr.phase) * 0.8, 1.4, Math.sin(dr.phase) * 0.8)) : t.mesh.position.clone().add(new V3(Math.cos(dr.phase + i * 2) * 0.6, 1.3 + Math.sin(time * 3 + i) * 0.1, Math.sin(dr.phase + i * 2) * 0.6));
           dr.mesh.position.lerp(goal, Math.min(1, dt * 3));
-          dr.mesh.rotation.y += dt * 4;
+          if (dr.bird) { // Phönix: in Flugrichtung drehen, Flügel schlagen, Feuerspur
+            dr.mesh.lookAt(goal); dr.bird.forEach((w, k) => w.rotation.z = (k ? -1 : 1) * (0.3 + Math.sin(time * 12) * 0.6));
+            if (Math.random() < 0.6) Particles.emit(dr.mesh.position.x, dr.mesh.position.y, dr.mesh.position.z, 1, Math.random() < 0.5 ? '#ff7a00' : '#ffd000', { speed: 0.2, up: 0.2, life: 0.5, size: 0.3, gravity: -0.5 });
+          } else dr.mesh.rotation.y += dt * 4;
           dr.cd -= dt;
           if (dr.target && dr.cd <= 0 && dr.mesh.position.distanceTo(dr.target.pos) < 2.4) {
             dr.cd = 1 / s.rate;
-            damage(dr.target, s.dmg, 'energy', t);
-            tracer(dr.mesh.position.clone(), dr.target.pos.clone().setY(dr.target.pos.y + 0.4 + (dr.target.fly ? 0.8 : 0)), '#38c6ff', 0.06);
+            damage(dr.target, s.dmg, d.dt, t);
+            if (s.burn) { const e = dr.target; if (!(e.def.immune && e.def.immune.includes('fire'))) { e.burnDps = Math.max(e.burnT > 0 ? e.burnDps : 0, s.burn); e.burnT = d.burnDur; e.burnSrc = t; } }
+            tracer(dr.mesh.position.clone(), dr.target.pos.clone().setY(dr.target.pos.y + 0.4 + (dr.target.fly ? 0.8 : 0)), d.id === 'phoenix' ? '#ffb000' : '#38c6ff', 0.06);
             if (Math.random() < 0.3) playShot(d);
           }
         });
+        break;
+      }
+      case 'pierce': {   // Balliste: Bolzen durchschlägt alle Gegner in einer Linie
+        const ts = findTargets(t, s.range, 1);
+        if (ts.length) aimHead(t, ts[0], dt);
+        if (t.cd <= 0 && ts.length) {
+          t.cd = 1 / s.rate;
+          const from = new V3(); ud.tip.getWorldPosition(from);
+          const to = ts[0].pos.clone().setY(ts[0].pos.y + 0.4 + (ts[0].fly ? 0.8 : 0));
+          const dir = to.sub(from).normalize();
+          const mesh = projMesh('bolt', d.c3); mesh.scale.setScalar(1.3); mesh.position.copy(from);
+          projectiles.push({ mesh, tower: t, pierceDir: dir, pos: from.clone(), start: from.clone(), maxDist: s.range * (t.level >= 5 ? 2.6 : 1.4), hit: new Set(), speed: s.speed, dmg: s.dmg, dt: d.dt, kind: 'bolt', color: d.c3 });
+          if (ud.recoil) ud.recoil.scale.set(1, 0.7, 1);
+          playShot(d);
+        }
+        if (ud.recoil) ud.recoil.scale.y += (1 - ud.recoil.scale.y) * Math.min(1, dt * 8);
+        break;
+      }
+      case 'zone': {   // Pilz-/Lavaturm: Gift- oder Lavafläche auf dem Weg
+        const ts = findTargets(t, s.range, 1);
+        if (t.cd <= 0 && ts.length && zones.filter(z => z.tower === t).length < 3) {
+          t.cd = 1 / s.rate;
+          const big = t.level >= 5 ? 1.5 : 1;
+          spawnZone(d.zone, ts[0].pos.clone().setY(0), d.zoneR * big * (1 + 0.04 * t.plus), d.zoneDur, t, d.zone === 'lava' ? s.burn : s.dot);
+          if (ud.puff) { ud.puff.scale.set(1.25, 0.8, 1.25); }
+          playShot(d);
+        }
+        if (ud.puff) ud.puff.scale.lerp(new V3(1, 1, 1), Math.min(1, dt * 5));
+        break;
+      }
+      case 'storm': {   // Gewitterwolke: Blitze von oben
+        if (ud.cloud) { ud.cloud.position.y = 0.55 + Math.sin(time * 2) * 0.04; ud.cloud.rotation.y += dt * 0.5; }
+        const ts = findTargets(t, s.range, 8);
+        if (t.cd <= 0 && ts.length) {
+          t.cd = 1 / s.rate;
+          const n = (d.strikes || 1) + (t.level >= 5 ? 2 : 0);
+          for (let i = 0; i < n; i++) {
+            const e = ts[Math.floor(Math.random() * ts.length)];
+            const top = e.pos.clone().add(new V3((Math.random() - 0.5) * 0.6, 7, (Math.random() - 0.5) * 0.6));
+            bolt(top, e.pos.clone().setY(e.pos.y + 0.4), '#fff35a', 0.22);
+            bolt(top, e.pos.clone().setY(e.pos.y + 0.4), '#ffffff', 0.15);
+            damage(e, s.dmg, d.dt, t); applyStun(e, s.stun);
+            Particles.emit(e.pos.x, 0.4, e.pos.z, 12, '#fff35a', { speed: 2.5, up: 2, life: 0.35, size: 0.22 });
+          }
+          shake = Math.max(shake, 0.06); playShot(d);
+        }
+        break;
+      }
+      case 'tornado': {  // Wirbelsturm läuft den Weg zurück und reißt Gegner mit
+        const ts = findTargets(t, s.range, 1);
+        if (t.cd <= 0 && ts.length && route) {
+          t.cd = 1 / s.rate;
+          const n = t.level >= 5 ? 2 : 1;
+          for (let i = 0; i < n; i++) spawnZone('tornado', ts[0].pos.clone(), 0.65, d.tornadoDur, t, s.dmg, ts[0].d + i * 0.8);
+          playShot(d);
+        }
         break;
       }
       case 'shock': {
         const ts = findTargets(t, s.range, 1);
         if (t.cd <= 0 && ts.length) {
           t.cd = 1 / s.rate;
-          for (const e of enemies) if (canTarget(t, e) && dist2(e.pos, t.mesh.position) <= s.range * s.range) { damage(e, s.dmg, 'energy', t); applyStun(e, s.stun); }
-          ring(t.mesh.position, s.range, d.c3, 0.4);
+          const stomp = () => {
+            for (const e of enemies) if (canTarget(t, e) && dist2(e.pos, t.mesh.position) <= s.range * s.range) { damage(e, s.dmg, d.dt, t); applyStun(e, s.stun); if (d.slow) applySlow(e, d.slow, d.slowDur); }
+            ring(t.mesh.position, s.range, d.c3, 0.4);
+            if (d.id === 'quake') { shake = Math.max(shake, 0.12); Particles.emit(t.mesh.position.x, 0.15, t.mesh.position.z, 30, '#a08060', { speed: s.range * 2.5, up: 0.8, life: 0.5, size: 0.3, tint: false }); if (ud.hammer) ud.hammer.rotation.x = 0.9; }
+          };
+          stomp();
+          if (d.id === 'quake' && t.level >= 5) setTimeout(() => { if (R && !R.over && towers.includes(t)) stomp(); }, 450);
           Particles.emit(t.mesh.position.x, 0.4, t.mesh.position.z, 24, d.c3, { speed: s.range * 3, up: 0.3, life: 0.35, size: 0.2, gravity: 0 });
           playShot(d);
         }
@@ -1155,7 +1325,10 @@ const Game = (() => {
   function playShot(d) {
     const map = { cannon: 'shoot_cannon', archer: 'shoot_arrow', laser: 'shoot_laser', ice: 'shoot_ice', fire: 'shoot_fire', rocket: 'shoot_rocket', magic: 'shoot_magic', sniper: 'shoot_sniper',
       poison: 'shoot_cannon', tesla: 'shoot_zap', mortar: 'shoot_cannon', gatling: 'shoot_gun', water: 'shoot_water', plasma: 'shoot_magic', crystal: 'shoot_magic', shadow: 'shoot_magic',
-      light: 'shoot_laser', drone: 'shoot_gun', bomb: 'shoot_cannon', multi: 'shoot_cannon', shock: 'shoot_shock', snake: 'shoot_zap', icelaser: 'shoot_ice', meteor: 'shoot_rocket', blackhole: 'shoot_shock', dragon: 'shoot_fire' };
+      light: 'shoot_laser', drone: 'shoot_gun', bomb: 'shoot_cannon', multi: 'shoot_cannon', shock: 'shoot_shock', snake: 'shoot_zap', icelaser: 'shoot_ice', meteor: 'shoot_rocket', blackhole: 'shoot_shock', dragon: 'shoot_fire',
+      crossbow: 'shoot_arrow', catapult: 'shoot_cannon', snowman: 'shoot_ice', ballista: 'shoot_sniper', acid: 'shoot_magic', beehive: 'shoot_gun', ninja: 'shoot_arrow',
+      harpoon: 'shoot_sniper', mushroom: 'shoot_water', quake: 'stomp', storm: 'shoot_zap', tornado: 'shoot_water', mirror: 'shoot_laser', lava: 'shoot_fire',
+      mech: 'shoot_gun', sun: 'shoot_sniper', phoenix: 'shoot_fire', cosmic: 'shoot_magic' };
     if (!demo) Audio2.play(map[d.id] || 'shoot_arrow');
   }
 
@@ -1178,8 +1351,9 @@ const Game = (() => {
       // Status-Effekte
       if (e.slowT > 0) { e.slowT -= dt; if (e.slowT <= 0) e.slowF = 0; }
       if (e.curseT > 0) e.curseT -= dt;
-      if (e.burnT > 0) { e.burnT -= dt; damage(e, e.burnDps * dt, 'fire', null); if (Math.random() < 0.3) Particles.emit(e.pos.x, 0.5, e.pos.z, 1, '#ff7a00', { speed: 0.3, up: 1.5, life: 0.4, size: 0.2, gravity: -1 }); if (!e.alive) continue; }
-      if (e.poisonT > 0) { e.poisonT -= dt; damage(e, e.poisonDps * dt, 'poison', null); if (Math.random() < 0.2) Particles.emit(e.pos.x, 0.5, e.pos.z, 1, '#9dff3d', { speed: 0.3, up: 0.8, life: 0.5, size: 0.2, gravity: -0.5 }); if (!e.alive) continue; }
+      if (e.shredT > 0) { e.shredT -= dt; if (Math.random() < 0.06) Particles.emit(e.pos.x, 0.5 + e.pos.y, e.pos.z, 1, '#c6ff3d', { speed: 0.3, up: 0.4, life: 0.5, size: 0.15 }); }
+      if (e.burnT > 0) { e.burnT -= dt; damage(e, e.burnDps * dt, 'fire', e.burnSrc && towers.includes(e.burnSrc) ? e.burnSrc : null); if (Math.random() < 0.3) Particles.emit(e.pos.x, 0.5, e.pos.z, 1, '#ff7a00', { speed: 0.3, up: 1.5, life: 0.4, size: 0.2, gravity: -1 }); if (!e.alive) continue; }
+      if (e.poisonT > 0) { e.poisonT -= dt; damage(e, e.poisonDps * dt, 'poison', e.poisonSrc && towers.includes(e.poisonSrc) ? e.poisonSrc : null); if (Math.random() < 0.2) Particles.emit(e.pos.x, 0.5, e.pos.z, 1, '#9dff3d', { speed: 0.3, up: 0.8, life: 0.5, size: 0.2, gravity: -0.5 }); if (!e.alive) continue; }
       if (def.regen) e.hp = Math.min(e.maxHp, e.hp + e.maxHp * def.regen * dt);
       if (def.healer) {
         e.healT -= dt;
@@ -1208,6 +1382,7 @@ const Game = (() => {
       if (e.jumpAnim > 0) { e.jumpAnim -= dt; y += Math.sin((0.5 - e.jumpAnim) / 0.5 * Math.PI) * 0.9; }
       e.pos.y = y;
       m.position.set(e.pos.x, y, e.pos.z);
+      if (A.blob) { A.blob.position.y = -y + 0.04; A.blob.material.opacity = 0.28 - Math.min(0.15, y * 0.05); }
       const yaw = Math.atan2(e.dir.x, e.dir.z);
       m.rotation.y = yaw;
       const sw = Math.sin(e.anim);
@@ -1288,6 +1463,46 @@ const Game = (() => {
     });
   }
 
+  // ---------------- Zonen (Gift, Lava, Tornado) ----------------
+  function spawnZone(kind, pos, r, dur, tower, dps, routeD) {
+    const m = new THREE.Group();
+    if (kind === 'tornado') {
+      for (let i = 0; i < 5; i++) { const ring = Models.mesh(Models.tor(0.18 + i * 0.09, 0.035, 5, 18), new THREE.MeshBasicMaterial({ color: 0xe8f6ff, transparent: true, opacity: 0.55 - i * 0.06, depthWrite: false }), 0, 0.15 + i * 0.28, 0, m, false); ring.rotation.x = Math.PI / 2; }
+    } else {
+      const col = kind === 'lava' ? 0xff5a00 : 0x8dff3d;
+      const disc = Models.mesh(Models.geo('zoneDisc', () => new THREE.CircleGeometry(1, 28)), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: kind === 'lava' ? 0.75 : 0.35, depthWrite: false }), 0, 0.06, 0, m, false);
+      disc.rotation.x = -Math.PI / 2; disc.scale.setScalar(r); m.userData.disc = disc;
+      if (kind === 'lava') { const rim = Models.mesh(Models.tor(1, 0.06, 5, 28), Models.M('#2a1a14'), 0, 0.06, 0, m, false); rim.rotation.x = Math.PI / 2; rim.scale.set(r, r, 1); }
+    }
+    m.position.copy(pos); m.position.y = 0;
+    scene.add(m);
+    zones.push({ kind, mesh: m, r, t: 0, dur, tower, dps, d: routeD });
+  }
+  function updateZones(dt, time) {
+    for (let i = zones.length - 1; i >= 0; i--) {
+      const z = zones[i]; z.t += dt;
+      const fade = Math.min(1, z.t * 4, (z.dur - z.t) * 3);
+      if (z.kind === 'tornado') {
+        z.d = Math.max(0, z.d - 2.2 * dt);   // läuft den Weg rückwärts
+        World.routePos(route, z.d, z.mesh.position);
+        z.mesh.rotation.y += dt * 9; z.mesh.scale.setScalar(Math.max(0.01, fade));
+        for (const e of enemies) if (e.alive && dist2(e.pos, z.mesh.position) < z.r * z.r) {
+          damage(e, z.dps * dt * 2, 'phys', z.tower);
+          if (!e.def.boss) e.d = Math.max(0, Math.min(e.d, z.d + 0.1)); else e.d -= 0.3 * dt;   // mitreißen
+        }
+        if (Math.random() < 0.5) Particles.emit(z.mesh.position.x, 0.2, z.mesh.position.z, 1, '#e8f6ff', { speed: 1.5, up: 2, life: 0.5, size: 0.25, gravity: -1, tint: false });
+      } else {
+        if (z.mesh.userData.disc) z.mesh.userData.disc.material.opacity = (z.kind === 'lava' ? 0.75 : 0.35) * fade;
+        for (const e of enemies) if (e.alive && !e.fly && dist2(e.pos, z.mesh.position) < z.r * z.r) {
+          if (z.kind === 'lava') { if (!(e.def.immune && e.def.immune.includes('fire'))) { e.burnDps = Math.max(e.burnT > 0 ? e.burnDps : 0, z.dps); e.burnT = 1.5; e.burnSrc = z.tower; } }
+          else if (!(e.def.immune && e.def.immune.includes('poison'))) { e.poisonDps = Math.max(e.poisonT > 0 ? e.poisonDps : 0, z.dps); e.poisonT = 1.5; e.poisonSrc = z.tower; }
+        }
+        if (Math.random() < (z.kind === 'lava' ? 0.4 : 0.6)) { const a = Math.random() * 6.28, rr = Math.random() * z.r; Particles.emit(z.mesh.position.x + Math.cos(a) * rr, 0.15, z.mesh.position.z + Math.sin(a) * rr, 1, z.kind === 'lava' ? '#ff8a1a' : '#9dff3d', { speed: 0.2, up: 0.8, life: 0.9, size: 0.3, gravity: -0.4 }); }
+      }
+      if (z.t >= z.dur) { scene.remove(z.mesh); z.mesh.traverse(o => { if (o.material && o.material.isMeshBasicMaterial) o.material.dispose(); }); zones.splice(i, 1); }
+    }
+  }
+
   function updateMines(dt) {
     for (let i = mines.length - 1; i >= 0; i--) {
       const m = mines[i];
@@ -1361,6 +1576,7 @@ const Game = (() => {
   function update(rawDt, time) {
     if (!R) return;
     const castleFlag = castle && castle.userData.flag; if (castleFlag) castleFlag.rotation.y = Math.sin(time * 3) * 0.3;
+    updateCastleBar(time);
     if (R.paused || R.over) { updateFloats(rawDt); return; }
     const dt = Math.min(rawDt, 0.05) * (demo ? 1 : R.speed);
     const steps = R.speed > 1 ? R.speed : 1;
@@ -1396,7 +1612,8 @@ const Game = (() => {
     for (const b of towers) if (b.def.type === 'buff') {
       const s = towerStats(b);
       for (const t of towers) if (t !== b && t.def.type !== 'buff' && dist2(t.mesh.position, b.mesh.position) <= s.range * s.range) {
-        t.buffDmg += s.buffDmg; t.buffRate += s.buffRate; if (b.level >= 5) t.buffRange += 0.5;
+        const k = b.def.id === 'totem' && b.level >= 5 ? 2 : 1;
+        t.buffDmg += s.buffDmg * k; t.buffRate += s.buffRate * k; if (b.def.buffRangeAdd) t.buffRange += b.def.buffRangeAdd * k; else if (b.level >= 5) t.buffRange += 0.5;
       }
     }
     updateEnemies(dt, time);
@@ -1404,6 +1621,7 @@ const Game = (() => {
     updateProjectiles(dt);
     updateMines(dt);
     if (!demo) updateTraps(dt, time);
+    if (route) updateZones(dt, time);
     updateHoles(dt, time);
     updateFx(dt);
     if (!demo) updatePickups(dt, time);
@@ -1424,6 +1642,7 @@ const Game = (() => {
     const m = new THREE.Group();
     Models.mesh(Models.cyl(0.22, 0.22, 0.06, 18), Models.M('#ffd700', { e: '#c08a00', ei: 0.6 }), 0, 0, 0, m, false).rotation.x = Math.PI / 2;
     Models.mesh(Models.cyl(0.13, 0.13, 0.07, 14), Models.M('#ffef7a', { e: '#ffd000', ei: 0.6 }), 0, 0, 0, m, false).rotation.x = Math.PI / 2;
+    m.add(Models.glow('#ffd700', 0.9, 0.6));
     m.position.set(p.x + (Math.random() - 0.5) * 0.4, 0.5, p.z + (Math.random() - 0.5) * 0.4);
     scene.add(m);
     pickups.push({ mesh: m, value, t: 0 });

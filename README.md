@@ -5,6 +5,9 @@ Ein 3D-Tower-Defense-Spiel für Browser, Smartphone und Tablet (Querformat). Du 
 **Spielen:** `index.html` im Browser öffnen. Die Datei ist komplett eigenständig und braucht keinen Server und kein Internet. Über GitHub Pages läuft sie direkt.
 
 ## Features
+- **Spielfigur wie in Roblox:** Laufen mit WASD bzw. Touch-Joystick, Springen, Rennen (Shift). Die Kamera folgt der Figur, und Maus/Finger drehen sie. Getötete Gegner lassen manchmal Bonusmünzen fallen, die du einsammeln kannst.
+- **Wellen kommen automatisch:** 30 Sekunden bis Welle 1, danach 25 Sekunden Pause. Über den Knopf geht's früher los.
+- **Neue Türme nach einer Niederlage:** Je mehr Wellen du überstanden hast, desto mehr und desto seltenere Türme darfst du dir aussuchen. Die nächste Runde beginnt wieder bei Welle 1.
 - **Eigenes Grundstück:** Straßen malen (6 Wegtypen, Kurven und Kreuzungen verbinden sich automatisch), Deko platzieren, Türme bauen, drehen, verschieben und verkaufen. Grüne/rote Bauvorschau.
 - **Echte Wegfindung (A\*):** Gegner laufen exakt über die gebaute Straße. Wenn eine Änderung den Weg zum Ziel unterbrechen würde, wird sie nicht übernommen.
 - **30 Türme** mit eigenen Modellen und Fähigkeiten (Laser, Blitzketten, Minen, Drohnen, schwarzes Loch, Meteore, Drache …), je **5 Upgrade-Stufen**, die man am Modell sieht (Ringe, Stacheln, Krone, Aura).

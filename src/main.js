@@ -25,6 +25,7 @@
       CamCtl.handlers.paintEnd = (p, tap) => Game.paintEnd(p, tap);
       CamCtl.handlers.paintCancel = () => {};
       CamCtl.handlers.tap = p => { if (UI.screen === 'game') Game.tap(p); };
+      Player.setObstacles(() => Game.obstacles());
       Thumbs.warm(TOWERS.filter(t => P.unlocked.includes(t.id)).map(t => ['tower', t.id]));
       setLoad(90, 'Fast fertig …');
       UI.goMenu();
@@ -53,6 +54,8 @@
     if (!World.renderer) return;
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
     const t = now / 1000;
+    const R = Game.R;
+    if (UI.screen === 'game' && R && !R.paused && !R.over) Player.update(dt, CamCtl.keys, CamCtl.yaw);
     CamCtl.update(dt);
     Game.update(dt, t);
     World.update(dt, t);

@@ -75,14 +75,18 @@
   <div class="cam-ctl">
     <button class="cbtn" data-cam="rl">⟲</button><button class="cbtn" data-cam="rr">⟳</button>
     <button class="cbtn" data-cam="zi">＋</button><button class="cbtn" data-cam="zo">－</button>
-    <button class="cbtn" data-cam="reset">⌂</button>
+    <button class="cbtn" data-cam="reset" id="camMode">👁 Übersicht</button>
   </div>
   <div class="wave-ctl">
     <button class="btn wavebtn" id="waveBtn">▶ WELLE STARTEN</button>
     <div class="wc-row"><button class="btn small" id="speedBtn">1x</button><button class="btn small" id="pauseBtn">❚❚</button></div>
   </div>
+  <div class="joy" id="joy"><div class="joy-knob" id="joyKnob"></div></div>
+  <button class="jump-btn" id="jumpBtn">⤒<small>Springen</small></button>
+  <button class="build-toggle btn gold" id="buildToggle">🔨 BAUEN</button>
   <div class="build-bar" id="buildBar">
     <div class="bb-tabs" id="bbTabs">
+      <button data-bbclose="1" class="bb-close" title="Baumenü schließen (B)">✕</button>
       <button data-tab="towers" class="on">🏰 Türme</button>
       <button data-tab="roads">🛣️ Straßen</button>
       <button data-tab="decos">🌳 Deko</button>

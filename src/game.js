@@ -106,7 +106,7 @@ const Game = (() => {
     loadLayout(); placeCastle();
     if (snapshot) for (const t of snapshot.towers) { const tw = spawnTower(TOWER_BY_ID[t.id], t.x, t.z, t.rot, false); if (tw) { tw.level = t.level; tw.invested = t.invested; tw.targeting = t.targeting || 'first'; tw.kills = t.kills || 0; Models.applyTowerLevel(tw.mesh, tw.level); } }
     if (!snapshot) { Save.addStat('gamesPlayed'); }
-    R.pauseTimer = 0;
+    R.pauseTimer = mode.creative ? 0 : (Save.P.settings.autoStart ? 30 : 0); // erste Welle startet automatisch
     World.setBuildOverlay(true);
     Audio2.setMood('build');
     snapshotRun();
@@ -132,6 +132,7 @@ const Game = (() => {
     for (const h of holes) scene.remove(h.mesh); holes.length = 0;
     for (const b of bolts) scene.remove(b.mesh); bolts.length = 0;
     for (const r of rings) scene.remove(r.mesh); rings.length = 0;
+    for (const c of pickups) scene.remove(c.mesh); pickups.length = 0;
     Particles.clear();
     if (grid.length) for (let x = 0; x < GW; x++) for (let z = 0; z < GH; z++) if (grid[x][z] && grid[x][z].type === 'tower') grid[x][z] = null;
     select(null); setBuild(null);
@@ -481,6 +482,8 @@ const Game = (() => {
     Particles.emit(p.x, 0.8, p.z, 6, '#ffd84a', { speed: 1, up: 3, life: 0.6, size: 0.2, tint: false });
     floatText(p, '+' + reward, '#ffd84a');
     Audio2.play('coin');
+    // Bonusmünze, die die Spielfigur einsammeln kann
+    if (Math.random() < (e.def.boss ? 1 : e.def.mini ? 0.6 : 0.08)) for (let k = 0; k < (e.def.boss ? 6 : 1); k++) spawnPickup(p, Math.round(reward * (e.def.boss ? 0.3 : 1.5) + 5));
     if (e.def.boss || e.def.mini) {
       if (e.def.boss) {
         R.stats.bosses++; shake = 0.8;
@@ -619,7 +622,7 @@ const Game = (() => {
       Save.grant({ gems: 100, crystals: 10 });
       R.pauseTimer = 0;
       Audio2.setMood('victory'); Audio2.play('victory');
-      Save.P.run = null; Save.save();
+      Save.P.run = null; Save.makeTowerPicks(w + 10); Save.save();
       ui.victory && ui.victory(summary());
     } else snapshotRun();
     ui.hud && ui.hud();
@@ -630,7 +633,9 @@ const Game = (() => {
     Audio2.play('gameover'); Audio2.setMood('menu');
     const rec = Save.P.records[R.mode.id] || 0;
     const s = summary(); s.record = Math.max(rec, R.wave - 1);
-    Save.P.run = null; Save.save();
+    Save.P.run = null;
+    if (!R.mode.creative) Save.makeTowerPicks(s.waves); // neue Türme zur Auswahl
+    Save.save();
     ui.gameOver && ui.gameOver(s);
   }
   function summary() {
@@ -1257,7 +1262,7 @@ const Game = (() => {
           R.spawnTimer = R.spawnQueue.length ? R.spawnQueue[0].delay : 0;
           if (info) checkWaveDone(s.wave);
         }
-      } else if (R.phase === 'build' && R.pauseTimer > 0 && !R.won && R.wave > 0) {
+      } else if (R.phase === 'build' && R.pauseTimer > 0 && !(R.won && !R.continueEndless)) {
         R.pauseTimer -= dt;
         if (R.pauseTimer <= 0) { R.pauseTimer = 0; startWave(false); }
       }
@@ -1276,6 +1281,42 @@ const Game = (() => {
     updateMines(dt);
     updateHoles(dt, time);
     updateFx(dt);
+    if (!demo) updatePickups(dt, time);
+  }
+
+  // ---------------- Spielfigur: Hindernisse & Münzen zum Einsammeln ----------------
+  const DECO_R = { tree: 0.3, house: 0.5, fountain: 0.45, crystalfountain: 0.45, statue: 0.3, goldstatue: 0.3, windmill: 0.35, lighthouse: 0.3, dragonstatue: 0.4, rock: 0.3, lantern: 0.1 };
+  function obstacles() {
+    const o = [];
+    for (const t of towers) o.push({ x: t.mesh.position.x, z: t.mesh.position.z, r: 0.42, h: 1.3 });
+    for (const [k, m] of decoMeshes) { const c = grid[+k.split(',')[0]][+k.split(',')[1]]; const r = c && DECO_R[c.id]; if (r) o.push({ x: m.position.x, z: m.position.z, r, h: 1.5 }); }
+    if (castle) o.push({ x: castle.position.x, z: castle.position.z, r: 1.2, h: 3 });
+    if (World.portalPos) { o.push({ x: World.portalPos.x, z: World.portalPos.z - 0.42, r: 0.15, h: 1.2 }); o.push({ x: World.portalPos.x, z: World.portalPos.z + 0.42, r: 0.15, h: 1.2 }); }
+    return o;
+  }
+  const pickups = [];
+  function spawnPickup(p, value) {
+    const m = new THREE.Group();
+    Models.mesh(Models.cyl(0.22, 0.22, 0.06, 18), Models.M('#ffd700', { e: '#c08a00', ei: 0.6 }), 0, 0, 0, m, false).rotation.x = Math.PI / 2;
+    Models.mesh(Models.cyl(0.13, 0.13, 0.07, 14), Models.M('#ffef7a', { e: '#ffd000', ei: 0.6 }), 0, 0, 0, m, false).rotation.x = Math.PI / 2;
+    m.position.set(p.x + (Math.random() - 0.5) * 0.4, 0.5, p.z + (Math.random() - 0.5) * 0.4);
+    scene.add(m);
+    pickups.push({ mesh: m, value, t: 0 });
+  }
+  function updatePickups(dt, time) {
+    for (let i = pickups.length - 1; i >= 0; i--) {
+      const c = pickups[i]; c.t += dt;
+      c.mesh.rotation.y += dt * 4; c.mesh.position.y = 0.5 + Math.sin(time * 4 + i) * 0.1;
+      if (c.t > 18) c.mesh.visible = Math.sin(c.t * 20) > 0;
+      const pp = Player.pos;
+      if (Player.active && Math.hypot(pp.x - c.mesh.position.x, pp.z - c.mesh.position.z) < 0.85 && pp.y < 1.6) {
+        R.coins += c.value; R.stats.coins += c.value; if (!R.mode.creative) Save.P.stats.coinsEarned += c.value;
+        Particles.emit(c.mesh.position.x, 0.6, c.mesh.position.z, 18, '#ffd700', { speed: 2, up: 2.5, life: 0.6, tint: false });
+        floatText(c.mesh.position, '+' + c.value + ' 🪙', '#ffe14d'); Audio2.play('coin'); Audio2.play('sell');
+        scene.remove(c.mesh); pickups.splice(i, 1); continue;
+      }
+      if (c.t > 22) { scene.remove(c.mesh); pickups.splice(i, 1); }
+    }
   }
 
   // ---------------- Teilen / Import ----------------
@@ -1295,7 +1336,7 @@ const Game = (() => {
   }
 
   return {
-    init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
+    obstacles, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
     continueEndless, exportLayout, parseLayout, loadLayout, recalcRoute, placeCastle, snapshotRun, ui,
     get R() { return R; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
     get enemies() { return enemies; }, get towers() { return towers; },

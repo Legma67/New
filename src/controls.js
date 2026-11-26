@@ -7,6 +7,8 @@ const CamCtl = (() => {
   let yaw = 0, pitch = 0.95, dist = 22;
   let tYaw = yaw, tPitch = pitch, tDist = dist; const tTarget = target.clone();
   let el, cam, auto = false, autoT = 0;
+  let mode = 'free';                 // 'follow' = Kamera folgt der Spielfigur (wie Roblox), 'free' = Übersicht
+  let follow = null;                 // () => Vector3
   const pointers = new Map();
   let dragMode = null, last = null, pinch = null, moved = 0, downPos = null;
   const handlers = { tap: null, hover: null, paint: null, paintEnd: null, toolActive: () => false };
@@ -25,9 +27,13 @@ const CamCtl = (() => {
     window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
     window.addEventListener('blur', () => keys.clear());
   }
-  function zoom(f) { tDist = THREE.MathUtils.clamp(tDist * f, 6, 42); }
+  function zoom(f) { tDist = THREE.MathUtils.clamp(tDist * f, mode === 'follow' ? 3.5 : 6, 42); }
   function rotate(a) { tYaw += a; }
-  function reset() { tYaw = 0; tPitch = 0.95; tDist = window.innerWidth < 900 ? 20 : 22; tTarget.set(0, 0, 0.6); }
+  function reset() {
+    if (mode === 'follow') { tPitch = 0.5; tDist = 9; }
+    else { tYaw = 0; tPitch = 0.95; tDist = window.innerWidth < 900 ? 20 : 22; tTarget.set(0, 0, 0.6); }
+  }
+  function setMode(m, followFn) { mode = m; if (followFn) follow = followFn; reset(); }
   function setAuto(v) { auto = v; if (!v) reset(); }
 
   function groundAt(cx, cy) {
@@ -50,11 +56,12 @@ const CamCtl = (() => {
     if (auto) return;
     el.setPointerCapture?.(e.pointerId);
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType, button: e.button });
-    moved = 0; downPos = { x: e.clientX, y: e.clientY };
+    moved = 0; downPos = { x: e.clientX, y: e.clientY, button: e.button };
     if (pointers.size === 1) {
       const tool = handlers.toolActive();
-      if (e.pointerType === 'mouse') dragMode = e.button === 2 || e.button === 1 ? 'rotate' : (tool ? 'paint' : 'pan');
-      else dragMode = tool ? 'paint' : 'pan';
+      const freeDrag = mode === 'follow' ? 'rotate' : 'pan';
+      if (e.pointerType === 'mouse') dragMode = e.button === 2 || e.button === 1 ? 'rotate' : (tool ? 'paint' : freeDrag);
+      else dragMode = tool ? 'paint' : freeDrag;
       last = { x: e.clientX, y: e.clientY };
       if (dragMode === 'paint') { const p = groundAt(e.clientX, e.clientY); handlers.hover && handlers.hover(p); handlers.paintStart && handlers.paintStart(p, e.pointerType); }
     } else if (pointers.size === 2) {
@@ -79,13 +86,13 @@ const CamCtl = (() => {
       if (pinch.d > 0) zoom(pinch.d / d);
       let da = ang - pinch.ang; if (da > Math.PI) da -= Math.PI * 2; if (da < -Math.PI) da += Math.PI * 2;
       tYaw -= da;
-      pan(cx - pinch.cx, cy - pinch.cy);
+      if (mode !== 'follow') pan(cx - pinch.cx, cy - pinch.cy);
       pinch = { d, ang, cx, cy };
       return;
     }
     if (!last) return;
     const dx = e.clientX - last.x, dy = e.clientY - last.y; last = { x: e.clientX, y: e.clientY };
-    if (dragMode === 'rotate') { tYaw -= dx * 0.008; tPitch = THREE.MathUtils.clamp(tPitch + dy * 0.006, 0.35, 1.45); }
+    if (dragMode === 'rotate') { tYaw -= dx * 0.008; tPitch = THREE.MathUtils.clamp(tPitch + dy * 0.006, mode === 'follow' ? 0.12 : 0.35, 1.45); }
     else if (dragMode === 'pan') pan(dx, dy);
     else if (dragMode === 'paint') { const g = groundAt(e.clientX, e.clientY); handlers.hover && handlers.hover(g); handlers.paint && handlers.paint(g); }
   }
@@ -94,12 +101,12 @@ const CamCtl = (() => {
     if (!p) return;
     pointers.delete(e.pointerId);
     if (pointers.size === 0) {
-      const wasTap = moved < 10 && dragMode !== 'pinch' && dragMode !== 'rotate';
+      const wasTap = moved < 10 && dragMode !== 'pinch' && !(downPos && downPos.button === 2);
       if (dragMode === 'paint') handlers.paintEnd && handlers.paintEnd(groundAt(e.clientX, e.clientY), wasTap);
       else if (wasTap && handlers.tap) handlers.tap(groundAt(e.clientX, e.clientY), e.pointerType);
       dragMode = null; last = null; pinch = null;
     } else if (pointers.size === 1) {
-      const r = [...pointers.values()][0]; last = { x: r.x, y: r.y }; dragMode = 'pan';
+      const r = [...pointers.values()][0]; last = { x: r.x, y: r.y }; dragMode = mode === 'follow' ? 'rotate' : 'pan';
     }
   }
 
@@ -109,10 +116,8 @@ const CamCtl = (() => {
       tYaw = autoT; tPitch = 0.78 + Math.sin(autoT * 1.7) * 0.12; tDist = 21 + Math.sin(autoT * 1.3) * 3; tTarget.set(0, 0, 0);
     } else {
       const k = 6 * dt;
-      if (keys.has('a') || keys.has('arrowleft')) pan(10 * 60 * dt, 0);
-      if (keys.has('d') || keys.has('arrowright')) pan(-10 * 60 * dt, 0);
-      if (keys.has('w') || keys.has('arrowup')) pan(0, 10 * 60 * dt);
-      if (keys.has('s') || keys.has('arrowdown')) pan(0, -10 * 60 * dt);
+      // WASD steuert die Spielfigur (siehe Player); hier nur Kamera drehen & zoomen
+      if (mode === 'follow' && follow) { const f = follow(); tTarget.set(f.x, f.y + 0.9, f.z); }
       if (keys.has('q')) tYaw += 1.6 * dt;
       if (keys.has('e')) tYaw -= 1.6 * dt;
       if (keys.has('+') || keys.has('=')) zoom(1 - dt);
@@ -120,10 +125,10 @@ const CamCtl = (() => {
     }
     const s = Math.min(1, 8 * dt);
     yaw += (tYaw - yaw) * s; pitch += (tPitch - pitch) * s; dist += (tDist - dist) * s;
-    target.lerp(tTarget, s);
-    const y = Math.max(1.2, Math.sin(pitch) * dist);
+    if (mode === 'follow' && !auto) target.lerp(tTarget, Math.min(1, 14 * dt)); else target.lerp(tTarget, s);
+    const y = Math.max(0.6, target.y + Math.sin(pitch) * dist);
     cam.position.set(target.x + Math.sin(yaw) * Math.cos(pitch) * dist, y, target.z + Math.cos(yaw) * Math.cos(pitch) * dist);
     cam.lookAt(target);
   }
-  return { init, update, zoom, rotate, reset, setAuto, groundAt, handlers, get yaw() { return yaw; }, keys };
+  return { init, update, zoom, rotate, reset, setAuto, setMode, groundAt, handlers, get yaw() { return yaw; }, get mode() { return mode; }, keys };
 })();

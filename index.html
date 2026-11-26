@@ -223,9 +223,33 @@ textarea.code{width:100%;height:6em;border-radius:10px;border:2px solid rgba(255
   #toasts{top:calc(108px + env(safe-area-inset-top,0px))}
   .build-hint{top:calc(58px + env(safe-area-inset-top,0px))}
   .modal-box{height:96vh}
-  .build-hint{bottom:calc(8.2em + var(--safe-b))}
+
 }
 @media (max-width:700px) and (orientation:landscape){.build-bar{right:calc(30vw + 14px)}}
+
+/* Spielfigur-Steuerung */
+.joy{position:fixed;left:calc(18px + var(--safe-l));bottom:calc(16px + var(--safe-b));width:128px;height:128px;border-radius:50%;background:rgba(15,25,55,.35);border:3px solid rgba(255,255,255,.45);touch-action:none;display:none}
+.joy-knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#bcd4ff);box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.jump-btn{position:fixed;right:calc(min(30vw,210px) + 22px + var(--safe-r));bottom:calc(18px + var(--safe-b));width:76px;height:76px;border-radius:50%;border:3px solid rgba(255,255,255,.6);background:rgba(15,25,55,.55);color:#fff;font-size:1.9em;font-weight:900;line-height:.9;display:none;flex-direction:column;align-items:center;justify-content:center;touch-action:none}
+.jump-btn small{font-size:.32em}
+.jump-btn:active{transform:scale(.92);background:rgba(79,163,255,.6)}
+.build-toggle{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--safe-b));display:none}
+.build-toggle:active{transform:translateX(-50%) translateY(3px)}
+.bb-tabs .bb-close{flex:0 0 2.4em;background:linear-gradient(#ff6a6a,#d93a3a);color:#fff}
+body:not(.build-open) .build-bar{display:none}
+body:not(.build-open) #hud .build-toggle{display:block}
+body.touch:not(.build-open):not(.tp-open) #hud .joy{display:block}
+body.touch:not(.build-open) #hud .jump-btn{display:flex}
+#camMode{font-size:.8em}
+.picks{margin:.8em 0;background:rgba(255,225,77,.1);border:2px solid #ffe14d;border-radius:16px;padding:.6em}
+.picks h3{margin:.1em 0 .4em;color:#ffe14d}
+.pick-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:.6em}
+.pick-row .card{border-width:3px}.pick-row .card img{height:4.2em}
+.pick-row.done .card{opacity:.35;pointer-events:none}
+.pick-row.done .card.chosen{opacity:1;box-shadow:0 0 0 4px #5fe07a;animation:pulse 1.2s infinite}
+.swatches{display:flex;gap:6px}
+.swatches button{width:2em;height:2em;border-radius:8px;border:3px solid rgba(255,255,255,.3)}
+.swatches button.on{border-color:#fff;box-shadow:0 0 0 2px #ffe14d}
 </style>
 </head>
 <body>
@@ -293,14 +317,18 @@ textarea.code{width:100%;height:6em;border-radius:10px;border:2px solid rgba(255
   <div class="cam-ctl">
     <button class="cbtn" data-cam="rl">⟲</button><button class="cbtn" data-cam="rr">⟳</button>
     <button class="cbtn" data-cam="zi">＋</button><button class="cbtn" data-cam="zo">－</button>
-    <button class="cbtn" data-cam="reset">⌂</button>
+    <button class="cbtn" data-cam="reset" id="camMode">👁 Übersicht</button>
   </div>
   <div class="wave-ctl">
     <button class="btn wavebtn" id="waveBtn">▶ WELLE STARTEN</button>
     <div class="wc-row"><button class="btn small" id="speedBtn">1x</button><button class="btn small" id="pauseBtn">❚❚</button></div>
   </div>
+  <div class="joy" id="joy"><div class="joy-knob" id="joyKnob"></div></div>
+  <button class="jump-btn" id="jumpBtn">⤒<small>Springen</small></button>
+  <button class="build-toggle btn gold" id="buildToggle">🔨 BAUEN</button>
   <div class="build-bar" id="buildBar">
     <div class="bb-tabs" id="bbTabs">
+      <button data-bbclose="1" class="bb-close" title="Baumenü schließen (B)">✕</button>
       <button data-tab="towers" class="on">🏰 Türme</button>
       <button data-tab="roads">🛣️ Straßen</button>
       <button data-tab="decos">🌳 Deko</button>
@@ -1472,7 +1500,52 @@ const Models = (() => {
     return g;
   }
 
-  return { M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
+
+  // ---------------------------------------------------------
+  //  SPIELFIGUR (eigener Klötzchen-Look)
+  // ---------------------------------------------------------
+  let faceTex = null;
+  function makeAvatar(shirt = '#e03a3a', pants = '#2f5bd0') {
+    if (!faceTex) {
+      const c = document.createElement('canvas'); c.width = c.height = 128;
+      const g = c.getContext('2d');
+      g.fillStyle = '#ffd23f'; g.fillRect(0, 0, 128, 128);
+      g.fillStyle = '#1b1b1b';
+      g.beginPath(); g.ellipse(44, 52, 8, 12, 0, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.ellipse(84, 52, 8, 12, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(46, 48, 3, 0, 7); g.fill(); g.beginPath(); g.arc(86, 48, 3, 0, 7); g.fill();
+      g.strokeStyle = '#1b1b1b'; g.lineWidth = 6; g.lineCap = 'round';
+      g.beginPath(); g.arc(64, 72, 22, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
+      g.fillStyle = 'rgba(255,120,120,.45)'; g.beginPath(); g.arc(30, 76, 9, 0, 7); g.fill(); g.beginPath(); g.arc(98, 76, 9, 0, 7); g.fill();
+      faceTex = new THREE.CanvasTexture(c); faceTex.colorSpace = THREE.SRGBColorSpace;
+    }
+    const g = new THREE.Group();
+    const skin = M('#ffd23f'), sh = M(shirt), pa = M(pants);
+    const A = { legs: [], arms: [] };
+    for (const sx of [-1, 1]) {
+      const leg = new THREE.Group(); leg.position.set(sx * 0.14, 1.0, 0); g.add(leg);
+      mesh(box(0.27, 1.0, 0.3), pa, 0, -0.5, 0, leg);
+      mesh(box(0.29, 0.12, 0.34), M('#3a2a22'), 0, -0.94, 0.02, leg);
+      A.legs.push(leg);
+      const arm = new THREE.Group(); arm.position.set(sx * 0.42, 1.78, 0); g.add(arm);
+      mesh(box(0.26, 0.36, 0.3), sh, 0, -0.16, 0, arm);
+      mesh(box(0.24, 0.5, 0.28), skin, 0, -0.58, 0, arm);
+      A.arms.push(arm);
+    }
+    mesh(box(0.58, 0.82, 0.32), sh, 0, 1.41, 0, g);
+    mesh(box(0.58, 0.08, 0.33), M('#222'), 0, 1.02, 0, g);
+    const faceMat = new THREE.MeshLambertMaterial({ map: faceTex });
+    const head = new THREE.Mesh(box(0.52, 0.52, 0.52), [skin, skin, skin, skin, faceMat, skin]);
+    head.position.y = 2.1; head.castShadow = true; g.add(head);
+    // Kappe
+    mesh(cyl(0.29, 0.29, 0.14, 12), pa, 0, 2.42, 0, g);
+    mesh(box(0.42, 0.04, 0.26), pa, 0, 2.37, 0.3, g);
+    A.head = head;
+    g.userData.A = A;
+    return g;
+  }
+
+  return { makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
 })();
 
 // ---- world.js ----
@@ -1997,6 +2070,8 @@ const CamCtl = (() => {
   let yaw = 0, pitch = 0.95, dist = 22;
   let tYaw = yaw, tPitch = pitch, tDist = dist; const tTarget = target.clone();
   let el, cam, auto = false, autoT = 0;
+  let mode = 'free';                 // 'follow' = Kamera folgt der Spielfigur (wie Roblox), 'free' = Übersicht
+  let follow = null;                 // () => Vector3
   const pointers = new Map();
   let dragMode = null, last = null, pinch = null, moved = 0, downPos = null;
   const handlers = { tap: null, hover: null, paint: null, paintEnd: null, toolActive: () => false };
@@ -2015,9 +2090,13 @@ const CamCtl = (() => {
     window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
     window.addEventListener('blur', () => keys.clear());
   }
-  function zoom(f) { tDist = THREE.MathUtils.clamp(tDist * f, 6, 42); }
+  function zoom(f) { tDist = THREE.MathUtils.clamp(tDist * f, mode === 'follow' ? 3.5 : 6, 42); }
   function rotate(a) { tYaw += a; }
-  function reset() { tYaw = 0; tPitch = 0.95; tDist = window.innerWidth < 900 ? 20 : 22; tTarget.set(0, 0, 0.6); }
+  function reset() {
+    if (mode === 'follow') { tPitch = 0.5; tDist = 9; }
+    else { tYaw = 0; tPitch = 0.95; tDist = window.innerWidth < 900 ? 20 : 22; tTarget.set(0, 0, 0.6); }
+  }
+  function setMode(m, followFn) { mode = m; if (followFn) follow = followFn; reset(); }
   function setAuto(v) { auto = v; if (!v) reset(); }
 
   function groundAt(cx, cy) {
@@ -2040,11 +2119,12 @@ const CamCtl = (() => {
     if (auto) return;
     el.setPointerCapture?.(e.pointerId);
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType, button: e.button });
-    moved = 0; downPos = { x: e.clientX, y: e.clientY };
+    moved = 0; downPos = { x: e.clientX, y: e.clientY, button: e.button };
     if (pointers.size === 1) {
       const tool = handlers.toolActive();
-      if (e.pointerType === 'mouse') dragMode = e.button === 2 || e.button === 1 ? 'rotate' : (tool ? 'paint' : 'pan');
-      else dragMode = tool ? 'paint' : 'pan';
+      const freeDrag = mode === 'follow' ? 'rotate' : 'pan';
+      if (e.pointerType === 'mouse') dragMode = e.button === 2 || e.button === 1 ? 'rotate' : (tool ? 'paint' : freeDrag);
+      else dragMode = tool ? 'paint' : freeDrag;
       last = { x: e.clientX, y: e.clientY };
       if (dragMode === 'paint') { const p = groundAt(e.clientX, e.clientY); handlers.hover && handlers.hover(p); handlers.paintStart && handlers.paintStart(p, e.pointerType); }
     } else if (pointers.size === 2) {
@@ -2069,13 +2149,13 @@ const CamCtl = (() => {
       if (pinch.d > 0) zoom(pinch.d / d);
       let da = ang - pinch.ang; if (da > Math.PI) da -= Math.PI * 2; if (da < -Math.PI) da += Math.PI * 2;
       tYaw -= da;
-      pan(cx - pinch.cx, cy - pinch.cy);
+      if (mode !== 'follow') pan(cx - pinch.cx, cy - pinch.cy);
       pinch = { d, ang, cx, cy };
       return;
     }
     if (!last) return;
     const dx = e.clientX - last.x, dy = e.clientY - last.y; last = { x: e.clientX, y: e.clientY };
-    if (dragMode === 'rotate') { tYaw -= dx * 0.008; tPitch = THREE.MathUtils.clamp(tPitch + dy * 0.006, 0.35, 1.45); }
+    if (dragMode === 'rotate') { tYaw -= dx * 0.008; tPitch = THREE.MathUtils.clamp(tPitch + dy * 0.006, mode === 'follow' ? 0.12 : 0.35, 1.45); }
     else if (dragMode === 'pan') pan(dx, dy);
     else if (dragMode === 'paint') { const g = groundAt(e.clientX, e.clientY); handlers.hover && handlers.hover(g); handlers.paint && handlers.paint(g); }
   }
@@ -2084,12 +2164,12 @@ const CamCtl = (() => {
     if (!p) return;
     pointers.delete(e.pointerId);
     if (pointers.size === 0) {
-      const wasTap = moved < 10 && dragMode !== 'pinch' && dragMode !== 'rotate';
+      const wasTap = moved < 10 && dragMode !== 'pinch' && !(downPos && downPos.button === 2);
       if (dragMode === 'paint') handlers.paintEnd && handlers.paintEnd(groundAt(e.clientX, e.clientY), wasTap);
       else if (wasTap && handlers.tap) handlers.tap(groundAt(e.clientX, e.clientY), e.pointerType);
       dragMode = null; last = null; pinch = null;
     } else if (pointers.size === 1) {
-      const r = [...pointers.values()][0]; last = { x: r.x, y: r.y }; dragMode = 'pan';
+      const r = [...pointers.values()][0]; last = { x: r.x, y: r.y }; dragMode = mode === 'follow' ? 'rotate' : 'pan';
     }
   }
 
@@ -2099,10 +2179,8 @@ const CamCtl = (() => {
       tYaw = autoT; tPitch = 0.78 + Math.sin(autoT * 1.7) * 0.12; tDist = 21 + Math.sin(autoT * 1.3) * 3; tTarget.set(0, 0, 0);
     } else {
       const k = 6 * dt;
-      if (keys.has('a') || keys.has('arrowleft')) pan(10 * 60 * dt, 0);
-      if (keys.has('d') || keys.has('arrowright')) pan(-10 * 60 * dt, 0);
-      if (keys.has('w') || keys.has('arrowup')) pan(0, 10 * 60 * dt);
-      if (keys.has('s') || keys.has('arrowdown')) pan(0, -10 * 60 * dt);
+      // WASD steuert die Spielfigur (siehe Player); hier nur Kamera drehen & zoomen
+      if (mode === 'follow' && follow) { const f = follow(); tTarget.set(f.x, f.y + 0.9, f.z); }
       if (keys.has('q')) tYaw += 1.6 * dt;
       if (keys.has('e')) tYaw -= 1.6 * dt;
       if (keys.has('+') || keys.has('=')) zoom(1 - dt);
@@ -2110,12 +2188,96 @@ const CamCtl = (() => {
     }
     const s = Math.min(1, 8 * dt);
     yaw += (tYaw - yaw) * s; pitch += (tPitch - pitch) * s; dist += (tDist - dist) * s;
-    target.lerp(tTarget, s);
-    const y = Math.max(1.2, Math.sin(pitch) * dist);
+    if (mode === 'follow' && !auto) target.lerp(tTarget, Math.min(1, 14 * dt)); else target.lerp(tTarget, s);
+    const y = Math.max(0.6, target.y + Math.sin(pitch) * dist);
     cam.position.set(target.x + Math.sin(yaw) * Math.cos(pitch) * dist, y, target.z + Math.cos(yaw) * Math.cos(pitch) * dist);
     cam.lookAt(target);
   }
-  return { init, update, zoom, rotate, reset, setAuto, groundAt, handlers, get yaw() { return yaw; }, keys };
+  return { init, update, zoom, rotate, reset, setAuto, setMode, groundAt, handlers, get yaw() { return yaw; }, get mode() { return mode; }, keys };
+})();
+
+// ---- player.js ----
+'use strict';
+// ============================================================
+//  Spielfigur: laufen & springen wie in Roblox (WASD / Joystick)
+// ============================================================
+const Player = (() => {
+  const V3 = THREE.Vector3;
+  const SCALE = 0.55, SPEED = 5.2, JUMP = 8.5, GRAV = 26;
+  let mesh = null, tag = null, scene = null;
+  const pos = new V3(), vel = new V3();
+  let yaw = 0, onGround = true, walkT = 0, active = false, jumpQueued = false;
+  const joy = { x: 0, y: 0 };          // vom Touch-Joystick (-1..1)
+  let obstacles = () => [];
+
+  function spawn(sc, name, shirt, pants) {
+    remove();
+    scene = sc;
+    mesh = Models.makeAvatar(shirt, pants);
+    mesh.scale.setScalar(SCALE);
+    tag = World.textSprite(name, 'rgba(0,0,0,0.45)', '#fff', 384, 96);
+    tag.scale.set(4 / SCALE * 0.42, 1 / SCALE * 0.42, 1); tag.position.y = 3.15;
+    mesh.add(tag);
+    pos.set(-1.5, 0, GH / 2 + 1.6); vel.set(0, 0, 0); yaw = Math.PI;
+    mesh.position.copy(pos);
+    scene.add(mesh);
+    active = true;
+  }
+  function remove() { if (mesh && scene) scene.remove(mesh); mesh = null; active = false; }
+  function setObstacles(fn) { obstacles = fn; }
+  function jump() { jumpQueued = true; }
+
+  function update(dt, keys, camYaw) {
+    if (!active || !mesh) return;
+    // Eingabe: vorwärts/rechts relativ zur Kamera
+    let fwd = 0, right = 0;
+    if (keys.has('w') || keys.has('arrowup')) fwd += 1;
+    if (keys.has('s') || keys.has('arrowdown')) fwd -= 1;
+    if (keys.has('d') || keys.has('arrowright')) right += 1;
+    if (keys.has('a') || keys.has('arrowleft')) right -= 1;
+    fwd += -joy.y; right += joy.x;
+    const len = Math.hypot(fwd, right);
+    if (len > 1) { fwd /= len; right /= len; }
+    const run = keys.has('shift') ? 1.35 : 1;
+    const fx = -Math.sin(camYaw), fz = -Math.cos(camYaw);   // Blickrichtung der Kamera
+    const rx = Math.cos(camYaw), rz = -Math.sin(camYaw);
+    const mx = (fx * fwd + rx * right) * SPEED * run, mz = (fz * fwd + rz * right) * SPEED * run;
+    const moving = Math.hypot(mx, mz) > 0.1;
+    // weich beschleunigen
+    const k = Math.min(1, dt * (onGround ? 14 : 5));
+    vel.x += (mx - vel.x) * k; vel.z += (mz - vel.z) * k;
+    if ((jumpQueued || keys.has(' ')) && onGround) { vel.y = JUMP; onGround = false; Audio2.play('click'); }
+    jumpQueued = false;
+    vel.y -= GRAV * dt;
+    pos.addScaledVector(vel, dt);
+    if (pos.y <= 0) { pos.y = 0; vel.y = 0; onGround = true; }
+    // Kollision mit Türmen, Deko, Burg (Kreise)
+    for (const o of obstacles()) {
+      if (pos.y > (o.h || 1.2)) continue;
+      const dx = pos.x - o.x, dz = pos.z - o.z, d = Math.hypot(dx, dz), r = o.r + 0.25;
+      if (d < r && d > 0.0001) { pos.x = o.x + dx / d * r; pos.z = o.z + dz / d * r; }
+    }
+    pos.x = THREE.MathUtils.clamp(pos.x, -42, 42); pos.z = THREE.MathUtils.clamp(pos.z, -42, 42);
+    // Drehen in Laufrichtung
+    if (moving) {
+      const target = Math.atan2(mx, mz);
+      let d = target - yaw; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2;
+      yaw += d * Math.min(1, dt * 14);
+    }
+    // Animation
+    const sp = Math.hypot(vel.x, vel.z);
+    walkT += dt * sp * 2.2;
+    const A = mesh.userData.A;
+    const sw = onGround ? Math.sin(walkT) * Math.min(1, sp / SPEED) * 0.9 : 0;
+    A.legs[0].rotation.x = sw; A.legs[1].rotation.x = -sw;
+    if (onGround) { A.arms[0].rotation.x = -sw; A.arms[1].rotation.x = sw; A.arms[0].rotation.z = A.arms[1].rotation.z = 0; }
+    else { A.arms[0].rotation.x = A.arms[1].rotation.x = -2.6; A.legs[0].rotation.x = 0.4; A.legs[1].rotation.x = -0.2; }
+    mesh.position.copy(pos);
+    mesh.position.y += onGround && sp > 0.5 ? Math.abs(Math.sin(walkT)) * 0.04 : 0;
+    mesh.rotation.y = yaw;
+    if (onGround && sp > 3 && Math.random() < dt * 8) Particles.emit(pos.x, 0.05, pos.z, 1, '#cfc3a0', { speed: 0.3, up: 0.4, life: 0.4, size: 0.18, tint: false });
+  }
+  return { spawn, remove, update, jump, setObstacles, joy, get pos() { return pos; }, get active() { return active; } };
 })();
 
 // ---- save.js ----
@@ -2147,9 +2309,10 @@ const Save = (() => {
       quests: {},                             // id -> 'claimed'
       daily: { date: '', list: [], streak: 0, lastClaim: '' },
       records: {},                            // modus -> beste Welle
+      pendingPicks: null,                     // Turm-Belohnung nach der letzten Runde
       layout: null,                           // {roads:[[x,z,id]], decos:[[x,z,id,rot]]}
       run: null,                              // laufende Runde (Snapshot nach jeder Welle)
-      settings: { music: 0.45, sfx: 0.7, quality: (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'medium' : 'high'), particles: true, autoStart: true, showGrid: true, damageNumbers: true },
+      settings: { music: 0.45, sfx: 0.7, quality: (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'medium' : 'high'), particles: true, autoStart: true, showGrid: true, damageNumbers: true, shirt: '#e03a3a', pants: '#2f5bd0' },
     };
   }
   function merge(base, src) {
@@ -2262,7 +2425,41 @@ const Save = (() => {
     return { ...r, day, streak: P.daily.streak };
   }
 
+  // ---------- Turm-Belohnung nach einer Runde ----------
+  // Je mehr Wellen überstanden, desto mehr Auswahlen und desto seltenere Türme.
+  function makeTowerPicks(waves) {
+    const n = waves >= 25 ? 3 : waves >= 10 ? 2 : 1;
+    const weight = t => ({ common: 6, uncommon: 10, rare: 4 + waves / 4, epic: 1 + waves / 7, legendary: waves / 14, mythic: waves / 25, secret: waves / 35 })[t.rarity];
+    const picks = [];
+    const taken = new Set();
+    for (let i = 0; i < n; i++) {
+      const pool = TOWERS.filter(t => !P.unlocked.includes(t.id) && !taken.has(t.id) && weight(t) > 0);
+      if (!pool.length) { picks.push({ gems: 25 + waves * 3 }); continue; }
+      const opts = [];
+      while (opts.length < 3 && pool.length) {
+        let tot = pool.reduce((a, t) => a + weight(t), 0), r = Math.random() * tot, k = 0;
+        for (; k < pool.length - 1; k++) { r -= weight(pool[k]); if (r <= 0) break; }
+        opts.push(pool[k].id); taken.add(pool[k].id); pool.splice(k, 1);
+      }
+      picks.push({ options: opts });
+    }
+    // Auswahlmöglichkeiten, die nicht gewählt werden, sind beim nächsten Mal wieder im Topf
+    P.pendingPicks = picks;
+  }
+  function choosePick(i, towerId) {
+    const p = P.pendingPicks && P.pendingPicks[i]; if (!p || p.done) return false;
+    if (p.gems) { P.gems += p.gems; P.stats.gemsEarned += p.gems; }
+    else if (p.options.includes(towerId) && !P.unlocked.includes(towerId)) P.unlocked.push(towerId);
+    else return false;
+    p.done = towerId || 'gems';
+    checkAchievements(); save();
+    return true;
+  }
+
+  const openPicks = () => !!(P.pendingPicks && P.pendingPicks.some(q => !q.done));
+  function tidyPicks() { if (P.pendingPicks && !openPicks()) P.pendingPicks = null; }
   return {
+    makeTowerPicks, choosePick, openPicks, tidyPicks,
     load, save, saveSoon, reset, on, emit, stat, addStat, maxStat, addXP, grant, checkAchievements,
     questProgress, claimQuest, refreshDaily, dailyDef, dailyProgress, claimDaily, dailyRewardAvailable, claimDailyReward,
     get P() { return P; },
@@ -2378,7 +2575,7 @@ const Game = (() => {
     loadLayout(); placeCastle();
     if (snapshot) for (const t of snapshot.towers) { const tw = spawnTower(TOWER_BY_ID[t.id], t.x, t.z, t.rot, false); if (tw) { tw.level = t.level; tw.invested = t.invested; tw.targeting = t.targeting || 'first'; tw.kills = t.kills || 0; Models.applyTowerLevel(tw.mesh, tw.level); } }
     if (!snapshot) { Save.addStat('gamesPlayed'); }
-    R.pauseTimer = 0;
+    R.pauseTimer = mode.creative ? 0 : (Save.P.settings.autoStart ? 30 : 0); // erste Welle startet automatisch
     World.setBuildOverlay(true);
     Audio2.setMood('build');
     snapshotRun();
@@ -2404,6 +2601,7 @@ const Game = (() => {
     for (const h of holes) scene.remove(h.mesh); holes.length = 0;
     for (const b of bolts) scene.remove(b.mesh); bolts.length = 0;
     for (const r of rings) scene.remove(r.mesh); rings.length = 0;
+    for (const c of pickups) scene.remove(c.mesh); pickups.length = 0;
     Particles.clear();
     if (grid.length) for (let x = 0; x < GW; x++) for (let z = 0; z < GH; z++) if (grid[x][z] && grid[x][z].type === 'tower') grid[x][z] = null;
     select(null); setBuild(null);
@@ -2753,6 +2951,8 @@ const Game = (() => {
     Particles.emit(p.x, 0.8, p.z, 6, '#ffd84a', { speed: 1, up: 3, life: 0.6, size: 0.2, tint: false });
     floatText(p, '+' + reward, '#ffd84a');
     Audio2.play('coin');
+    // Bonusmünze, die die Spielfigur einsammeln kann
+    if (Math.random() < (e.def.boss ? 1 : e.def.mini ? 0.6 : 0.08)) for (let k = 0; k < (e.def.boss ? 6 : 1); k++) spawnPickup(p, Math.round(reward * (e.def.boss ? 0.3 : 1.5) + 5));
     if (e.def.boss || e.def.mini) {
       if (e.def.boss) {
         R.stats.bosses++; shake = 0.8;
@@ -2891,7 +3091,7 @@ const Game = (() => {
       Save.grant({ gems: 100, crystals: 10 });
       R.pauseTimer = 0;
       Audio2.setMood('victory'); Audio2.play('victory');
-      Save.P.run = null; Save.save();
+      Save.P.run = null; Save.makeTowerPicks(w + 10); Save.save();
       ui.victory && ui.victory(summary());
     } else snapshotRun();
     ui.hud && ui.hud();
@@ -2902,7 +3102,9 @@ const Game = (() => {
     Audio2.play('gameover'); Audio2.setMood('menu');
     const rec = Save.P.records[R.mode.id] || 0;
     const s = summary(); s.record = Math.max(rec, R.wave - 1);
-    Save.P.run = null; Save.save();
+    Save.P.run = null;
+    if (!R.mode.creative) Save.makeTowerPicks(s.waves); // neue Türme zur Auswahl
+    Save.save();
     ui.gameOver && ui.gameOver(s);
   }
   function summary() {
@@ -3529,7 +3731,7 @@ const Game = (() => {
           R.spawnTimer = R.spawnQueue.length ? R.spawnQueue[0].delay : 0;
           if (info) checkWaveDone(s.wave);
         }
-      } else if (R.phase === 'build' && R.pauseTimer > 0 && !R.won && R.wave > 0) {
+      } else if (R.phase === 'build' && R.pauseTimer > 0 && !(R.won && !R.continueEndless)) {
         R.pauseTimer -= dt;
         if (R.pauseTimer <= 0) { R.pauseTimer = 0; startWave(false); }
       }
@@ -3548,6 +3750,42 @@ const Game = (() => {
     updateMines(dt);
     updateHoles(dt, time);
     updateFx(dt);
+    if (!demo) updatePickups(dt, time);
+  }
+
+  // ---------------- Spielfigur: Hindernisse & Münzen zum Einsammeln ----------------
+  const DECO_R = { tree: 0.3, house: 0.5, fountain: 0.45, crystalfountain: 0.45, statue: 0.3, goldstatue: 0.3, windmill: 0.35, lighthouse: 0.3, dragonstatue: 0.4, rock: 0.3, lantern: 0.1 };
+  function obstacles() {
+    const o = [];
+    for (const t of towers) o.push({ x: t.mesh.position.x, z: t.mesh.position.z, r: 0.42, h: 1.3 });
+    for (const [k, m] of decoMeshes) { const c = grid[+k.split(',')[0]][+k.split(',')[1]]; const r = c && DECO_R[c.id]; if (r) o.push({ x: m.position.x, z: m.position.z, r, h: 1.5 }); }
+    if (castle) o.push({ x: castle.position.x, z: castle.position.z, r: 1.2, h: 3 });
+    if (World.portalPos) { o.push({ x: World.portalPos.x, z: World.portalPos.z - 0.42, r: 0.15, h: 1.2 }); o.push({ x: World.portalPos.x, z: World.portalPos.z + 0.42, r: 0.15, h: 1.2 }); }
+    return o;
+  }
+  const pickups = [];
+  function spawnPickup(p, value) {
+    const m = new THREE.Group();
+    Models.mesh(Models.cyl(0.22, 0.22, 0.06, 18), Models.M('#ffd700', { e: '#c08a00', ei: 0.6 }), 0, 0, 0, m, false).rotation.x = Math.PI / 2;
+    Models.mesh(Models.cyl(0.13, 0.13, 0.07, 14), Models.M('#ffef7a', { e: '#ffd000', ei: 0.6 }), 0, 0, 0, m, false).rotation.x = Math.PI / 2;
+    m.position.set(p.x + (Math.random() - 0.5) * 0.4, 0.5, p.z + (Math.random() - 0.5) * 0.4);
+    scene.add(m);
+    pickups.push({ mesh: m, value, t: 0 });
+  }
+  function updatePickups(dt, time) {
+    for (let i = pickups.length - 1; i >= 0; i--) {
+      const c = pickups[i]; c.t += dt;
+      c.mesh.rotation.y += dt * 4; c.mesh.position.y = 0.5 + Math.sin(time * 4 + i) * 0.1;
+      if (c.t > 18) c.mesh.visible = Math.sin(c.t * 20) > 0;
+      const pp = Player.pos;
+      if (Player.active && Math.hypot(pp.x - c.mesh.position.x, pp.z - c.mesh.position.z) < 0.85 && pp.y < 1.6) {
+        R.coins += c.value; R.stats.coins += c.value; if (!R.mode.creative) Save.P.stats.coinsEarned += c.value;
+        Particles.emit(c.mesh.position.x, 0.6, c.mesh.position.z, 18, '#ffd700', { speed: 2, up: 2.5, life: 0.6, tint: false });
+        floatText(c.mesh.position, '+' + c.value + ' 🪙', '#ffe14d'); Audio2.play('coin'); Audio2.play('sell');
+        scene.remove(c.mesh); pickups.splice(i, 1); continue;
+      }
+      if (c.t > 22) { scene.remove(c.mesh); pickups.splice(i, 1); }
+    }
   }
 
   // ---------------- Teilen / Import ----------------
@@ -3567,7 +3805,7 @@ const Game = (() => {
   }
 
   return {
-    init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
+    obstacles, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
     continueEndless, exportLayout, parseLayout, loadLayout, recalcRoute, placeCastle, snapshotRun, ui,
     get R() { return R; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
     get enemies() { return enemies; }, get towers() { return towers; },
@@ -3691,21 +3929,53 @@ const UI = (() => {
   }
   function goMenu() {
     closeModal(); Game.quit(); visiting = null; $('.visit-bar')?.remove();
+    Player.remove(); CamCtl.setMode('free');
     show('menu'); refreshMenu();
     Game.startDemo(); CamCtl.setAuto(true); Audio2.setMood('menu');
+    if (Save.openPicks()) setTimeout(picksScreen, 400); else Save.tidyPicks();
   }
   function startGame(modeId, biomeId, snapshot) {
-    closeModal();
+    closeModal(); Save.tidyPicks();
     Game.stopDemo(); CamCtl.setAuto(false);
     const b = BIOME_BY_ID[biomeId] || BIOMES[0];
     Save.P.equipped.biome = b.id;
     World.buildEnvironment(b, Save.P.name);
     Game.newRun(modeId, b.id, snapshot);
     show('game'); curTab = 'towers'; renderBuildBar(); hud(true);
-    CamCtl.reset();
-    if (!snapshot) banner('Baue deine Verteidigung!', 'Straßen bauen · Türme platzieren · Welle starten', '', 2600);
+    Player.spawn(World.scene, Save.P.name, Save.P.settings.shirt, Save.P.settings.pants);
+    setCamMode('follow');
+    setBuildOpen(!isTouch());
+    if (!snapshot) banner('Welle 1 kommt in 30 Sekunden!', isTouch() ? 'Joystick: laufen · 🔨 BAUEN: Türme setzen' : 'WASD: laufen · Leertaste: springen · B: Baumenü', '', 3200);
     else banner('Willkommen zurück!', `Welle ${snapshot.wave} · ${MODE_BY_ID[modeId].name}`, '', 2000);
     Save.save();
+  }
+
+  // ---------------- Spielfigur / Kamera / Baumenü ----------------
+  const isTouch = () => matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+  function setCamMode(m) {
+    CamCtl.setMode(m, () => Player.pos);
+    const b = $('#camMode'); if (b) b.textContent = m === 'follow' ? '👁 Übersicht' : '🧍 Figur';
+  }
+  function setBuildOpen(open) {
+    document.body.classList.toggle('build-open', open);
+    if (!open) Game.setBuild(null);
+    Player.joy.x = Player.joy.y = 0;
+  }
+  function bindJoystick() {
+    const joy = $('#joy'), knob = $('#joyKnob'); let id = null;
+    const move = e => {
+      const r = joy.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, max = r.width / 2 - 10;
+      let dx = e.clientX - cx, dy = e.clientY - cy; const d = Math.hypot(dx, dy);
+      if (d > max) { dx = dx / d * max; dy = dy / d * max; }
+      knob.style.transform = `translate(${dx}px,${dy}px)`;
+      Player.joy.x = dx / max; Player.joy.y = dy / max;
+    };
+    const end = e => { if (e.pointerId !== id) return; id = null; knob.style.transform = ''; Player.joy.x = Player.joy.y = 0; };
+    joy.addEventListener('pointerdown', e => { id = e.pointerId; joy.setPointerCapture(e.pointerId); Audio2.init(); move(e); e.preventDefault(); });
+    joy.addEventListener('pointermove', e => { if (e.pointerId === id) move(e); });
+    joy.addEventListener('pointerup', end); joy.addEventListener('pointercancel', end);
+    const jb = $('#jumpBtn');
+    jb.addEventListener('pointerdown', e => { e.preventDefault(); Player.jump(); });
   }
 
   // ---------------- HUD ----------------
@@ -3721,7 +3991,7 @@ const UI = (() => {
     if (force || lastHud.lv !== lvKey) { playerChip($('#hudPlayer')); lastHud.lv = lvKey; }
     // Wellen-Anzeige
     let alive = 0, total = 0;
-    for (const w of R.waves.values()) { alive += w.alive + w.queued; total += w.total; }
+    for (const w of R.waves.values()) { alive += w.alive; total += w.total; }
     const winTxt = R.mode.win && !R.continueEndless ? ` / ${R.mode.win}` : '';
     $('#wpWave').textContent = `Welle ${R.wave}${winTxt}`;
     $('#wpMode').textContent = R.mode.icon + ' ' + R.mode.name;
@@ -3820,7 +4090,7 @@ const UI = (() => {
     if (!sel) { h.classList.add('hidden'); return; }
     let name = sel.kind === 'tower' ? TOWER_BY_ID[sel.id].name : sel.kind === 'road' ? ROAD_BY_ID[sel.id].name : sel.kind === 'deco' ? DECO_BY_ID[sel.id].name : sel.kind === 'move' ? 'Turm verschieben' : 'Abreißen';
     const touch = matchMedia('(pointer:coarse)').matches;
-    const how = sel.kind === 'road' || sel.kind === 'erase' ? (touch ? 'Tippen oder Finger ziehen' : 'Klicken oder ziehen') : (touch ? 'Tippen zum Platzieren · 2 Finger: Kamera' : 'Klicken zum Platzieren · R: drehen');
+    const how = sel.kind === 'road' || sel.kind === 'erase' ? (touch ? 'Tippen oder Finger ziehen' : 'Klicken oder ziehen') : (touch ? 'Aufs Feld tippen zum Platzieren' : 'Klicken zum Platzieren · R: drehen');
     h.innerHTML = `<b>${esc(name)}</b><span>${how}</span>${sel.kind !== 'road' && sel.kind !== 'erase' ? '<button class="btn small" data-tool="rotate">🔄</button>' : ''}<button class="btn small red" data-tool="cancel">✕</button>`;
     h.classList.remove('hidden');
   }
@@ -4128,10 +4398,12 @@ const UI = (() => {
         <div class="set-row"><span>🎵 Musik</span><input type="range" id="setMusic" min="0" max="1" step="0.05" value="${S.music}"></div>
         <div class="set-row"><span>🔊 Soundeffekte</span><input type="range" id="setSfx" min="0" max="1" step="0.05" value="${S.sfx}"></div>
         <div class="set-row"><span>🖥️ Grafikqualität</span><select id="setQ"><option value="low" ${S.quality === 'low' ? 'selected' : ''}>Niedrig (schnell, ohne Schatten)</option><option value="medium" ${S.quality === 'medium' ? 'selected' : ''}>Mittel</option><option value="high" ${S.quality === 'high' ? 'selected' : ''}>Hoch</option></select></div>
-        ${tg('particles', '✨ Viele Partikeleffekte')}${tg('autoStart', '⏱️ Nächste Welle automatisch starten (25s Pause)')}${tg('damageNumbers', '🔢 Münz-Anzeigen über Gegnern')}${tg('showGrid', '#️⃣ Raster beim Bauen')}
+        <div class="set-row"><span>👕 Shirt-Farbe</span><div class="swatches">${['#e03a3a', '#2f8fe0', '#2fae4a', '#9b4dff', '#ff8a1a', '#222222', '#ff5ab4'].map(c => `<button data-shirt="${c}" class="${S.shirt === c ? 'on' : ''}" style="background:${c}"></button>`).join('')}</div></div>
+        <div class="set-row"><span>👖 Hosen- & Kappenfarbe</span><div class="swatches">${['#2f5bd0', '#3a3a3a', '#6b4423', '#2f8f4a', '#d4af37', '#c0392b', '#ffffff'].map(c => `<button data-pants="${c}" class="${S.pants === c ? 'on' : ''}" style="background:${c}"></button>`).join('')}</div></div>
+        ${tg('particles', '✨ Viele Partikeleffekte')}${tg('autoStart', '⏱️ Wellen kommen automatisch (30s vor Welle 1, danach 25s Pause)')}${tg('damageNumbers', '🔢 Münz-Anzeigen über Gegnern')}${tg('showGrid', '#️⃣ Raster beim Bauen')}
         <h4 class="sec">🎮 Steuerung</h4>
-        <p class="note">🖱️ <b>PC:</b> Linksklick bauen/auswählen · Linke Maus ziehen: Kamera verschieben (ohne Bauauswahl) bzw. Straßen malen · Rechte Maus: drehen · Mausrad: Zoom · WASD/Pfeile: bewegen · Q/E: drehen · R: Gebäude drehen · Leertaste: Welle · Esc: abbrechen · U: Upgrade · X: Verkaufen<br>
-        📱 <b>Touch:</b> 1 Finger: Kamera verschieben (ohne Auswahl) oder bauen/malen · 2 Finger: zoomen, drehen und verschieben · Knöpfe links: Kamera drehen/zoomen</p>
+        <p class="note">🖱️ <b>PC:</b> WASD/Pfeile: laufen · Shift: rennen · Leertaste: springen · Maus ziehen: Kamera drehen · Mausrad: Zoom · B: Baumenü · Linksklick: bauen/auswählen · R: Gebäude drehen · Enter: Welle starten · C: Übersicht/Figur · Esc: abbrechen · U: Upgrade · X: Verkaufen<br>
+        📱 <b>Touch:</b> Joystick links: laufen · ⤒: springen · 1 Finger auf der Welt: Kamera drehen · 2 Finger: zoomen · 🔨 BAUEN: Baumenü öffnen, dann aufs Feld tippen</p>
         <h4 class="sec">⚠️ Daten</h4>
         <div class="row" style="justify-content:flex-start"><button class="btn small gray" id="resetPlot">Grundstück zurücksetzen</button><button class="btn small red" id="resetAll">Gesamten Spielstand löschen</button></div>
         <p class="note">Dein Fortschritt wird automatisch auf diesem Gerät gespeichert (im Browser-Speicher).</p>`;
@@ -4141,6 +4413,12 @@ const UI = (() => {
       $('#setSfx').oninput = e => { S.sfx = +e.target.value; Audio2.setVolumes(S.sfx, S.music); Save.saveSoon(); };
       $('#setSfx').onchange = () => Audio2.play('coin');
       $('#setQ').onchange = e => { S.quality = e.target.value; World.setQuality(S.quality); Save.save(); };
+      $$('[data-shirt],[data-pants]').forEach(b => b.onclick = () => {
+        if (b.dataset.shirt) S.shirt = b.dataset.shirt; else S.pants = b.dataset.pants;
+        Save.save(); Audio2.play('click');
+        if (screen === 'game' && Player.active) { const p = Player.pos.clone(); Player.spawn(World.scene, P.name, S.shirt, S.pants); Player.pos.copy(p); }
+        render();
+      });
       $$('[data-tg]').forEach(b => b.onclick = () => { S[b.dataset.tg] = !S[b.dataset.tg]; Particles.enabled = S.particles; Save.save(); render(); });
       $('#resetPlot').onclick = () => confirmBox('Grundstück auf den Standardweg zurücksetzen? Alle Straßen und Deko werden ersetzt.', () => {
         if (Game.R && !Game.demo && Game.R.phase === 'wave') return toast('Nur zwischen den Wellen möglich', 'bad');
@@ -4188,6 +4466,39 @@ const UI = (() => {
     $('#vAdopt').onclick = () => confirmBox(`Das Grundstück von ${esc(L.name)} als dein eigenes übernehmen? Dein aktuelles Straßennetz wird ersetzt.`, () => { Save.P.layout = { roads: L.roads, decos: L.decos }; Save.P.run = null; Save.save(); bar.remove(); visiting = null; toast('✅ Grundstück übernommen', 'good'); goMenu(); });
   }
 
+  // ---------------- Neue Türme nach der Runde ----------------
+  function picksHtml() {
+    const P = Save.P, picks = P.pendingPicks;
+    if (!picks || !picks.length) return '';
+    const open = picks.filter(p => !p.done).length;
+    let h = `<div class="picks"><h3>🎁 Neue Türme! ${open ? `Wähle ${open === 1 ? 'einen Turm' : open + ' Türme'} aus:` : 'Alle gewählt ✅'}</h3>`;
+    picks.forEach((p, i) => {
+      if (p.gems) { h += `<div class="pick-row${p.done ? ' done' : ''}"><div class="card${p.done ? ' chosen' : ''}" data-pick="${i}" data-id=""><div class="ic">💎</div><div class="nm">Alle Türme frei! +${p.gems} Edelsteine</div></div></div>`; return; }
+      h += `<div class="pick-row${p.done ? ' done' : ''}">${p.options.map(id => { const t = TOWER_BY_ID[id]; return `<div class="card${p.done === id ? ' chosen' : ''}" data-pick="${i}" data-id="${id}" style="border-color:${RARITIES[t.rarity].color}">${Thumbs.img('tower', id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}<div class="sub">${esc(t.desc)}</div></div>`; }).join('')}</div>`;
+    });
+    return h + '</div>';
+  }
+  function bindPicks(rerender) {
+    $$('[data-pick]').forEach(c => c.onclick = () => {
+      const i = +c.dataset.pick, id = c.dataset.id;
+      if (Save.choosePick(i, id || null)) {
+        Audio2.play('achievement');
+        if (id) toast(`🏰 Neuer Turm: <b>${esc(TOWER_BY_ID[id].name)}</b>`, 'gold');
+        rerender();
+      }
+    });
+  }
+  function picksScreen() {
+    if (!Save.openPicks() || screen !== 'menu') return;
+    const render = () => {
+      $('#modalBody').innerHTML = picksHtml() + `<div class="row"><button class="btn green big" id="pkPlay">▶ Neue Runde (Welle 1)</button><button class="btn gray" id="pkClose">Später</button></div>`;
+      bindPicks(render);
+      $('#pkPlay').onclick = () => { closeModal(); playDialog(); };
+      $('#pkClose').onclick = () => closeModal();
+    };
+    openModal('🎁 Belohnung', '', true); render();
+  }
+
   // ---------------- Pause / Ergebnis ----------------
   function pauseMenu() {
     const R = Game.R;
@@ -4206,13 +4517,16 @@ const UI = (() => {
     const t = s.time; const tm = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
     const h = `<div class="result"><div class="big">${won ? '🏆 SIEG!' : '💀 GAME OVER'}</div><div>${s.mode.icon} ${s.mode.name}</div>
       <div class="statgrid"><div><span>Überstandene Wellen</span><b>${s.waves}</b></div><div><span>Besiegte Gegner</span><b>${fmt(s.kills)}</b></div><div><span>Verdiente Münzen</span><b>${fmt(s.coins)}</b></div><div><span>Besiegte Bosse</span><b>${s.bosses}</b></div><div><span>Spielzeit</span><b>${tm}</b></div><div><span>Persönlicher Rekord</span><b>Welle ${Math.max(s.record, s.waves)}</b></div></div>
-      ${won ? '<p>Belohnung: 💎100 🔮10</p>' : ''}
-      <div class="row">${won && s.mode.id !== 'boss' ? '<button class="btn green" id="rsCont">♾️ Weiterspielen (Endlos)</button>' : ''}<button class="btn ${won ? '' : 'green'}" id="rsRetry">🔁 Neu starten</button><button class="btn gray" id="rsMenu">🏠 Hauptmenü</button></div></div>`;
+      ${won ? '<p>Belohnung: 💎100 🔮10</p>' : '<p>Deine Burg ist gefallen – aber du bekommst neue Türme für die nächste Runde!</p>'}
+      <div id="rsPicks"></div>
+      <div class="row">${won && s.mode.id !== 'boss' ? '<button class="btn green" id="rsCont">♾️ Weiterspielen (Endlos)</button>' : ''}<button class="btn ${won ? '' : 'green'}" id="rsRetry">🔁 Neue Runde (Welle 1)</button><button class="btn gray" id="rsMenu">🏠 Hauptmenü</button></div></div>`;
     openModal(won ? 'Sieg' : 'Niederlage', h, true);
     $('#modalClose').classList.add('hidden');
+    const renderPicks = () => { $('#rsPicks').innerHTML = picksHtml(); bindPicks(renderPicks); };
+    renderPicks();
     const done = () => $('#modalClose').classList.remove('hidden');
     const c = $('#rsCont'); if (c) c.onclick = () => { done(); Game.continueEndless(); closeModal(); Game.R.paused = false; hud(true); };
-    $('#rsRetry').onclick = () => { done(); startGame(s.mode.id, Game.R.biome); };
+    $('#rsRetry').onclick = () => { done(); Save.P.run = null; startGame(s.mode.id, Game.R.biome); };
     $('#rsMenu').onclick = () => { done(); goMenu(); };
     if (won) for (let i = 0; i < 6; i++) setTimeout(() => Particles.emit((Math.random() - 0.5) * 16, 2, (Math.random() - 0.5) * 10, 60, '#ffffff', { speed: 5, up: 6, life: 1.6, size: 0.35, tint: false }), i * 250);
   }
@@ -4240,9 +4554,11 @@ const UI = (() => {
       const b = e.target.closest('[data-act]'); if (b) { action(b.dataset.act); return; }
       const it = e.target.closest('#bbItems .item'); if (it) { onBuildItem(it); return; }
       const tool = e.target.closest('[data-tool]'); if (tool) { onBuildItem(tool); return; }
+      if (e.target.closest('[data-bbclose]')) { Audio2.play('click'); setBuildOpen(false); return; }
+      if (e.target.closest('#buildToggle')) { Audio2.init(); Audio2.play('click'); setBuildOpen(true); return; }
       const tab = e.target.closest('#bbTabs button'); if (tab) { curTab = tab.dataset.tab; Audio2.play('click'); renderBuildBar(); return; }
       const cam = e.target.closest('[data-cam]');
-      if (cam) { const c = cam.dataset.cam; if (c === 'rl') CamCtl.rotate(Math.PI / 4); if (c === 'rr') CamCtl.rotate(-Math.PI / 4); if (c === 'zi') CamCtl.zoom(0.8); if (c === 'zo') CamCtl.zoom(1.25); if (c === 'reset') CamCtl.reset(); return; }
+      if (cam) { const c = cam.dataset.cam; if (c === 'rl') CamCtl.rotate(Math.PI / 4); if (c === 'rr') CamCtl.rotate(-Math.PI / 4); if (c === 'zi') CamCtl.zoom(0.8); if (c === 'zo') CamCtl.zoom(1.25); if (c === 'reset') { if (screen === 'game') { setCamMode(CamCtl.mode === 'follow' ? 'free' : 'follow'); Audio2.play('click'); } else CamCtl.reset(); } return; }
       const tp = e.target.closest('[data-tp]');
       if (tp) {
         const t = Game.selected; const k = tp.dataset.tp;
@@ -4277,14 +4593,19 @@ const UI = (() => {
       if (k === 'escape') { if (!$('#modal').classList.contains('hidden')) closeModal(); else if (Game.buildSel) Game.setBuild(null); else if (Game.selected) Game.select(null); else if (screen === 'game') pauseMenu(); }
       if (screen !== 'game' || !$('#modal').classList.contains('hidden')) return;
       if (k === 'r') Game.rotateBuild();
-      if (k === ' ') { e.preventDefault(); $('#waveBtn').click(); }
+      if (k === ' ') e.preventDefault(); // Springen (Player)
+      if (k === 'enter') { e.preventDefault(); $('#waveBtn').click(); }
+      if (k === 'b') setBuildOpen(!document.body.classList.contains('build-open'));
+      if (k === 'c') setCamMode(CamCtl.mode === 'follow' ? 'free' : 'follow');
       if (k === 'u' && Game.selected) Game.upgrade(Game.selected);
       if (k === 'x' && Game.selected) Game.sell(Game.selected);
       if (k === 'm' && Game.selected) Game.startMove(Game.selected);
       if (k === 'p') $('#pauseBtn').click();
       if (k === 'f') $('#speedBtn').click();
-      if (/^[1-9]$/.test(k)) { const un = TOWERS.filter(t => Save.P.unlocked.includes(t.id)).sort((a, b) => a.cost - b.cost); const t = un[+k - 1]; if (t) { curTab = 'towers'; Game.setBuild({ kind: 'tower', id: t.id }); } }
+      if (/^[1-9]$/.test(k)) { const un = TOWERS.filter(t => Save.P.unlocked.includes(t.id)).sort((a, b) => a.cost - b.cost); const t = un[+k - 1]; if (t) { curTab = 'towers'; setBuildOpen(true); Game.setBuild({ kind: 'tower', id: t.id }); } }
     });
+    bindJoystick();
+    document.body.classList.toggle('touch', isTouch());
     // Mausrad im Baumenü horizontal scrollen
     $('#bbItems').addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { $('#bbItems').scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
   }
@@ -4342,6 +4663,7 @@ const UI = (() => {
       CamCtl.handlers.paintEnd = (p, tap) => Game.paintEnd(p, tap);
       CamCtl.handlers.paintCancel = () => {};
       CamCtl.handlers.tap = p => { if (UI.screen === 'game') Game.tap(p); };
+      Player.setObstacles(() => Game.obstacles());
       Thumbs.warm(TOWERS.filter(t => P.unlocked.includes(t.id)).map(t => ['tower', t.id]));
       setLoad(90, 'Fast fertig …');
       UI.goMenu();
@@ -4370,6 +4692,8 @@ const UI = (() => {
     if (!World.renderer) return;
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
     const t = now / 1000;
+    const R = Game.R;
+    if (UI.screen === 'game' && R && !R.paused && !R.over) Player.update(dt, CamCtl.keys, CamCtl.yaw);
     CamCtl.update(dt);
     Game.update(dt, t);
     World.update(dt, t);

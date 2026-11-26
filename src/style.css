@@ -213,6 +213,30 @@ textarea.code{width:100%;height:6em;border-radius:10px;border:2px solid rgba(255
   #toasts{top:calc(108px + env(safe-area-inset-top,0px))}
   .build-hint{top:calc(58px + env(safe-area-inset-top,0px))}
   .modal-box{height:96vh}
-  .build-hint{bottom:calc(8.2em + var(--safe-b))}
+
 }
 @media (max-width:700px) and (orientation:landscape){.build-bar{right:calc(30vw + 14px)}}
+
+/* Spielfigur-Steuerung */
+.joy{position:fixed;left:calc(18px + var(--safe-l));bottom:calc(16px + var(--safe-b));width:128px;height:128px;border-radius:50%;background:rgba(15,25,55,.35);border:3px solid rgba(255,255,255,.45);touch-action:none;display:none}
+.joy-knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#bcd4ff);box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.jump-btn{position:fixed;right:calc(min(30vw,210px) + 22px + var(--safe-r));bottom:calc(18px + var(--safe-b));width:76px;height:76px;border-radius:50%;border:3px solid rgba(255,255,255,.6);background:rgba(15,25,55,.55);color:#fff;font-size:1.9em;font-weight:900;line-height:.9;display:none;flex-direction:column;align-items:center;justify-content:center;touch-action:none}
+.jump-btn small{font-size:.32em}
+.jump-btn:active{transform:scale(.92);background:rgba(79,163,255,.6)}
+.build-toggle{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--safe-b));display:none}
+.build-toggle:active{transform:translateX(-50%) translateY(3px)}
+.bb-tabs .bb-close{flex:0 0 2.4em;background:linear-gradient(#ff6a6a,#d93a3a);color:#fff}
+body:not(.build-open) .build-bar{display:none}
+body:not(.build-open) #hud .build-toggle{display:block}
+body.touch:not(.build-open):not(.tp-open) #hud .joy{display:block}
+body.touch:not(.build-open) #hud .jump-btn{display:flex}
+#camMode{font-size:.8em}
+.picks{margin:.8em 0;background:rgba(255,225,77,.1);border:2px solid #ffe14d;border-radius:16px;padding:.6em}
+.picks h3{margin:.1em 0 .4em;color:#ffe14d}
+.pick-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:.6em}
+.pick-row .card{border-width:3px}.pick-row .card img{height:4.2em}
+.pick-row.done .card{opacity:.35;pointer-events:none}
+.pick-row.done .card.chosen{opacity:1;box-shadow:0 0 0 4px #5fe07a;animation:pulse 1.2s infinite}
+.swatches{display:flex;gap:6px}
+.swatches button{width:2em;height:2em;border-radius:8px;border:3px solid rgba(255,255,255,.3)}
+.swatches button.on{border-color:#fff;box-shadow:0 0 0 2px #ffe14d}

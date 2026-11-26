@@ -26,9 +26,10 @@ const Save = (() => {
       quests: {},                             // id -> 'claimed'
       daily: { date: '', list: [], streak: 0, lastClaim: '' },
       records: {},                            // modus -> beste Welle
+      pendingPicks: null,                     // Turm-Belohnung nach der letzten Runde
       layout: null,                           // {roads:[[x,z,id]], decos:[[x,z,id,rot]]}
       run: null,                              // laufende Runde (Snapshot nach jeder Welle)
-      settings: { music: 0.45, sfx: 0.7, quality: (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'medium' : 'high'), particles: true, autoStart: true, showGrid: true, damageNumbers: true },
+      settings: { music: 0.45, sfx: 0.7, quality: (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'medium' : 'high'), particles: true, autoStart: true, showGrid: true, damageNumbers: true, shirt: '#e03a3a', pants: '#2f5bd0' },
     };
   }
   function merge(base, src) {
@@ -141,7 +142,41 @@ const Save = (() => {
     return { ...r, day, streak: P.daily.streak };
   }
 
+  // ---------- Turm-Belohnung nach einer Runde ----------
+  // Je mehr Wellen überstanden, desto mehr Auswahlen und desto seltenere Türme.
+  function makeTowerPicks(waves) {
+    const n = waves >= 25 ? 3 : waves >= 10 ? 2 : 1;
+    const weight = t => ({ common: 6, uncommon: 10, rare: 4 + waves / 4, epic: 1 + waves / 7, legendary: waves / 14, mythic: waves / 25, secret: waves / 35 })[t.rarity];
+    const picks = [];
+    const taken = new Set();
+    for (let i = 0; i < n; i++) {
+      const pool = TOWERS.filter(t => !P.unlocked.includes(t.id) && !taken.has(t.id) && weight(t) > 0);
+      if (!pool.length) { picks.push({ gems: 25 + waves * 3 }); continue; }
+      const opts = [];
+      while (opts.length < 3 && pool.length) {
+        let tot = pool.reduce((a, t) => a + weight(t), 0), r = Math.random() * tot, k = 0;
+        for (; k < pool.length - 1; k++) { r -= weight(pool[k]); if (r <= 0) break; }
+        opts.push(pool[k].id); taken.add(pool[k].id); pool.splice(k, 1);
+      }
+      picks.push({ options: opts });
+    }
+    // Auswahlmöglichkeiten, die nicht gewählt werden, sind beim nächsten Mal wieder im Topf
+    P.pendingPicks = picks;
+  }
+  function choosePick(i, towerId) {
+    const p = P.pendingPicks && P.pendingPicks[i]; if (!p || p.done) return false;
+    if (p.gems) { P.gems += p.gems; P.stats.gemsEarned += p.gems; }
+    else if (p.options.includes(towerId) && !P.unlocked.includes(towerId)) P.unlocked.push(towerId);
+    else return false;
+    p.done = towerId || 'gems';
+    checkAchievements(); save();
+    return true;
+  }
+
+  const openPicks = () => !!(P.pendingPicks && P.pendingPicks.some(q => !q.done));
+  function tidyPicks() { if (P.pendingPicks && !openPicks()) P.pendingPicks = null; }
   return {
+    makeTowerPicks, choosePick, openPicks, tidyPicks,
     load, save, saveSoon, reset, on, emit, stat, addStat, maxStat, addXP, grant, checkAchievements,
     questProgress, claimQuest, refreshDaily, dailyDef, dailyProgress, claimDaily, dailyRewardAvailable, claimDailyReward,
     get P() { return P; },

@@ -705,5 +705,50 @@ const Models = (() => {
     return g;
   }
 
-  return { M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
+
+  // ---------------------------------------------------------
+  //  SPIELFIGUR (eigener Klötzchen-Look)
+  // ---------------------------------------------------------
+  let faceTex = null;
+  function makeAvatar(shirt = '#e03a3a', pants = '#2f5bd0') {
+    if (!faceTex) {
+      const c = document.createElement('canvas'); c.width = c.height = 128;
+      const g = c.getContext('2d');
+      g.fillStyle = '#ffd23f'; g.fillRect(0, 0, 128, 128);
+      g.fillStyle = '#1b1b1b';
+      g.beginPath(); g.ellipse(44, 52, 8, 12, 0, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.ellipse(84, 52, 8, 12, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(46, 48, 3, 0, 7); g.fill(); g.beginPath(); g.arc(86, 48, 3, 0, 7); g.fill();
+      g.strokeStyle = '#1b1b1b'; g.lineWidth = 6; g.lineCap = 'round';
+      g.beginPath(); g.arc(64, 72, 22, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
+      g.fillStyle = 'rgba(255,120,120,.45)'; g.beginPath(); g.arc(30, 76, 9, 0, 7); g.fill(); g.beginPath(); g.arc(98, 76, 9, 0, 7); g.fill();
+      faceTex = new THREE.CanvasTexture(c); faceTex.colorSpace = THREE.SRGBColorSpace;
+    }
+    const g = new THREE.Group();
+    const skin = M('#ffd23f'), sh = M(shirt), pa = M(pants);
+    const A = { legs: [], arms: [] };
+    for (const sx of [-1, 1]) {
+      const leg = new THREE.Group(); leg.position.set(sx * 0.14, 1.0, 0); g.add(leg);
+      mesh(box(0.27, 1.0, 0.3), pa, 0, -0.5, 0, leg);
+      mesh(box(0.29, 0.12, 0.34), M('#3a2a22'), 0, -0.94, 0.02, leg);
+      A.legs.push(leg);
+      const arm = new THREE.Group(); arm.position.set(sx * 0.42, 1.78, 0); g.add(arm);
+      mesh(box(0.26, 0.36, 0.3), sh, 0, -0.16, 0, arm);
+      mesh(box(0.24, 0.5, 0.28), skin, 0, -0.58, 0, arm);
+      A.arms.push(arm);
+    }
+    mesh(box(0.58, 0.82, 0.32), sh, 0, 1.41, 0, g);
+    mesh(box(0.58, 0.08, 0.33), M('#222'), 0, 1.02, 0, g);
+    const faceMat = new THREE.MeshLambertMaterial({ map: faceTex });
+    const head = new THREE.Mesh(box(0.52, 0.52, 0.52), [skin, skin, skin, skin, faceMat, skin]);
+    head.position.y = 2.1; head.castShadow = true; g.add(head);
+    // Kappe
+    mesh(cyl(0.29, 0.29, 0.14, 12), pa, 0, 2.42, 0, g);
+    mesh(box(0.42, 0.04, 0.26), pa, 0, 2.37, 0.3, g);
+    A.head = head;
+    g.userData.A = A;
+    return g;
+  }
+
+  return { makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
 })();

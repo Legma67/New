@@ -111,6 +111,15 @@ const Models = (() => {
         const bow = mesh(tor(0.16, 0.015, 5, 14, Math.PI), M(c2), 0, 0.18, 0.12, h); bow.rotation.z = Math.PI / 2;
         tip.position.set(0, 0.2, 0.2); break;
       }
+      case 'crossbow': {
+        mesh(box(0.16, 0.14, 0.5), M(c2), 0, 0.14, 0.05, h);
+        const arms = mesh(tor(0.24, 0.025, 5, 16, Math.PI), M(c1), 0, 0.16, 0.22, h); arms.rotation.x = Math.PI / 2; arms.rotation.z = Math.PI;
+        mesh(box(0.48, 0.01, 0.01), M('#eeeeee'), 0, 0.16, 0.2, h, false);
+        const bolt = mesh(cyl(0.015, 0.015, 0.42, 4), M(c3), 0, 0.2, 0.15, h, false); bolt.rotation.x = Math.PI / 2;
+        mesh(cone(0.03, 0.08, 4), M(c3), 0, 0.2, 0.38, h, false).rotation.x = Math.PI / 2;
+        mesh(box(0.08, 0.16, 0.08), M('#3a7bd5'), 0, 0.05, -0.15, h);
+        tip.position.set(0, 0.2, 0.42); ud.recoil = arms; break;
+      }
       case 'dish': {
         mesh(cyl(0.08, 0.12, 0.15, 8), M(c2), 0, 0.07, 0, h);
         const d = mesh(geo('dish', () => new THREE.SphereGeometry(0.24, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2.6)), M(c1, { side: 1 }), 0, 0.22, 0.05, h);
@@ -673,6 +682,20 @@ const Models = (() => {
     return g;
   }
 
+  function makeTrap(def) {
+    const g = new THREE.Group();
+    mesh(box(0.8, 0.05, 0.8), M('#4a4a4a'), 0, 0.075, 0, g, false).receiveShadow = true;
+    const c = def.color;
+    switch (def.id) {
+      case 'trap_spike': for (let x = -1; x <= 1; x++) for (let z = -1; z <= 1; z++) mesh(cone(0.07, 0.22, 4), M(c), x * 0.24, 0.2, z * 0.24, g); break;
+      case 'trap_glue': mesh(cyl(0.36, 0.38, 0.04, 16), M(c, { e: '#6a5000', ei: 0.2 }), 0, 0.12, 0, g, false); for (let i = 0; i < 5; i++) mesh(sph(0.06, 6), M('#e0c040'), Math.cos(i) * 0.22, 0.13, Math.sin(i * 2) * 0.22, g, false); break;
+      case 'trap_fire': for (let i = 0; i < 4; i++) { const a = i / 4 * 6.28; mesh(cyl(0.05, 0.06, 0.08, 6), M('#2a2a2a'), Math.cos(a) * 0.22, 0.14, Math.sin(a) * 0.22, g, false); } { const f = mesh(cone(0.18, 0.3, 8), M('#ff8a1a', { e: '#ff5a00', ei: 1, o: 0.85 }), 0, 0.25, 0, g, false); g.userData.flame = f; } break;
+      case 'trap_bomb': mesh(sph(0.2, 12), M('#2a2a2a'), 0, 0.25, 0, g); mesh(cyl(0.02, 0.02, 0.14, 4), M('#a08060'), 0, 0.48, 0, g, false); { const l = mesh(sph(0.04, 6), M('#ff3020', { e: '#ff2000', ei: 1 }), 0, 0.56, 0, g, false); g.userData.led = l; } break;
+      case 'trap_frost': { const cr = mesh(oct(0.16), M(c, { e: '#5ad0ff', ei: 0.6 }), 0, 0.3, 0, g, false); cr.scale.y = 1.6; g.userData.spin = cr; for (let i = 0; i < 4; i++) { const a = i / 4 * 6.28; mesh(cone(0.05, 0.18, 4), M('#e0f8ff'), Math.cos(a) * 0.26, 0.17, Math.sin(a) * 0.26, g, false); } break; }
+    }
+    return g;
+  }
+
   function makeCastle(skin) {
     const g = new THREE.Group();
     const wall = M(skin.wall), roof = M(skin.roof), dark = M('#4a4038');
@@ -750,5 +773,5 @@ const Models = (() => {
     return g;
   }
 
-  return { makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
+  return { makeTrap, makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
 })();

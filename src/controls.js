@@ -31,13 +31,13 @@ const CamCtl = (() => {
   function rotate(a) { tYaw += a; }
   function reset() {
     if (mode === 'follow') { tPitch = 0.5; tDist = 9; }
-    else { tYaw = 0; tPitch = 0.95; tDist = window.innerWidth < 900 ? 20 : 22; tTarget.set(0, 0, 0.6); }
+    else { tYaw = 0; tPitch = 0.95; tDist = View.w < 900 ? 20 : 22; tTarget.set(0, 0, 0.6); }
   }
   function setMode(m, followFn) { mode = m; if (followFn) follow = followFn; reset(); }
   function setAuto(v) { auto = v; if (!v) reset(); }
 
   function groundAt(cx, cy) {
-    ndc.set(cx / window.innerWidth * 2 - 1, -(cy / window.innerHeight) * 2 + 1);
+    ndc.set(cx / View.w * 2 - 1, -(cy / View.h) * 2 + 1);
     ray.setFromCamera(ndc, cam);
     return ray.ray.intersectPlane(plane, hit) ? hit.clone() : null;
   }
@@ -52,9 +52,12 @@ const CamCtl = (() => {
   }
   function clampTarget() { tTarget.x = THREE.MathUtils.clamp(tTarget.x, -GW / 2 - 4, GW / 2 + 4); tTarget.z = THREE.MathUtils.clamp(tTarget.z, -GH / 2 - 4, GH / 2 + 4); }
 
-  function onDown(e) {
+  // Ereignis mit Spielkoordinaten (bei gedrehter Ansicht umgerechnet)
+  const L = e => { const p = View.toLocal(e.clientX, e.clientY); return { pointerId: e.pointerId, pointerType: e.pointerType, button: e.button, target: e.target, clientX: p.x, clientY: p.y }; };
+  function onDown(ev) {
+    const e = L(ev);
     if (auto) return;
-    el.setPointerCapture?.(e.pointerId);
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType, button: e.button });
     moved = 0; downPos = { x: e.clientX, y: e.clientY, button: e.button };
     if (pointers.size === 1) {
@@ -71,7 +74,8 @@ const CamCtl = (() => {
       pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), ang: Math.atan2(b.y - a.y, b.x - a.x), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
     }
   }
-  function onMove(e) {
+  function onMove(ev) {
+    const e = L(ev);
     if (auto) return;
     const p = pointers.get(e.pointerId);
     if (!p) {
@@ -96,7 +100,8 @@ const CamCtl = (() => {
     else if (dragMode === 'pan') pan(dx, dy);
     else if (dragMode === 'paint') { const g = groundAt(e.clientX, e.clientY); handlers.hover && handlers.hover(g); handlers.paint && handlers.paint(g); }
   }
-  function onUp(e) {
+  function onUp(ev) {
+    const e = L(ev);
     const p = pointers.get(e.pointerId);
     if (!p) return;
     pointers.delete(e.pointerId);

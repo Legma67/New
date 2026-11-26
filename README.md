@@ -4,22 +4,16 @@ Ein 3D-Tower-Defense-Spiel für Browser, Smartphone und Tablet (Querformat). Du 
 
 **Spielen:** `index.html` im Browser öffnen. Die Datei ist komplett eigenständig und braucht keinen Server und kein Internet. Über GitHub Pages läuft sie direkt.
 
-## Features
-- **Spielfigur wie in Roblox:** Laufen mit WASD bzw. Touch-Joystick, Springen, Rennen (Shift). Die Kamera folgt der Figur, und Maus/Finger drehen sie. Getötete Gegner lassen manchmal Bonusmünzen fallen, die du einsammeln kannst.
-- **Wellen kommen automatisch:** 30 Sekunden bis Welle 1, danach 25 Sekunden Pause. Über den Knopf geht's früher los.
-- **Neue Türme nach einer Niederlage:** Je mehr Wellen du überstanden hast, desto mehr und desto seltenere Türme darfst du dir aussuchen. Die nächste Runde beginnt wieder bei Welle 1.
-- **Eigenes Grundstück:** Straßen malen (6 Wegtypen, Kurven und Kreuzungen verbinden sich automatisch), Deko platzieren, Türme bauen, drehen, verschieben und verkaufen. Grüne/rote Bauvorschau.
-- **Echte Wegfindung (A\*):** Gegner laufen exakt über die gebaute Straße. Wenn eine Änderung den Weg zum Ziel unterbrechen würde, wird sie nicht übernommen.
-- **30 Türme** mit eigenen Modellen und Fähigkeiten (Laser, Blitzketten, Minen, Drohnen, schwarzes Loch, Meteore, Drache …), je **5 Upgrade-Stufen**, die man am Modell sieht (Ringe, Stacheln, Krone, Aura).
-- **43 Gegnertypen:** fliegend, unsichtbar, gepanzert, mit Schild, heilend, springend, sich teilend, mit Immunitäten …
-- **Bosse alle 10 Wellen:** Steinriese, Feuerdrache, Eiskönig, Schattenmonster, Ultimativer Titan. Jeder hat Spezialfähigkeiten und eine eigene Lebensleiste.
-- **5 Spielmodi:** Normal (30 Wellen), Endlos, Bossmodus, Schwer, Kreativ.
-- **8 Biome:** Grasland, Wüste, Schnee, Vulkan, Dschungel, Dunkler Wald, Eiswelt, Magische Landschaft.
-- **Fortschritt:** Spielerlevel, XP, Edelsteine, Kristalle, Shop (Türme, Skins, Effekte, Burgen, Biome, Boosts), Inventar mit Suche/Filter/Sortierung, Bestiarium, tägliche + feste Aufgaben, 36 Erfolge, Tagesbelohnung mit Serie.
-- **Speichern:** automatisch im Browser (localStorage). Laufende Runden werden nach jeder Welle gesichert.
-- **Sound:** alle Effekte und 5 Musikstücke werden live per WebAudio erzeugt. Musik und Effekte sind getrennt regelbar.
-- **Steuerung:** Maus und Tastatur oder Touch (1 Finger: bauen/verschieben, 2 Finger: zoomen/drehen, Kamera-Knöpfe).
-- **Teilen:** Grundstück als Code exportieren, fremde Grundstücke per Code besuchen oder übernehmen.
+## So funktioniert das Spiel
+- **Ein Endlos-Modus:** Die Wellen kommen automatisch, und jede **5. Welle kommt ein Boss**.
+- **Pflicht-Tutorial beim ersten Start:** Du hast nur eine **Armbrust**. Die Wellen 1–4 sind so gebaut, dass sie allein reicht. In Welle 5 kommt der erste Boss, danach platzierst du deine neue Waffe.
+- **Türme gibt es nur von Bossen**, nicht für Geld. Jeder Boss öffnet eine Truhe mit einer Waffe, oft gibt es Wegstücke, eine Falle oder Münzen als Bonus dazu.
+- **Münzen** von besiegten Gegnern brauchst du für **Upgrades** (5 Stufen) und **Wegstücke**. Mit Wegstücken baust du den Weg der Gegner um. Das geht nur in der Pause zwischen zwei Wellen, und es muss immer ein Weg zur Burg führen.
+- **Fallen** (Stacheln, Kleber, Feuer, Sprengfalle, Frost) legst du direkt auf den Weg.
+- **Verloren?** Du suchst dir neue Türme aus, und die nächste Runde beginnt wieder bei Welle 1. Alle Türme, die du bekommen hast, behältst du.
+- **Spielfigur wie in Roblox:** Laufen mit WASD bzw. Joystick, Springen, Bonusmünzen einsammeln.
+- **Immer Querformat:** Hältst du das Handy hochkant, dreht sich das Spiel automatisch mit.
+- Außerdem: 31 Türme mit 5 Upgrade-Stufen, 44 Gegnertypen, 8 Biome, Shop (Kosmetik, Wegstücke), Aufgaben, Erfolge, Bestiarium und automatisches Speichern.
 
 > Hinweis: Echter Online-Multiplayer bräuchte einen Server. Dieses Spiel läuft komplett lokal, deshalb funktionieren Teilen und Besuchen über Codes.
 

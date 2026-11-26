@@ -17,6 +17,8 @@ const RARITIES = {
 // Tower types: bullet, splash, beam, slow, flame, sniper, poison, chain, mine, push, multi,
 //              drone, heal, buff, shock, aura, gold, meteor, blackhole
 const TOWERS = [
+  { id:'crossbow', name:'Armbrust', rarity:'common', cost:100, level:1, type:'bullet', dmg:24, range:3.8, rate:1.35, speed:20, dt:'phys', air:true,
+    body:'wood', head:'crossbow', c1:'#a8743f', c2:'#5a3a1c', c3:'#c9ced6', desc:'Dein erster Turm: schießt schwere Bolzen auf ein Ziel. Trifft auch Flieger.', lv5:'Doppelbolzen: trifft 2 Gegner' },
   { id:'cannon', name:'Kanonenturm', rarity:'common', cost:150, level:1, type:'splash', dmg:40, range:3.2, rate:0.8, speed:9, splash:0.9, dt:'explosive',
     body:'stone', head:'cannon', c1:'#8d8f99', c2:'#3b3f4a', c3:'#ffcc33', desc:'Feuert schwere Kanonenkugeln mit kleinem Flächenschaden.', lv5:'Riesenkugeln: +50% Explosionsradius' },
   { id:'archer', name:'Bogenschützenturm', rarity:'common', cost:100, level:1, type:'bullet', dmg:14, range:3.5, rate:2.2, speed:18, dt:'phys', air:true,
@@ -131,6 +133,7 @@ const ENEMIES = [
   { id:'magicdragon', name:'Magischer Drache', kind:'Magischer Drache', hp:2800, speed:1.1, reward:120, size:1.0, color:'#8a4dff', shape:'dragon', min:30, w:1, fly:true, resist:{ magic:0.6 }, glow:'#d0a0ff' },
   { id:'colossus', name:'Urzeitkoloss', kind:'Legendärer Boss', hp:9000, speed:0.55, reward:400, size:1.6, color:'#6b4f3a', shape:'golem', min:35, w:0.4, armor:0.5, mini:true },
   // ----- Bosse -----
+  { id:'boss_tut', name:'Kleiner Steinriese', kind:'Tutorial-Boss', hp:420, speed:0.42, reward:120, size:1.4, color:'#9a9282', shape:'golem', boss:true, min:999, glow:'#ffcc33' },
   { id:'boss_stone', name:'Steinriese', kind:'Bossgegner', hp:6000, speed:0.5, reward:600, size:1.9, color:'#8d8576', shape:'golem', boss:true, armor:0.4, abilities:['stomp','summon'], summon:'skeleton', min:999 },
   { id:'boss_fire', name:'Feuerdrache', kind:'Bossgegner', hp:16000, speed:0.7, reward:1200, size:1.8, color:'#e8361c', shape:'dragon', boss:true, fly:true, immune:['fire'], abilities:['rage','summon'], summon:'fireimp', min:999, glow:'#ff8800' },
   { id:'boss_ice', name:'Eiskönig', kind:'Bossgegner', hp:30000, speed:0.55, reward:2000, size:1.9, color:'#bfefff', shape:'knight', boss:true, immune:['ice','slow'], armor:0.4, abilities:['freeze','shieldregen'], shield:5000, crown:true, min:999, glow:'#e0fbff' },
@@ -222,11 +225,7 @@ const BOOSTS = [
 // Spielmodi
 // ------------------------------------------------------------
 const MODES = [
-  { id:'normal', name:'Normalmodus', icon:'🛡️', desc:'Klassisch: Überstehe 30 Wellen.', win:30, hp:1, speed:1, lives:20 },
-  { id:'endless', name:'Endlosmodus', icon:'♾️', desc:'Unbegrenzte Wellen. Wie weit kommst du?', win:0, hp:1, speed:1, lives:20 },
-  { id:'boss', name:'Bossmodus', icon:'👹', desc:'Jede Welle ein Boss. Besiege 10 Bosse.', win:10, hp:0.55, speed:1, lives:20, bossRush:true, unlock:5 },
-  { id:'hard', name:'Schwerer Modus', icon:'💀', desc:'Mehr Lebenspunkte, schnellere Gegner, 10 Leben.', win:30, hp:1.6, speed:1.2, lives:10, unlock:8 },
-  { id:'creative', name:'Kreativmodus', icon:'🎨', desc:'Unendlich Münzen, keine Niederlage. Baue und experimentiere!', win:0, hp:1, speed:1, lives:9999, creative:true },
+  { id:'endless', name:'Endlos', icon:'♾️', desc:'Unendlich viele Wellen – jede 5. Welle kommt ein Boss.', win:0, hp:1, speed:1, lives:20, bossEvery:5 },
 ];
 const MODE_BY_ID = Object.fromEntries(MODES.map(m => [m.id, m]));
 
@@ -236,12 +235,12 @@ const MODE_BY_ID = Object.fromEntries(MODES.map(m => [m.id, m]));
 const QUESTS = [
   { id:'q_kill100', name:'Monsterjäger', desc:'Besiege 100 Gegner.', stat:'kills', goal:100, reward:{ gems:15, xp:100 } },
   { id:'q_wave10', name:'Durchhalten', desc:'Überstehe insgesamt 10 Wellen.', stat:'wavesTotal', goal:10, reward:{ gems:15, xp:120 } },
-  { id:'q_tower5', name:'Baumeister', desc:'Baue 5 Türme.', stat:'towersBuilt', goal:5, reward:{ gems:10, xp:60 } },
+  { id:'q_tower5', name:'Baumeister', desc:'Platziere 5 Türme.', stat:'towersBuilt', goal:5, reward:{ gems:10, xp:60 } },
   { id:'q_up5', name:'Maximalstufe', desc:'Verbessere einen Turm auf Stufe 5.', stat:'maxTowerLevel', goal:5, reward:{ gems:25, xp:150 } },
   { id:'q_boss1', name:'Bossbezwinger', desc:'Besiege einen Boss.', stat:'bossKills', goal:1, reward:{ gems:30, crystals:3, xp:200 } },
   { id:'q_coins10k', name:'Schatzmeister', desc:'Verdiene 10.000 Münzen.', stat:'coinsEarned', goal:10000, reward:{ gems:25, xp:150 } },
   { id:'q_games3', name:'Stammspieler', desc:'Spiele drei Runden.', stat:'gamesPlayed', goal:3, reward:{ gems:10, xp:80 } },
-  { id:'q_road30', name:'Straßenbauer', desc:'Baue 30 Straßenfelder.', stat:'roadsBuilt', goal:30, reward:{ gems:10, xp:60 } },
+  { id:'q_road30', name:'Straßenbauer', desc:'Baue 15 Straßenfelder.', stat:'roadsBuilt', goal:15, reward:{ gems:10, xp:60 } },
   { id:'q_kill1000', name:'Legendärer Jäger', desc:'Besiege 1.000 Gegner.', stat:'kills', goal:1000, reward:{ gems:50, crystals:5, xp:500 } },
   { id:'q_wave50', name:'Unerschütterlich', desc:'Überstehe insgesamt 50 Wellen.', stat:'wavesTotal', goal:50, reward:{ gems:40, crystals:4, xp:400 } },
   { id:'q_deco10', name:'Gartenkünstler', desc:'Platziere 10 Dekorationen.', stat:'decoBuilt', goal:10, reward:{ gems:10, xp:60 } },
@@ -252,11 +251,11 @@ const QUESTS = [
 const DAILY_POOL = [
   { id:'d_kill', name:'Tägliche Jagd', desc:'Besiege {g} Gegner.', stat:'kills', goal:150, reward:{ gems:12, xp:100 } },
   { id:'d_wave', name:'Tägliche Wellen', desc:'Überstehe {g} Wellen.', stat:'wavesTotal', goal:8, reward:{ gems:12, xp:100 } },
-  { id:'d_build', name:'Täglicher Bau', desc:'Baue {g} Türme.', stat:'towersBuilt', goal:6, reward:{ gems:8, xp:60 } },
+  { id:'d_build', name:'Täglicher Bau', desc:'Platziere {g} Türme.', stat:'towersBuilt', goal:4, reward:{ gems:8, xp:60 } },
   { id:'d_upg', name:'Tägliches Training', desc:'Führe {g} Upgrades durch.', stat:'upgrades', goal:8, reward:{ gems:8, xp:60 } },
   { id:'d_coins', name:'Tägliches Gold', desc:'Verdiene {g} Münzen.', stat:'coinsEarned', goal:4000, reward:{ gems:12, xp:100 } },
   { id:'d_boss', name:'Täglicher Boss', desc:'Besiege {g} Boss.', stat:'bossKills', goal:1, reward:{ gems:20, crystals:2, xp:150 } },
-  { id:'d_road', name:'Tägliche Straßen', desc:'Baue {g} Straßenfelder.', stat:'roadsBuilt', goal:15, reward:{ gems:6, xp:40 } },
+  { id:'d_road', name:'Tägliche Straßen', desc:'Baue {g} Straßenfelder.', stat:'roadsBuilt', goal:6, reward:{ gems:6, xp:40 } },
 ];
 const ACHIEVEMENTS = [
   { id:'a_tower1', name:'Erster Turm', desc:'Baue deinen ersten Turm.', stat:'towersBuilt', goal:1, gems:5, icon:'🏰' },
@@ -283,19 +282,33 @@ const ACHIEVEMENTS = [
   { id:'a_deco25', name:'Landschaftsgärtner', desc:'Platziere 25 Dekorationen.', stat:'decoBuilt', goal:25, gems:15, icon:'🌸' },
   { id:'a_games10', name:'Veteran', desc:'Spiele 10 Runden.', stat:'gamesPlayed', goal:10, gems:20, icon:'🎮' },
   { id:'a_skip10', name:'Draufgänger', desc:'Überspringe 10 Wellen-Pausen.', stat:'skips', goal:10, gems:15, icon:'⏩' },
-  { id:'a_victory', name:'Triumph', desc:'Gewinne einen Spielmodus.', stat:'victories', goal:1, gems:50, crystals:5, icon:'🏆' },
-  { id:'a_hard', name:'Unbezwingbar', desc:'Gewinne den Schweren Modus.', stat:'hardVictories', goal:1, gems:100, crystals:15, icon:'💀' },
+  { id:'a_victory', name:'Tutorial gemeistert', desc:'Schließe das Tutorial ab.', stat:'tutorial', goal:1, gems:20, icon:'🎓' },
+  { id:'a_hard', name:'Unbezwingbar', desc:'Erreiche Welle 75 in einer Runde.', stat:'bestWave', goal:75, gems:100, crystals:15, icon:'💀' },
+  { id:'a_trap', name:'Fallensteller', desc:'Platziere 10 Fallen.', stat:'trapsBuilt', goal:10, gems:15, icon:'🪤' },
   { id:'a_perfect', name:'Makellos', desc:'Überstehe ab Welle 10 eine Welle ohne Lebensverlust.', stat:'perfectWaves', goal:1, gems:15, icon:'✨' },
   { id:'a_level10', name:'Aufsteiger', desc:'Erreiche Spielerlevel 10.', stat:'playerLevel', goal:10, gems:30, icon:'📈' },
   { id:'a_level25', name:'Kommandant', desc:'Erreiche Spielerlevel 25.', stat:'playerLevel', goal:25, gems:80, crystals:10, icon:'🎖️' },
-  { id:'a_collect15', name:'Sammler', desc:'Schalte 15 Türme frei.', stat:'towersUnlocked', goal:15, gems:30, icon:'📚' },
-  { id:'a_collect30', name:'Komplettist', desc:'Schalte alle 30 Türme frei.', stat:'towersUnlocked', goal:30, gems:150, crystals:30, icon:'🗃️' },
+  { id:'a_collect15', name:'Sammler', desc:'Besitze 15 verschiedene Türme.', stat:'towersUnlocked', goal:15, gems:30, icon:'📚' },
+  { id:'a_collect30', name:'Komplettist', desc:'Besitze alle 31 Türme.', stat:'towersUnlocked', goal:31, gems:150, crystals:30, icon:'🗃️' },
   { id:'a_seen20', name:'Monsterforscher', desc:'Entdecke 20 Gegnertypen.', stat:'enemiesSeen', goal:20, gems:20, icon:'🔍' },
   { id:'a_dmg1m', name:'Zerstörungskraft', desc:'Verursache 1.000.000 Schaden.', stat:'damage', goal:1000000, gems:40, icon:'💥' },
   { id:'a_titan', name:'Titanenbezwinger', desc:'Besiege den Ultimativen Titan.', stat:'titanKills', goal:1, gems:200, crystals:50, icon:'🗿' },
   { id:'a_shop', name:'Kunde', desc:'Kaufe etwas im Shop.', stat:'purchases', goal:1, gems:5, icon:'🛒' },
   { id:'a_streak7', name:'Treue Seele', desc:'Hole 7 Tage in Folge die Tagesbelohnung.', stat:'bestStreak', goal:7, gems:50, crystals:5, icon:'📅' },
 ];
+
+// ------------------------------------------------------------
+// Fallen (werden auf Straßenfelder gelegt, nur von Bossen)
+// ------------------------------------------------------------
+const TRAPS = [
+  { id:'trap_spike', name:'Stachelfalle', rarity:'uncommon', icon:'🔺', color:'#b8bcc6', dmg:18, every:0.5, desc:'Verletzt alle Bodengegner, die darüberlaufen.' },
+  { id:'trap_glue', name:'Klebefalle', rarity:'uncommon', icon:'🟫', color:'#c9a227', slow:0.55, desc:'Gegner kleben fest und laufen viel langsamer.' },
+  { id:'trap_fire', name:'Feuerfalle', rarity:'rare', icon:'🔥', color:'#ff6a1a', burn:22, desc:'Setzt Gegner in Brand.' },
+  { id:'trap_bomb', name:'Sprengfalle', rarity:'rare', icon:'💣', color:'#3a3a3a', dmg:140, splash:1.2, rearm:5, desc:'Explodiert, wenn ein Gegner drauftritt. Lädt sich wieder auf.' },
+  { id:'trap_frost', name:'Frostfalle', rarity:'epic', icon:'❄️', color:'#9fe6ff', stun:1.2, rearm:6, desc:'Friert Gegner kurz komplett ein.' },
+];
+const TRAP_BY_ID = Object.fromEntries(TRAPS.map(t => [t.id, t]));
+const ROAD_PIECE_PRICE = 30;   // Münzen pro Wegstück
 
 const NEIGHBOR_NAMES = ['MaxBuilder', 'TurmTina', 'KanonenKai', 'LaserLena', 'Drachenjäger', 'PixelPaul'];
 

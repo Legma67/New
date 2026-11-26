@@ -4,6 +4,7 @@
 // ============================================================
 (function boot() {
   const setLoad = (p, t) => { document.getElementById('loadfill').style.width = p + '%'; if (t) document.getElementById('loadtxt').textContent = t; };
+  View.layout();
   setLoad(10, 'Lade Spielstand …');
   const P = Save.load();
   Audio2.setVolumes(P.settings.sfx, P.settings.music);
@@ -29,6 +30,7 @@
       Thumbs.warm(TOWERS.filter(t => P.unlocked.includes(t.id)).map(t => ['tower', t.id]));
       setLoad(90, 'Fast fertig …');
       UI.goMenu();
+      if (!P.tutorialDone) UI.startGame('endless', P.equipped.biome);   // allererster Start: sofort ins Tutorial
       setLoad(100);
       setTimeout(() => document.getElementById('loading').classList.add('hidden'), 250);
     } catch (e) {
@@ -42,7 +44,7 @@
   window.addEventListener('pointerdown', unlock, { passive: true });
   window.addEventListener('keydown', unlock);
 
-  window.addEventListener('resize', () => World.renderer && World.resize());
+  View.onChange(() => World.renderer && World.resize());
   const persist = () => { if (Game.R && !Game.demo) Game.snapshotRun(); Save.save(); };
   document.addEventListener('visibilitychange', () => { if (document.hidden) { persist(); if (Game.R && !Game.demo && !Game.R.over) Game.R.paused = true; } });
   window.addEventListener('pagehide', persist);
@@ -59,6 +61,7 @@
     CamCtl.update(dt);
     Game.update(dt, t);
     World.update(dt, t);
+    UI.Tut.tick(t);
     hudT -= dt;
     if (hudT <= 0) { hudT = 0.1; UI.hud(); }
     World.renderer.render(World.scene, World.camera);

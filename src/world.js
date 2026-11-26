@@ -114,7 +114,7 @@ const World = (() => {
     resize();
   }
   function resize() {
-    const w = window.innerWidth, h = window.innerHeight;
+    const w = View.w, h = View.h;
     renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
   }

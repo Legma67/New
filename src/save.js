@@ -11,16 +11,20 @@ const Save = (() => {
 
   function defaults() {
     return {
-      v: 1,
+      v: 2,
+      tutorialDone: false,
+      towerInv: { crossbow: 1 },               // Türme im Besitz (Anzahl) – nur von Bossen
+      trapInv: {},                             // Fallen im Besitz (Anzahl)
+      roadPieces: 4,                           // freie Wegstücke
       name: 'Spieler' + Math.floor(1000 + Math.random() * 9000),
       level: 1, xp: 0, gems: 50, crystals: 0,
-      unlocked: ['archer', 'cannon'],            // freigeschaltete Türme
+      unlocked: ['crossbow'],                  // jemals erhaltene Türme (Sammlung)
       owned: { skins: ['skin_default'], effects: ['fx_default'], castles: ['castle_default'], biomes: ['grass'], decos: [] },
       equipped: { skin: 'skin_default', effect: 'fx_default', castle: 'castle_default', biome: 'grass' },
       boosts: { boost_coins: 0, boost_lives: 0, boost_xp: 0 },
       stats: { kills: 0, bossKills: 0, titanKills: 0, wavesTotal: 0, bestWave: 0, towersBuilt: 0, roadsBuilt: 0, decoBuilt: 0, upgrades: 0, maxTowerLevel: 0,
         coinsEarned: 0, gamesPlayed: 0, skips: 0, victories: 0, hardVictories: 0, perfectWaves: 0, legendaryBuilt: 0, damage: 0, purchases: 0,
-        playTime: 0, livesLost: 0, sold: 0, gemsEarned: 0, bestStreak: 0 },
+        playTime: 0, livesLost: 0, trapsBuilt: 0, sold: 0, gemsEarned: 0, bestStreak: 0 },
       seen: {}, killsBy: {},
       achievements: {},                       // id -> Zeitstempel
       quests: {},                             // id -> 'claimed'
@@ -44,6 +48,11 @@ const Save = (() => {
       const raw = localStorage.getItem(SAVE_KEY);
       P = raw ? merge(defaults(), JSON.parse(raw)) : defaults();
     } catch (e) { P = defaults(); }
+    // Umstieg auf das neue System (Türme nur von Bossen)
+    if (P.v < 2) {
+      Object.assign(P, { v: 2, tutorialDone: false, towerInv: { crossbow: 1 }, trapInv: {}, roadPieces: 4, unlocked: ['crossbow'], run: null, pendingPicks: null, records: {} });
+      P.stats.bestWave = 0;
+    }
     if (!P.layout) P.layout = { roads: DEFAULT_ROADS.map(([x, z]) => [x, z, 'road_stone']), decos: [[2, 7, 'tree', 0], [3, 12, 'flowers', 0], [10, 1, 'lantern', 0], [16, 12, 'bush', 0], [20, 1, 'house', 1]] };
     refreshDaily();
     return P;
@@ -61,7 +70,8 @@ const Save = (() => {
   // ---------- Stats ----------
   function stat(key) {
     if (key === 'playerLevel') return P.level;
-    if (key === 'towersUnlocked') return P.unlocked.length;
+    if (key === 'towersUnlocked') return Object.keys(P.towerInv).filter(k => P.towerInv[k] > 0).length;
+    if (key === 'tutorial') return P.tutorialDone ? 1 : 0;
     if (key === 'enemiesSeen') return Object.keys(P.seen).length;
     return P.stats[key] || 0;
   }
@@ -76,8 +86,7 @@ const Save = (() => {
       P.xp -= xpForLevel(P.level); P.level++;
       const gems = 10 + P.level * 2;
       P.gems += gems; P.stats.gemsEarned += gems;
-      const newTowers = TOWERS.filter(t => t.level === P.level && !P.unlocked.includes(t.id));
-      newTowers.forEach(t => P.unlocked.push(t.id));
+      const newTowers = [];
       const newBiomes = BIOMES.filter(b => b.level === P.level && !P.owned.biomes.includes(b.id));
       newBiomes.forEach(b => P.owned.biomes.push(b.id));
       emit('levelup', { level: P.level, gems, towers: newTowers, biomes: newBiomes });
@@ -142,6 +151,36 @@ const Save = (() => {
     return { ...r, day, streak: P.daily.streak };
   }
 
+  // ---------- Inventar ----------
+  function addTower(id, n = 1) { P.towerInv[id] = (P.towerInv[id] || 0) + n; if (!P.unlocked.includes(id)) P.unlocked.push(id); checkAchievements(); }
+  function addTrap(id, n = 1) { P.trapInv[id] = (P.trapInv[id] || 0) + n; }
+  // Zufälliger Turm, je höher die Welle desto seltener
+  function rollTower(wave, exclude = []) {
+    const weight = t => ({ common: 10, uncommon: 9, rare: 3 + wave / 6, epic: 0.5 + wave / 12, legendary: wave / 25, mythic: wave / 45, secret: wave / 60 })[t.rarity];
+    const pool = TOWERS.filter(t => !exclude.includes(t.id) && weight(t) > 0);
+    let tot = pool.reduce((a, t) => a + weight(t), 0), r = Math.random() * tot;
+    for (const t of pool) { r -= weight(t); if (r <= 0) return t.id; }
+    return pool[0].id;
+  }
+  // Boss-Belohnung: Turm, Wegstücke, Falle oder Münzen
+  function rollFake(wave) {
+    const r = Math.random();
+    if (r < 0.7) return { kind: 'tower', id: rollTower(wave) };
+    if (r < 0.8) return { kind: 'roads', n: 6 };
+    if (r < 0.95) return { kind: 'trap', id: TRAPS[Math.floor(Math.random() * TRAPS.length)].id };
+    return { kind: 'coins', n: 500 };
+  }
+  function rollBossReward(wave, tutorial) {
+    if (tutorial) { const ids = ['crossbow', 'cannon', 'archer', 'ice', 'poison', 'crossbow']; return { kind: 'tower', id: ids[Math.floor(Math.random() * ids.length)] }; }
+    // Jeder Boss gibt immer eine Waffe – und oft noch einen Bonus obendrauf
+    const r = Math.random();
+    let bonus = null;
+    if (r < 0.3) bonus = { kind: 'roads', n: 4 + Math.floor(wave / 5) };
+    else if (r < 0.6) { const pool = wave < 15 ? TRAPS.slice(0, 3) : TRAPS; bonus = { kind: 'trap', id: pool[Math.floor(Math.random() * pool.length)].id }; }
+    else if (r < 0.8) bonus = { kind: 'coins', n: 100 + wave * 20 };
+    return { kind: 'tower', id: rollTower(wave), bonus };
+  }
+
   // ---------- Turm-Belohnung nach einer Runde ----------
   // Je mehr Wellen überstanden, desto mehr Auswahlen und desto seltenere Türme.
   function makeTowerPicks(waves) {
@@ -150,7 +189,7 @@ const Save = (() => {
     const picks = [];
     const taken = new Set();
     for (let i = 0; i < n; i++) {
-      const pool = TOWERS.filter(t => !P.unlocked.includes(t.id) && !taken.has(t.id) && weight(t) > 0);
+      const pool = TOWERS.filter(t => !taken.has(t.id) && weight(t) > 0);
       if (!pool.length) { picks.push({ gems: 25 + waves * 3 }); continue; }
       const opts = [];
       while (opts.length < 3 && pool.length) {
@@ -166,7 +205,7 @@ const Save = (() => {
   function choosePick(i, towerId) {
     const p = P.pendingPicks && P.pendingPicks[i]; if (!p || p.done) return false;
     if (p.gems) { P.gems += p.gems; P.stats.gemsEarned += p.gems; }
-    else if (p.options.includes(towerId) && !P.unlocked.includes(towerId)) P.unlocked.push(towerId);
+    else if (p.options.includes(towerId)) addTower(towerId);
     else return false;
     p.done = towerId || 'gems';
     checkAchievements(); save();
@@ -176,7 +215,7 @@ const Save = (() => {
   const openPicks = () => !!(P.pendingPicks && P.pendingPicks.some(q => !q.done));
   function tidyPicks() { if (P.pendingPicks && !openPicks()) P.pendingPicks = null; }
   return {
-    makeTowerPicks, choosePick, openPicks, tidyPicks,
+    makeTowerPicks, choosePick, openPicks, tidyPicks, addTower, addTrap, rollTower, rollBossReward, rollFake,
     load, save, saveSoon, reset, on, emit, stat, addStat, maxStat, addXP, grant, checkAchievements,
     questProgress, claimQuest, refreshDaily, dailyDef, dailyProgress, claimDaily, dailyRewardAvailable, claimDailyReward,
     get P() { return P; },

@@ -102,7 +102,7 @@ const UI = (() => {
     db.classList.toggle('done', !av); db.textContent = av ? '🎁 Tagesbelohnung abholen!' : '✅ Belohnung abgeholt';
   }
   function goMenu() {
-    closeModal(); Game.quit(); visiting = null; $('.visit-bar')?.remove();
+    closeModal(); Tut.stop(); Game.quit(); visiting = null; $('.visit-bar')?.remove();
     Player.remove(); CamCtl.setMode('free');
     show('menu'); refreshMenu();
     Game.startDemo(); CamCtl.setAuto(true); Audio2.setMood('menu');
@@ -119,8 +119,11 @@ const UI = (() => {
     Player.spawn(World.scene, Save.P.name, Save.P.settings.shirt, Save.P.settings.pants);
     setCamMode('follow');
     setBuildOpen(!isTouch());
-    if (!snapshot) banner('Welle 1 kommt in 30 Sekunden!', isTouch() ? 'Joystick: laufen · 🔨 BAUEN: Türme setzen' : 'WASD: laufen · Leertaste: springen · B: Baumenü', '', 3200);
-    else banner('Willkommen zurück!', `Welle ${snapshot.wave} · ${MODE_BY_ID[modeId].name}`, '', 2000);
+    Tut.stop();
+    if (Game.R.tutorial) { setBuildOpen(false); Tut.start(); }
+    if (Game.R.tutorial) banner('TUTORIAL', 'Lerne, wie man spielt', '', 2000);
+    else if (!snapshot) banner('Welle 1 kommt gleich!', 'Jede 5. Welle kommt ein Boss 👑', '', 2800);
+    else banner('Willkommen zurück!', `Weiter bei Welle ${snapshot.wave + 1}`, '', 2000);
     Save.save();
   }
 
@@ -138,8 +141,10 @@ const UI = (() => {
   function bindJoystick() {
     const joy = $('#joy'), knob = $('#joyKnob'); let id = null;
     const move = e => {
-      const r = joy.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, max = r.width / 2 - 10;
-      let dx = e.clientX - cx, dy = e.clientY - cy; const d = Math.hypot(dx, dy);
+      const r = joy.getBoundingClientRect();
+      const c = View.toLocal(r.left + r.width / 2, r.top + r.height / 2), p = View.toLocal(e.clientX, e.clientY);
+      const max = joy.offsetWidth / 2 - 10;
+      let dx = p.x - c.x, dy = p.y - c.y; const d = Math.hypot(dx, dy);
       if (d > max) { dx = dx / d * max; dy = dy / d * max; }
       knob.style.transform = `translate(${dx}px,${dy}px)`;
       Player.joy.x = dx / max; Player.joy.y = dy / max;
@@ -166,19 +171,20 @@ const UI = (() => {
     // Wellen-Anzeige
     let alive = 0, total = 0;
     for (const w of R.waves.values()) { alive += w.alive; total += w.total; }
-    const winTxt = R.mode.win && !R.continueEndless ? ` / ${R.mode.win}` : '';
-    $('#wpWave').textContent = `Welle ${R.wave}${winTxt}`;
-    $('#wpMode').textContent = R.mode.icon + ' ' + R.mode.name;
+    $('#wpWave').textContent = `Welle ${R.wave}`;
+    const toBoss = 5 - (R.wave % 5);
+    $('#wpMode').textContent = R.boss ? '👑 BOSS!' : (R.phase === 'wave' && Game.isBossWave(R.wave)) ? '👑 Bosswelle' : `👑 Boss in ${toBoss} Welle${toBoss > 1 ? 'n' : ''}`;
     $('#wpEnemies').textContent = R.phase === 'wave' ? `Gegner: ${alive} / ${total}` : 'Bauphase';
     $('#wpFill').style.width = (R.phase === 'wave' && total ? (1 - alive / total) * 100 : R.phase === 'build' ? 100 : 0) + '%';
     const nxt = R.wave + 1;
-    const nb = R.mode.bossRush || nxt % 10 === 0;
+    const nb = Game.isBossWave(nxt);
     $('#wpNext').textContent = R.phase === 'build' && R.pauseTimer > 0 ? `Nächste: ${nxt}${nb ? ' 👑' : ''} in ${Math.ceil(R.pauseTimer)}s` : `Nächste: ${nxt}${nb ? ' 👑 BOSS' : ''}`;
     const wb = $('#waveBtn');
     const label = R.phase === 'build' ? (R.wave === 0 ? '▶ WELLE STARTEN' : R.pauseTimer > 0 ? '⏩ WELLE ÜBERSPRINGEN' : '▶ NÄCHSTE WELLE') : '⏩ WELLE ÜBERSPRINGEN';
     if (wb.textContent !== label) wb.textContent = label;
     wb.classList.toggle('skip', R.phase !== 'build' || R.pauseTimer > 0);
-    wb.disabled = (R.won && R.mode.win && !R.continueEndless) || R.over;
+    wb.disabled = R.over || R.hold;
+    wb.classList.toggle('hidden', !!R.tutorial && (R.hold || R.wave === 0));
     $('#speedBtn').textContent = R.speed + 'x';
     $('#pauseBtn').textContent = R.paused ? '▶' : '❚❚';
     // Boss
@@ -193,7 +199,8 @@ const UI = (() => {
     const ready = QUESTS.some(q => P.quests[q.id] !== 'claimed' && Save.questProgress(q) >= q.goal) || P.daily.list.some(d => !d.claimed && Save.dailyProgress(d) >= Save.dailyDef(d).goal);
     $('#questDot').classList.toggle('hidden', !ready);
     // Baumenü-Preise aktualisieren
-    $$('#bbItems .item[data-cost]').forEach(el => { const c = +el.dataset.cost; const pr = el.querySelector('.pr'); if (pr) pr.classList.toggle('no', !R.mode.creative && R.coins < c); });
+    $$('#bbItems .item[data-cost]').forEach(el => { const c = +el.dataset.cost; const pr = el.querySelector('.pr'); if (pr) pr.classList.toggle('no', R.coins < c); });
+    const rp = $('#roadCount'); if (rp && rp.textContent !== String(P.roadPieces)) rp.textContent = P.roadPieces;
     if (Game.selected && !$('#towerPanel').classList.contains('hidden')) {
       const key = Game.selected.level + ':' + (R.coins >= Game.upgradeCost(Game.selected)) + ':' + Game.selected.kills;
       if (lastHud.tp !== key) { towerPanel(Game.selected); }
@@ -202,24 +209,36 @@ const UI = (() => {
 
   // ---------------- Baumenü ----------------
   function renderBuildBar() {
-    $$('#bbTabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === curTab));
     const P = Save.P, R = Game.R, sel = Game.buildSel;
+    const tut = R && R.tutorial;
+    $$('#bbTabs button[data-tab]').forEach(b => { b.classList.toggle('on', b.dataset.tab === curTab); b.classList.toggle('hidden', tut && b.dataset.tab !== 'towers'); });
     let h = '';
     const isSel = (k, id) => sel && sel.kind === k && sel.id === id ? ' sel' : '';
     if (curTab === 'towers') {
-      const list = TOWERS.slice().sort((a, b) => (P.unlocked.includes(b.id) - P.unlocked.includes(a.id)) || a.cost - b.cost);
-      list.forEach((t, i) => {
-        const un = P.unlocked.includes(t.id);
-        const poor = R && !R.mode.creative && R.coins < t.cost;
-        h += `<button class="item${un ? '' : ' locked'}${isSel('tower', t.id)}" data-kind="tower" data-id="${t.id}" ${un ? `data-cost="${t.cost}"` : ''} title="${esc(t.name)}">
-          <i class="rar" style="background:${RARITIES[t.rarity].color}"></i>${un ? '' : '<span class="lock">🔒</span>'}
-          ${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div><div class="pr${poor ? ' no' : ''}">${un ? '🪙' + fmt(t.cost) : (t.shop ? '🔮 Shop' : 'Lv ' + t.level)}</div></button>`;
+      const list = TOWERS.filter(t => (P.towerInv[t.id] || 0) > 0).sort((a, b) => RARITIES[a.rarity].order - RARITIES[b.rarity].order || a.cost - b.cost);
+      list.forEach(t => {
+        const av = Game.available('tower', t.id), tot = P.towerInv[t.id];
+        h += `<button class="item${av > 0 ? '' : ' locked'}${isSel('tower', t.id)}" data-kind="tower" data-id="${t.id}" title="${esc(t.name)}">
+          <i class="rar" style="background:${RARITIES[t.rarity].color}"></i>
+          ${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div><div class="pr">${av} / ${tot} frei</div></button>`;
       });
+      if (!tut) h += `<div class="item info">🎁 Neue Türme gibt es nur von <b>Bossen</b> (jede 5. Welle) und nach einer verlorenen Runde.</div>`;
+    } else if (curTab === 'traps') {
+      const list = TRAPS.filter(t => (P.trapInv[t.id] || 0) > 0);
+      list.forEach(t => {
+        const av = Game.available('trap', t.id);
+        h += `<button class="item${av > 0 ? '' : ' locked'}${isSel('trap', t.id)}" data-kind="trap" data-id="${t.id}" title="${esc(t.desc)}"><i class="rar" style="background:${RARITIES[t.rarity].color}"></i><div class="ic">${t.icon}</div><div class="nm">${esc(t.name)}</div><div class="pr">${av} / ${P.trapInv[t.id]} frei</div></button>`;
+      });
+      h += `<div class="item info">${list.length ? '🪤 Fallen legst du auf den Weg. Mit 🧹 Abreißen nimmst du sie wieder auf.' : '🪤 Noch keine Fallen. Bosse lassen manchmal Fallen fallen!'}</div>`;
     } else if (curTab === 'roads') {
+      h += `<div class="item info big">🛣️ Wegstücke: <b id="roadCount">${P.roadPieces}</b><br><small>Jedes neue Wegfeld braucht 1 Stück. Abreißen gibt es zurück.</small></div>`;
+      h += `<button class="item" data-tool="buyroad1" data-cost="${ROAD_PIECE_PRICE}"><div class="ic">➕</div><div class="nm">1 Wegstück kaufen</div><div class="pr">🪙${ROAD_PIECE_PRICE}</div></button>`;
+      h += `<button class="item" data-tool="buyroad5" data-cost="${ROAD_PIECE_PRICE * 5}"><div class="ic">📦</div><div class="nm">5 Wegstücke kaufen</div><div class="pr">🪙${ROAD_PIECE_PRICE * 5}</div></button>`;
       ROADS.forEach(r => {
-        h += `<button class="item${isSel('road', r.id)}" data-kind="road" data-id="${r.id}" data-cost="${r.cost}"><div class="ic"><span style="display:inline-block;width:1.4em;height:1.4em;border-radius:6px;background:${r.color};border:3px solid ${r.edge};${r.width < 0.8 ? 'transform:scaleX(.6)' : ''}"></span></div><div class="nm">${esc(r.name)}</div><div class="pr">🪙${r.cost}</div></button>`;
+        h += `<button class="item${isSel('road', r.id)}" data-kind="road" data-id="${r.id}"><div class="ic"><span style="display:inline-block;width:1.4em;height:1.4em;border-radius:6px;background:${r.color};border:3px solid ${r.edge};${r.width < 0.8 ? 'transform:scaleX(.6)' : ''}"></span></div><div class="nm">${esc(r.name)}</div><div class="pr">1 Stück</div></button>`;
       });
-      h += `<div class="item" style="width:9em;text-align:left;font-size:.85em;padding:.4em;opacity:.9">ℹ️ Kurven &amp; Kreuzungen entstehen automatisch, wenn du Felder verbindest. Ziehen zum Malen!</div>`;
+      h += `<button class="item${isSel('erase', 'erase')}" data-kind="erase" data-id="erase"><div class="ic">🧹</div><div class="nm">Weg abreißen</div><div class="pr">+1 Stück</div></button>`;
+      h += `<div class="item info">ℹ️ Wege nur in der Pause zwischen den Wellen ändern. Kurven &amp; Kreuzungen entstehen automatisch. Es muss immer ein Weg zur Burg führen.</div>`;
     } else if (curTab === 'decos') {
       DECOS.forEach(d => {
         if (d.shop && !P.owned.decos.includes(d.id)) return;
@@ -227,11 +246,11 @@ const UI = (() => {
       });
       h += `<button class="item" data-act="shop"><div class="ic">🛒</div><div class="nm">Mehr im Shop</div><div class="pr">💎</div></button>`;
     } else {
-      h += `<button class="item${isSel('erase', 'erase')}" data-kind="erase" data-id="erase"><div class="ic">🧹</div><div class="nm">Abreißen</div><div class="pr">Straße/Deko</div></button>`;
+      h += `<button class="item${isSel('erase', 'erase')}" data-kind="erase" data-id="erase"><div class="ic">🧹</div><div class="nm">Abreißen</div><div class="pr">Weg/Falle/Deko</div></button>`;
       h += `<button class="item" data-tool="rotate"><div class="ic">🔄</div><div class="nm">Drehen (R)</div><div class="pr">${Game.buildSel ? 'aktiv' : '&nbsp;'}</div></button>`;
       h += `<button class="item" data-tool="cancel"><div class="ic">✋</div><div class="nm">Auswahl aufheben</div><div class="pr">Esc</div></button>`;
       h += `<button class="item" data-tool="grid"><div class="ic">#️⃣</div><div class="nm">Raster</div><div class="pr">${P.settings.showGrid ? 'an' : 'aus'}</div></button>`;
-      h += `<button class="item" data-tool="sellall"><div class="ic">💰</div><div class="nm">Alle Türme verkaufen</div><div class="pr">70%</div></button>`;
+      h += `<button class="item" data-tool="sellall"><div class="ic">↩️</div><div class="nm">Alle Türme aufheben</div><div class="pr">ins Inventar</div></button>`;
     }
     $('#bbItems').innerHTML = h;
   }
@@ -241,18 +260,15 @@ const UI = (() => {
     const tool = el.dataset.tool;
     if (tool === 'rotate') return Game.rotateBuild();
     if (tool === 'cancel') return Game.setBuild(null);
+    if (tool === 'buyroad1' || tool === 'buyroad5') { if (Game.buyRoadPieces(tool === 'buyroad1' ? 1 : 5)) renderBuildBar(); return; }
     if (tool === 'grid') { Save.P.settings.showGrid = !Save.P.settings.showGrid; Save.saveSoon(); renderBuildBar(); return; }
     if (tool === 'sellall') {
       if (!Game.towers.length) return toast('Keine Türme vorhanden');
-      return confirmBox('Alle Türme für 70% des Wertes verkaufen?', () => { [...Game.towers].forEach(t => Game.sell(t)); });
+      return confirmBox('Alle Türme aufheben? Sie kommen zurück ins Inventar (Upgrades gehen verloren, 70% der Upgrade-Münzen gibt es zurück).', () => { [...Game.towers].forEach(t => Game.sell(t)); });
     }
     const kind = el.dataset.kind, id = el.dataset.id;
     if (!kind) return;
-    if (kind === 'tower' && !Save.P.unlocked.includes(id)) {
-      const t = TOWER_BY_ID[id];
-      toast(t.shop ? `🔒 ${t.name}: im Shop für 🔮 ${t.shop.crystals} Kristalle` : `🔒 ${t.name}: frei ab Level ${t.level} – oder im Shop`, 'bad');
-      return;
-    }
+    if ((kind === 'tower' || kind === 'trap') && Game.available(kind, id) <= 0) { toast('Schon alle platziert – tippe einen Turm an und hebe ihn auf, um ihn umzustellen', 'bad'); return; }
     Audio2.play('click');
     const s = Game.buildSel;
     if (s && s.kind === kind && s.id === id) Game.setBuild(null);
@@ -262,9 +278,9 @@ const UI = (() => {
     renderBuildBar();
     const h = $('#buildHint');
     if (!sel) { h.classList.add('hidden'); return; }
-    let name = sel.kind === 'tower' ? TOWER_BY_ID[sel.id].name : sel.kind === 'road' ? ROAD_BY_ID[sel.id].name : sel.kind === 'deco' ? DECO_BY_ID[sel.id].name : sel.kind === 'move' ? 'Turm verschieben' : 'Abreißen';
+    let name = sel.kind === 'tower' ? TOWER_BY_ID[sel.id].name : sel.kind === 'trap' ? TRAP_BY_ID[sel.id].name : sel.kind === 'road' ? ROAD_BY_ID[sel.id].name : sel.kind === 'deco' ? DECO_BY_ID[sel.id].name : sel.kind === 'move' ? 'Turm verschieben' : 'Abreißen';
     const touch = matchMedia('(pointer:coarse)').matches;
-    const how = sel.kind === 'road' || sel.kind === 'erase' ? (touch ? 'Tippen oder Finger ziehen' : 'Klicken oder ziehen') : (touch ? 'Aufs Feld tippen zum Platzieren' : 'Klicken zum Platzieren · R: drehen');
+    const how = sel.kind === 'road' || sel.kind === 'erase' || sel.kind === 'trap' ? (touch ? 'Tippen oder Finger ziehen' : 'Klicken oder ziehen') : (touch ? 'Aufs Feld tippen zum Platzieren' : 'Klicken zum Platzieren · R: drehen');
     h.innerHTML = `<b>${esc(name)}</b><span>${how}</span>${sel.kind !== 'road' && sel.kind !== 'erase' ? '<button class="btn small" data-tool="rotate">🔄</button>' : ''}<button class="btn small red" data-tool="cancel">✕</button>`;
     h.classList.remove('hidden');
   }
@@ -306,9 +322,9 @@ const UI = (() => {
       <div class="tp-spec">✨ ${esc(d.desc)}<br>${t.level >= 5 ? '👑 <b>' + esc(d.lv5) + '</b> (aktiv)' : '🔒 Stufe 5: ' + esc(d.lv5)}</div>
       ${hasTarget ? `<div class="tp-target">${[['first', 'Erster'], ['last', 'Letzter'], ['strong', 'Stärkster'], ['close', 'Nächster']].map(([k, n]) => `<button data-tp="tg" data-v="${k}" class="${t.targeting === k ? 'on' : ''}">${n}</button>`).join('')}</div>` : ''}
       <div class="tp-btns">
-        <button class="btn green" data-tp="up" ${maxed || (!R.mode.creative && R.coins < cost) ? 'disabled' : ''}>${maxed ? 'MAX' : 'UPGRADE<br>🪙' + fmt(cost)}</button>
-        <button class="btn red" data-tp="sell">SELL<br>🪙${fmt(Game.sellValue(t))}</button>
-        <button class="btn small wide gray" data-tp="move">↔ Verschieben</button>
+        <button class="btn green${R.tutorial && t.level === 1 ? ' tut-hl' : ''}" data-tp="up" ${maxed || R.coins < cost ? 'disabled' : ''}>${maxed ? 'MAX' : 'UPGRADE<br>🪙' + fmt(cost)}</button>
+        <button class="btn red" data-tp="sell">AUFHEBEN<br>${Game.sellValue(t) ? '↩ +🪙' + fmt(Game.sellValue(t)) : '↩ Inventar'}</button>
+        ${R.tutorial ? '' : '<button class="btn small wide gray" data-tp="move">↔ Verschieben</button>'}
       </div>`;
     el.classList.remove('hidden');
   }
@@ -338,66 +354,41 @@ const UI = (() => {
   let modalState = null;
   const rarityBadge = r => `<span class="rb" style="background:${RARITIES[r].color}">${RARITIES[r].name}</span>`;
 
-  // ---------------- PLAY / Modus-Auswahl ----------------
+  // ---------------- PLAY: direkt los (immer Endlos) ----------------
   function playDialog() {
     const P = Save.P;
-    menuMode = menuMode || 'normal';
-    let selBiome = P.equipped.biome;
-    const render = () => {
-      let h = '';
-      if (P.run && MODE_BY_ID[P.run.mode]) {
-        const m = MODE_BY_ID[P.run.mode];
-        h += `<div class="detail" style="align-items:center"><div style="font-size:2.4em">${m.icon}</div><div style="flex:1"><h3>Runde fortsetzen</h3><p>${m.name} · Welle ${P.run.wave} · ${P.run.towers.length} Türme · 🪙${fmt(P.run.coins)}</p></div><button class="btn green" id="pdCont">▶ FORTSETZEN</button></div>`;
-      }
-      h += `<h4 class="sec">Spielmodus wählen</h4><div class="modes">`;
-      for (const m of MODES) {
-        const locked = m.unlock && P.level < m.unlock;
-        h += `<div class="mode${menuMode === m.id ? ' on' : ''}${locked ? ' locked' : ''}" data-mode="${m.id}"><div class="mi">${m.icon}</div><div class="mn">${m.name}</div><div class="md">${m.desc}</div><div class="sub" style="font-size:.75em">${locked ? '🔒 ab Level ' + m.unlock : 'Rekord: Welle ' + (P.records[m.id] || 0)}</div></div>`;
-      }
-      h += `</div><h4 class="sec">Landschaft (Biom)</h4><div class="biomes">`;
-      for (const b of BIOMES) {
-        const own = P.owned.biomes.includes(b.id);
-        h += `<div class="biome${selBiome === b.id ? ' on' : ''}${own ? '' : ' locked'}" data-biome="${b.id}" style="background:linear-gradient(${b.sky},${b.ground})">${own ? '' : '🔒 '}${b.name}</div>`;
-      }
-      h += `</div><div class="row" style="margin-top:1em"><button class="btn big green" id="pdStart">▶ NEUE RUNDE STARTEN</button></div>`;
-      if (P.run) h += `<p class="note">⚠️ Eine neue Runde ersetzt die gespeicherte Runde. Dein Grundstück (Straßen &amp; Deko) bleibt erhalten.</p>`;
-      $('#modalBody').innerHTML = h;
-      $$('.mode').forEach(el => el.onclick = () => { const m = MODE_BY_ID[el.dataset.mode]; if (m.unlock && P.level < m.unlock) return toast(`🔒 Ab Level ${m.unlock}`, 'bad'); menuMode = m.id; Audio2.play('click'); render(); });
-      $$('.biome').forEach(el => el.onclick = () => { if (!P.owned.biomes.includes(el.dataset.biome)) { const b = BIOME_BY_ID[el.dataset.biome]; return toast(`🔒 ${b.name}: ab Level ${b.level} oder im Shop`, 'bad'); } selBiome = el.dataset.biome; Audio2.play('click'); render(); });
-      $('#pdStart').onclick = () => { Audio2.play('click'); P.run = null; startGame(menuMode, selBiome); };
-      const c = $('#pdCont'); if (c) c.onclick = () => { Audio2.play('click'); startGame(P.run.mode, P.run.biome, P.run); };
-    };
-    openModal('▶ PLAY', '');
-    render();
+    if (!P.tutorialDone) return startGame('endless', P.equipped.biome);
+    if (P.run) return startGame('endless', P.run.biome, P.run);
+    startGame('endless', P.equipped.biome);
   }
 
   // ---------------- Inventar / Türme / Sammlung ----------------
   function towerDetail(t) {
-    const P = Save.P; const un = P.unlocked.includes(t.id);
+    const P = Save.P; const own = P.towerInv[t.id] || 0;
     const rows = [1, 2, 3, 4, 5].map(l => {
       const d = t.dmg * LEVEL_DMG[l - 1], r = t.range ? t.range + LEVEL_RANGE[l - 1] : 0, s = t.rate * LEVEL_RATE[l - 1];
-      const cost = l === 1 ? t.cost : Math.round(t.cost * UPGRADE_COST[l - 2]);
-      return `<tr><td>Stufe ${l}</td><td>${t.dmg ? fmt(d) : '–'}</td><td>${r ? r.toFixed(1) : '–'}</td><td>${t.rate && t.type !== 'beam' ? s.toFixed(2) : '–'}</td><td>🪙${fmt(cost)}</td></tr>`;
+      const cost = l === 1 ? 0 : Math.round(t.cost * UPGRADE_COST[l - 2]);
+      return `<tr><td>Stufe ${l}</td><td>${t.dmg ? fmt(d) : '–'}</td><td>${r ? r.toFixed(1) : '–'}</td><td>${t.rate && t.type !== 'beam' ? s.toFixed(2) : '–'}</td><td>${cost ? '🪙' + fmt(cost) : '–'}</td></tr>`;
     }).join('');
     const tags = [t.air ? '✈️ Trifft Flieger' : '', t.ground ? '🦶 Nur Boden' : '', t.detect ? '👁️ Erkennt Unsichtbare' : '', t.pierce ? '🛡️ Durchschlägt Rüstung' : ''].filter(Boolean).join(' · ');
     return `<div class="detail">${Thumbs.img('tower5', t.id)}<div style="flex:1"><h3>${esc(t.name)} ${rarityBadge(t.rarity)}</h3><p>${esc(t.desc)}</p><p>👑 Stufe 5: ${esc(t.lv5)}</p><p style="opacity:.8">${tags || ''}</p>
-      <p>${un ? '✅ Freigeschaltet' : t.shop ? `🔒 Im Shop für 🔮 ${t.shop.crystals}` : `🔒 Ab Spielerlevel ${t.level} (oder im Shop)`}</p>
-      <table class="lvt"><tr><th></th><th>Schaden</th><th>Reichw.</th><th>Rate</th><th>Kosten</th></tr>${rows}</table></div></div>`;
+      <p>${own ? `✅ Im Besitz: ${own}x` : '🔒 Noch nicht erhalten – Bosse geben dir neue Türme!'}</p>
+      <table class="lvt"><tr><th></th><th>Schaden</th><th>Reichw.</th><th>Rate</th><th>Upgrade</th></tr>${rows}</table></div></div>`;
   }
   function towersScreen(title = '🏰 TOWERS') {
     const P = Save.P;
     let q = '', rar = 'all', sort = 'cost', own = 'all', det = null;
     openModal(title, '');
     const render = () => {
-      let list = TOWERS.filter(t => (!q || t.name.toLowerCase().includes(q)) && (rar === 'all' || t.rarity === rar) && (own === 'all' || (own === 'own') === P.unlocked.includes(t.id)));
+      let list = TOWERS.filter(t => (!q || t.name.toLowerCase().includes(q)) && (rar === 'all' || t.rarity === rar) && (own === 'all' || (own === 'own') === !!P.towerInv[t.id]));
       const sorters = { cost: (a, b) => a.cost - b.cost, name: (a, b) => a.name.localeCompare(b.name), rarity: (a, b) => RARITIES[b.rarity].order - RARITIES[a.rarity].order, dmg: (a, b) => b.dmg * b.rate - a.dmg * a.rate, range: (a, b) => b.range - a.range };
       list.sort(sorters[sort]);
       let h = `<div class="filters"><input id="fq" placeholder="🔍 Suchen…" value="${esc(q)}"><select id="fr"><option value="all">Alle Seltenheiten</option>${Object.entries(RARITIES).map(([k, r]) => `<option value="${k}" ${rar === k ? 'selected' : ''}>${r.name}</option>`).join('')}</select>
-        <select id="fo"><option value="all">Alle</option><option value="own" ${own === 'own' ? 'selected' : ''}>Freigeschaltet</option><option value="locked" ${own === 'locked' ? 'selected' : ''}>Gesperrt</option></select>
+        <select id="fo"><option value="all">Alle</option><option value="own" ${own === 'own' ? 'selected' : ''}>Im Besitz</option><option value="locked" ${own === 'locked' ? 'selected' : ''}>Noch nicht erhalten</option></select>
         <select id="fs">${[['cost', 'Kosten'], ['name', 'Name'], ['rarity', 'Seltenheit'], ['dmg', 'Schaden'], ['range', 'Reichweite']].map(([k, n]) => `<option value="${k}" ${sort === k ? 'selected' : ''}>Sortieren: ${n}</option>`).join('')}</select></div>
-        <div style="font-size:.85em;margin-bottom:.5em">Freigeschaltet: <b>${P.unlocked.length} / ${TOWERS.length}</b></div>`;
+        <div style="font-size:.85em;margin-bottom:.5em">Im Besitz: <b>${Save.stat('towersUnlocked')} / ${TOWERS.length}</b> verschiedene Türme · Neue Türme gibt es von Bossen.</div>`;
       if (det) h += towerDetail(TOWER_BY_ID[det]);
-      h += `<div class="cards">${list.map(t => { const un = P.unlocked.includes(t.id); return `<div class="card${un ? '' : ' locked'}" data-t="${t.id}" style="border-color:${RARITIES[t.rarity].color}">${un ? '' : '<span class="tag">🔒</span>'}${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}<div class="sub">🪙${fmt(t.cost)}</div></div>`; }).join('') || '<p>Keine Türme gefunden.</p>'}</div>`;
+      h += `<div class="cards">${list.map(t => { const n = P.towerInv[t.id] || 0; return `<div class="card${n ? '' : ' locked'}" data-t="${t.id}" style="border-color:${RARITIES[t.rarity].color}"><span class="tag">${n ? n + 'x' : '🔒'}</span>${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}</div>`; }).join('') || '<p>Keine Türme gefunden.</p>'}</div>`;
       $('#modalBody').innerHTML = h;
       const fq = $('#fq'); fq.oninput = () => { q = fq.value.toLowerCase(); const pos = fq.selectionStart; render(); const n = $('#fq'); n.focus(); n.setSelectionRange(pos, pos); };
       $('#fr').onchange = e => { rar = e.target.value; render(); };
@@ -412,14 +403,17 @@ const UI = (() => {
     let tab = 'towers', q = '', rar = 'all';
     openModal('🎒 INVENTORY', '');
     const render = () => {
-      const tabs = [['towers', '🏰 Türme'], ['skins', '🛣️ Straßen-Skins'], ['effects', '✨ Effekte'], ['castles', '🏯 Burgen'], ['biomes', '🌍 Biome'], ['decos', '🗿 Spezialgebäude'], ['boosts', '⚡ Boosts']];
+      const tabs = [['towers', '🏰 Türme'], ['traps', '🪤 Fallen & Wege'], ['skins', '🛣️ Straßen-Skins'], ['effects', '✨ Effekte'], ['castles', '🏯 Burgen'], ['biomes', '🌍 Biome'], ['decos', '🗿 Spezialgebäude'], ['boosts', '⚡ Boosts']];
       let h = `<div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>
         <div class="filters"><input id="iq" placeholder="🔍 Suchen…" value="${esc(q)}"><select id="ir"><option value="all">Alle Seltenheiten</option>${Object.entries(RARITIES).map(([k, r]) => `<option value="${k}" ${rar === k ? 'selected' : ''}>${r.name}</option>`).join('')}</select></div>`;
       const match = (name, r) => (!q || name.toLowerCase().includes(q)) && (rar === 'all' || r === rar);
       let cards = '';
       if (tab === 'towers') {
-        cards = TOWERS.filter(t => P.unlocked.includes(t.id) && match(t.name, t.rarity)).map(t => `<div class="card" style="border-color:${RARITIES[t.rarity].color}">${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}</div>`).join('');
-        cards += `<div class="card" data-go="towers"><div class="ic">📚</div><div class="nm">Alle Türme ansehen</div><div class="sub">${P.unlocked.length}/${TOWERS.length}</div></div>`;
+        cards = TOWERS.filter(t => P.towerInv[t.id] && match(t.name, t.rarity)).map(t => `<div class="card" style="border-color:${RARITIES[t.rarity].color}"><span class="tag">${P.towerInv[t.id]}x</span>${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}</div>`).join('');
+        cards += `<div class="card" data-go="towers"><div class="ic">📚</div><div class="nm">Alle Türme ansehen</div><div class="sub">${Save.stat('towersUnlocked')}/${TOWERS.length}</div></div>`;
+      } else if (tab === 'traps') {
+        cards = `<div class="card"><div class="ic">🛣️</div><div class="nm">Wegstücke</div><div class="sub">${P.roadPieces} Stück</div></div>`;
+        cards += TRAPS.filter(t => P.trapInv[t.id] && match(t.name, t.rarity)).map(t => `<div class="card" style="border-color:${RARITIES[t.rarity].color}"><span class="tag">${P.trapInv[t.id]}x</span><div class="ic">${t.icon}</div><div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}<div class="sub">${esc(t.desc)}</div></div>`).join('');
       } else if (tab === 'skins' || tab === 'effects' || tab === 'castles') {
         const list = tab === 'skins' ? ROAD_SKINS : tab === 'effects' ? EFFECTS : CASTLES;
         const slot = tab === 'skins' ? 'skin' : tab === 'effects' ? 'effect' : 'castle';
@@ -429,7 +423,7 @@ const UI = (() => {
           return `<div class="card${eq ? ' eq' : ''}" style="border-color:${RARITIES[i.rarity].color}">${eq ? '<span class="tag">✅</span>' : ''}${pic}<div class="nm">${esc(i.name)}</div>${rarityBadge(i.rarity)}<button class="btn small ${eq ? 'gray' : 'green'} buy" data-eq="${slot}" data-id="${i.id}" ${eq ? 'disabled' : ''}>${eq ? 'Ausgerüstet' : 'Ausrüsten'}</button></div>`;
         }).join('');
       } else if (tab === 'biomes') {
-        cards = BIOMES.filter(b => P.owned.biomes.includes(b.id) && match(b.name, 'common')).map(b => `<div class="card${P.equipped.biome === b.id ? ' eq' : ''}"><div class="ic" style="background:linear-gradient(${b.sky},${b.ground});border-radius:10px">🌍</div><div class="nm">${esc(b.name)}</div><div class="sub">In PLAY auswählbar</div></div>`).join('');
+        cards = BIOMES.filter(b => P.owned.biomes.includes(b.id) && match(b.name, 'common')).map(b => { const eq = P.equipped.biome === b.id; return `<div class="card${eq ? ' eq' : ''}"><div class="ic" style="background:linear-gradient(${b.sky},${b.ground});border-radius:10px">🌍</div><div class="nm">${esc(b.name)}</div><button class="btn small ${eq ? 'gray' : 'green'} buy" data-eq="biome" data-id="${b.id}" ${eq ? 'disabled' : ''}>${eq ? 'Ausgewählt' : 'Auswählen'}</button><div class="sub">gilt ab der nächsten Runde</div></div>`; }).join('');
       } else if (tab === 'decos') {
         cards = DECOS.filter(d => d.shop && P.owned.decos.includes(d.id) && match(d.name, 'rare')).map(d => `<div class="card">${Thumbs.img('deco', d.id)}<div class="nm">${esc(d.name)}</div><div class="sub">Im Baumenü unter Deko</div></div>`).join('');
       } else if (tab === 'boosts') {
@@ -450,6 +444,7 @@ const UI = (() => {
     if (slot === 'skin') Game.rebuildRoadsVisual();
     if (slot === 'effect') Particles.setTint(EFFECTS.find(e => e.id === id));
     if (slot === 'castle') Game.placeCastle();
+    if (slot === 'biome' && screen === 'menu') { World.buildEnvironment(BIOME_BY_ID[id], Save.P.name); Game.startDemo(); }
     toast('✅ Ausgerüstet', 'good');
   }
   function collectionScreen() {
@@ -472,17 +467,17 @@ const UI = (() => {
 
   // ---------------- Shop ----------------
   function shopScreen() {
-    const P = Save.P; let tab = 'towers';
+    const P = Save.P; let tab = 'roads';
     openModal('🛒 SHOP', '');
     const towerPrice = t => t.shop ? { crystals: t.shop.crystals } : { gems: Math.max(40, t.level * 14) };
     const render = () => {
-      const tabs = [['towers', '🏰 Neue Türme'], ['decos', '🗿 Besondere Gebäude'], ['skins', '🛣️ Straßen-Skins'], ['biomes', '🌍 Landschaften'], ['effects', '✨ Effekte'], ['castles', '🏯 Burgen'], ['boosts', '⚡ Boosts']];
+      const tabs = [['roads', '🛣️ Wegstücke'], ['decos', '🗿 Besondere Gebäude'], ['skins', '🛣️ Straßen-Skins'], ['biomes', '🌍 Landschaften'], ['effects', '✨ Effekte'], ['castles', '🏯 Burgen'], ['boosts', '⚡ Boosts']];
       let h = `<div class="cur-row" style="margin-bottom:.6em"><div class="res gems"><span>💎</span><b>${fmt(P.gems)}</b></div><div class="res crys"><span>🔮</span><b>${fmt(P.crystals)}</b></div></div>
         <div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>`;
       const price = p => p.crystals ? `🔮 ${p.crystals}` : p.gems ? `💎 ${p.gems}` : 'Gratis';
       const afford = p => (p.crystals ? P.crystals >= p.crystals : P.gems >= (p.gems || 0));
       let items = [];
-      if (tab === 'towers') items = TOWERS.filter(t => !P.unlocked.includes(t.id)).map(t => ({ id: t.id, name: t.name, desc: t.desc + (t.shop ? '' : ` (Sonst frei ab Lv ${t.level})`), rarity: t.rarity, price: towerPrice(t), pic: Thumbs.img('tower', t.id) }));
+      if (tab === 'roads') items = [{ id: 'roads10', name: '10 Wegstücke', desc: `Du hast ${P.roadPieces}. Damit kannst du den Weg der Gegner verlängern und umbauen.`, rarity: 'uncommon', price: { gems: 40 }, pic: '<div class="ic">🛣️</div>' }, { id: 'roads30', name: '30 Wegstücke', desc: 'Großes Paket für ein langes Labyrinth.', rarity: 'rare', price: { gems: 100 }, pic: '<div class="ic">🏗️</div>' }];
       if (tab === 'decos') items = DECOS.filter(d => d.shop).map(d => ({ id: d.id, name: d.name, desc: 'Dekoratives Spezialgebäude für dein Grundstück.', rarity: 'rare', price: { gems: d.cost }, owned: P.owned.decos.includes(d.id), pic: Thumbs.img('deco', d.id) }));
       if (tab === 'skins') items = ROAD_SKINS.map(s => ({ id: s.id, name: s.name, desc: s.desc, rarity: s.rarity, price: s.crystals ? { crystals: s.crystals } : { gems: s.gems }, owned: P.owned.skins.includes(s.id), sw: s.tint }));
       if (tab === 'effects') items = EFFECTS.map(s => ({ id: s.id, name: s.name, desc: s.desc, rarity: s.rarity, price: s.crystals ? { crystals: s.crystals } : { gems: s.gems }, owned: P.owned.effects.includes(s.id), sw: s.tint }));
@@ -494,7 +489,7 @@ const UI = (() => {
         return `<div class="card" style="border-color:${RARITIES[i.rarity].color}" title="${esc(i.desc)}">${pic}<div class="nm">${esc(i.name)}</div>${rarityBadge(i.rarity)}<div class="sub" style="min-height:2.6em">${esc(i.desc)}</div>
           <button class="btn small ${i.owned ? 'gray' : afford(i.price) ? 'gold' : 'gray'} buy" data-buy="${tab}" data-id="${i.id}" ${i.owned ? 'disabled' : ''}>${i.owned ? '✅ Besitzt du' : price(i.price)}</button></div>`;
       }).join('') || '<p>🎉 Alles freigeschaltet!</p>'}</div>
-      <p class="note">💎 Edelsteine bekommst du durch Levelaufstiege, Bosse, Aufgaben, Erfolge und die Tagesbelohnung. 🔮 Kristalle gibt es für Bosse und besondere Erfolge. Es gibt keine Echtgeld-Käufe.</p>`;
+      <p class="note">🏰 Türme kann man nicht kaufen – die gibt es nur von Bossen! 💎 Edelsteine bekommst du durch Levelaufstiege, Bosse, Aufgaben, Erfolge und die Tagesbelohnung. Es gibt keine Echtgeld-Käufe.</p>`;
       $('#modalBody').innerHTML = h;
       $$('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; Audio2.play('click'); render(); });
       $$('[data-buy]').forEach(b => b.onclick = () => {
@@ -502,7 +497,7 @@ const UI = (() => {
         const it = items.find(i => i.id === id); const p = it.price;
         if (!afford(p)) { Audio2.play('error'); return toast('Nicht genug ' + (p.crystals ? 'Kristalle 🔮' : 'Edelsteine 💎'), 'bad'); }
         if (p.crystals) P.crystals -= p.crystals; else P.gems -= p.gems || 0;
-        if (cat === 'towers') P.unlocked.push(id);
+        if (cat === 'roads') P.roadPieces += id === 'roads10' ? 10 : 30;
         else if (cat === 'decos') P.owned.decos.push(id);
         else if (cat === 'boosts') P.boosts[id] = (P.boosts[id] || 0) + 1;
         else P.owned[cat].push(id);
@@ -556,8 +551,8 @@ const UI = (() => {
     const t = s.playTime; const pt = `${Math.floor(t / 3600)}h ${Math.floor(t / 60) % 60}m`;
     const rows = [['Besiegte Gegner', fmt(s.kills)], ['Besiegte Bosse', fmt(s.bossKills)], ['Überstandene Wellen', fmt(s.wavesTotal)], ['Beste Welle', s.bestWave], ['Gebaute Türme', fmt(s.towersBuilt)], ['Gebaute Straßen', fmt(s.roadsBuilt)],
       ['Dekorationen', fmt(s.decoBuilt)], ['Upgrades', fmt(s.upgrades)], ['Verdiente Münzen', fmt(s.coinsEarned)], ['Verursachter Schaden', fmt(s.damage)], ['Gespielte Runden', s.gamesPlayed], ['Siege', s.victories],
-      ['Verlorene Leben', fmt(s.livesLost)], ['Perfekte Wellen', s.perfectWaves], ['Spielzeit', pt], ['Edelsteine verdient', fmt(s.gemsEarned)], ['Entdeckte Gegner', Object.keys(P.seen).length + ' / ' + ENEMIES.length], ['Freigeschaltete Türme', P.unlocked.length + ' / 30']];
-    let h = `<div class="statgrid">${rows.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join('')}</div><h4 class="sec">🏅 Rekorde</h4><div class="statgrid">${MODES.map(m => `<div><span>${m.icon} ${m.name}</span><b>Welle ${P.records[m.id] || 0}</b></div>`).join('')}</div>`;
+      ['Verlorene Leben', fmt(s.livesLost)], ['Perfekte Wellen', s.perfectWaves], ['Spielzeit', pt], ['Edelsteine verdient', fmt(s.gemsEarned)], ['Entdeckte Gegner', Object.keys(P.seen).length + ' / ' + ENEMIES.length], ['Verschiedene Türme', Save.stat('towersUnlocked') + ' / ' + TOWERS.length], ['Türme insgesamt', Object.values(P.towerInv).reduce((a, b) => a + b, 0)], ['Wegstücke', P.roadPieces]];
+    let h = `<div class="statgrid">${rows.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join('')}</div><h4 class="sec">🏅 Rekord</h4><div class="statgrid"><div><span>♾️ Beste Welle</span><b>Welle ${P.records.endless || 0}</b></div></div>`;
     const R = Game.R;
     if (R && !Game.demo) h += `<h4 class="sec">⚔️ Aktuelle Runde</h4><div class="statgrid"><div><span>Welle</span><b>${R.wave}</b></div><div><span>Besiegt</span><b>${R.stats.kills}</b></div><div><span>Münzen verdient</span><b>${fmt(R.stats.coins)}</b></div><div><span>Bosse</span><b>${R.stats.bosses}</b></div><div><span>Türme</span><b>${Game.towers.length}</b></div></div>`;
     openModal('📊 Statistiken', h);
@@ -640,6 +635,143 @@ const UI = (() => {
     $('#vAdopt').onclick = () => confirmBox(`Das Grundstück von ${esc(L.name)} als dein eigenes übernehmen? Dein aktuelles Straßennetz wird ersetzt.`, () => { Save.P.layout = { roads: L.roads, decos: L.decos }; Save.P.run = null; Save.save(); bar.remove(); visiting = null; toast('✅ Grundstück übernommen', 'good'); goMenu(); });
   }
 
+  // ---------------- Tutorial (Pflicht, nicht überspringbar) ----------------
+  const Tut = (() => {
+    let step = null, marker = null, moveStart = null, pollT = null;
+    const box = () => $('#tut');
+    function say(html, btn, onBtn) {
+      const b = box();
+      b.innerHTML = `<div class="tut-face">🧙</div><div class="tut-text">${html}</div>${btn ? `<button class="btn green" id="tutBtn">${btn}</button>` : ''}`;
+      b.classList.remove('hidden'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+      if (btn) $('#tutBtn').onclick = () => { Audio2.play('click'); onBtn(); };
+    }
+    function hide() { box().classList.add('hidden'); }
+    function hl(sel) { $$('.tut-hl').forEach(e => e.classList.remove('tut-hl')); if (sel) $$(sel).forEach(e => e.classList.add('tut-hl')); }
+    function showMarker(on, at) {
+      if (marker) { World.scene.remove(marker); marker = null; }
+      if (!on) return;
+      const sp = at || Game.bestSpot(TOWER_BY_ID.crossbow.range); if (!sp) return;
+      marker = new THREE.Group();
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.48, 32), new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false }));
+      ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; marker.add(ring);
+      const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.45, 4), new THREE.MeshBasicMaterial({ color: 0xffe14d }));
+      arrow.rotation.x = Math.PI; arrow.position.y = 1.2; marker.add(arrow);
+      marker.position.copy(tileToWorld(sp.x, sp.z)); marker.userData.arrow = arrow;
+      World.scene.add(marker);
+    }
+    function tick(t) { if (marker) { marker.userData.arrow.position.y = 1.1 + Math.sin(t * 5) * 0.15; marker.rotation.y = t; } }
+    function go(s) {
+      step = s; const R = Game.R; const touch = isTouch();
+      clearInterval(pollT);
+      if (s === 'welcome') {
+        R.hold = true; hl(null);
+        say('<b>Willkommen!</b> Aus dem lila Portal kommen Monster. Sie laufen den Weg entlang zu deiner Burg. <b>Halte sie auf!</b>', 'Weiter ▶', () => go('move'));
+      } else if (s === 'move') {
+        moveStart = Player.pos.clone();
+        say(touch ? 'Lauf mit dem <b>Joystick</b> unten links ein bisschen herum. Mit <b>⤒</b> springst du.' : 'Lauf mit <b>W A S D</b> herum. Mit der <b>Leertaste</b> springst du, mit der Maus drehst du die Kamera.');
+        hl(touch ? '#joy' : null);
+        pollT = setInterval(() => { if (Player.pos.distanceTo(moveStart) > 2.5) go('place'); }, 200);
+      } else if (s === 'place') {
+        say(`Du hast genau <b>eine Armbrust</b>. ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle die Armbrust und tippe' : 'Wähle unten die Armbrust und klicke'} auf das <b>leuchtende Feld</b> neben dem Weg.`);
+        hl(document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle');
+        showMarker(true);
+        pollT = setInterval(() => { if (step === 'place') hl(document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle'); }, 400);
+      } else if (s === 'wave1') {
+        showMarker(false); hl(null); setBuildOpen(false);
+        say('Super! Deine Armbrust schießt <b>ganz von allein</b>. Gleich kommt Welle 1 …');
+        R.hold = false; setTimeout(() => { if (step === 'wave1' && Game.R && Game.R.phase === 'build') Game.startWave(false); }, 2500);
+      } else if (s === 'fighting') {
+        say('Pass auf die Gegner auf! 💪 Jede besiegte Kreatur gibt dir <b>Münzen</b>.');
+        setTimeout(() => { if (step === 'fighting') hide(); }, 4500);
+      } else if (s === 'upgrade') {
+        R.hold = true; R.pauseTimer = 0;
+        const t = Game.towers[0];
+        if (t) { R.coins = Math.max(R.coins, Game.upgradeCost(t)); showMarker(true, { x: t.x, z: t.z }); }
+        say(`Du hast Münzen verdient! 🪙 Tippe auf deine <b>Armbrust</b> und drücke <b>UPGRADE</b>, damit sie stärker wird.`);
+        pollT = setInterval(() => { const t = Game.towers[0]; if (t && t.level >= 2) go('cont'); else if (t && !Game.selected) { hl(null); } }, 300);
+      } else if (s === 'cont') {
+        Game.select(null); hl(null); showMarker(false); R.hold = false; R.pauseTimer = 6;
+        say('Stark! ⬆️ Upgrades machen Türme stärker – und man sieht es am Turm. Weiter geht\'s!');
+        setTimeout(() => { if (step === 'cont') hide(); }, 4000);
+      } else if (s === 'bosswarn') {
+        R.hold = true; R.pauseTimer = 0;
+        say('⚠️ <b>Achtung!</b> Jede <b>5. Welle</b> kommt ein <b>BOSS</b>. Besiege ihn – dann bekommst du eine <b>neue Waffe</b>!', 'Los geht\'s! ▶', () => { R.hold = false; hide(); step = 'boss'; Game.startWave(false); });
+      } else if (s === 'place2') {
+        R.hold = true; R.pauseTimer = 0; showMarker(true);
+        say(`Deine neue Waffe ist da! 🎁 ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle sie aus' : 'Wähle sie unten aus'} und stelle sie neben den Weg.`);
+        pollT = setInterval(() => { hl(document.body.classList.contains('build-open') ? '#bbItems .item:not(.locked)' : '#buildToggle'); }, 400);
+      } else if (s === 'done') {
+        hl(null); showMarker(false); setBuildOpen(!touch);
+        say('<b>Perfekt – Tutorial geschafft!</b> 🎓<br>Ab jetzt kommen die Wellen <b>automatisch</b>. Jede 5. Welle kommt ein Boss. Bosse geben dir <b>Türme, Wege und Fallen</b>. Mit Wegstücken kannst du den Weg der Gegner umbauen!', 'Spielen! ▶', () => {
+          Save.P.tutorialDone = true; R.tutorial = false; R.hold = false; R.pauseTimer = 15;
+          Save.checkAchievements(); Save.save(); hide(); step = null;
+          document.body.classList.remove('tutorial'); renderBuildBar(); Game.snapshotRun();
+        });
+      }
+    }
+    function event(name, data) {
+      const R = Game.R; if (!R || !R.tutorial) return;
+      if (name === 'placed' && step === 'place') go('wave1');
+      else if (name === 'placed' && step === 'place2') { clearInterval(pollT); go('done'); }
+      else if (name === 'waveStart' && step === 'wave1') go('fighting');
+      else if (name === 'waveCleared' && data === 2) go('upgrade');
+      else if (name === 'waveCleared' && data === 4) go('bosswarn');
+      else if (name === 'rewardClosed') go('place2');
+    }
+    function start() { document.body.classList.add('tutorial'); go('welcome'); }
+    function stop() { clearInterval(pollT); showMarker(false); hide(); hl(null); step = null; document.body.classList.remove('tutorial'); }
+    return { start, stop, event, tick, get step() { return step; } };
+  })();
+
+  // ---------------- Boss-Truhe (Belohnung mit Glücksrad-Streifen) ----------------
+  function rewardCard(rw) {
+    if (rw.kind === 'tower') { const t = TOWER_BY_ID[rw.id]; return { html: Thumbs.img('tower', rw.id), name: t.name, color: RARITIES[t.rarity].color, sub: RARITIES[t.rarity].name }; }
+    if (rw.kind === 'trap') { const t = TRAP_BY_ID[rw.id]; return { html: `<div class="ic">${t.icon}</div>`, name: t.name, color: RARITIES[t.rarity].color, sub: 'Falle' }; }
+    if (rw.kind === 'roads') return { html: '<div class="ic">🛣️</div>', name: `${rw.n} Wegstücke`, color: '#9b9a94', sub: 'Wege' };
+    return { html: '<div class="ic">💰</div>', name: `${rw.n} Münzen`, color: '#ffd700', sub: 'Münzen' };
+  }
+  function bossReward(rw, bossDef) {
+    const R = Game.R;
+    const fake = () => Save.rollFake(R.wave + 10);
+    const strip = []; for (let i = 0; i < 36; i++) strip.push(i === 30 ? rw : fake());
+    const cards = strip.map(r => { const c = rewardCard(r); return `<div class="rl-card" style="border-color:${c.color}">${c.html}<div class="nm">${esc(c.name)}</div></div>`; }).join('');
+    openModal('🎁 Boss-Truhe', `<div class="result"><div class="big">👑 ${esc(bossDef.name)} besiegt!</div><p>Mal sehen, was in der Truhe ist …</p>
+      <div class="roulette"><div class="rl-line"></div><div class="rl-strip" id="rlStrip">${cards}</div></div>
+      <div id="rlWin" class="rl-win hidden"></div></div>`, true);
+    $('#modalClose').classList.add('hidden');
+    const stripEl = $('#rlStrip');
+    requestAnimationFrame(() => {
+      const card = stripEl.children[30]; const wrap = stripEl.parentElement;
+      const target = card.offsetLeft + card.offsetWidth / 2 - wrap.clientWidth / 2 + (Math.random() - 0.5) * card.offsetWidth * 0.5;
+      stripEl.style.transition = 'transform 4.2s cubic-bezier(.08,.75,.12,1)';
+      stripEl.style.transform = `translateX(${-target}px)`;
+      let last = 0; const t0 = performance.now();
+      const tickSnd = () => { const t = performance.now() - t0; if (t > 4200) return; const pos = -new DOMMatrix(getComputedStyle(stripEl).transform).m41; const idx = Math.floor(pos / card.offsetWidth); if (idx !== last) { last = idx; Audio2.play('click'); } requestAnimationFrame(tickSnd); };
+      tickSnd();
+    });
+    setTimeout(() => {
+      const c = rewardCard(rw);
+      stripEl.children[30].classList.add('won');
+      Audio2.play('achievement');
+      const isPlaceable = rw.kind === 'tower' || rw.kind === 'trap';
+      const w = $('#rlWin');
+      w.innerHTML = `<h3>Du bekommst: <span style="color:${c.color}">${esc(c.name)}</span>!</h3><p>${rw.kind === 'tower' ? esc(TOWER_BY_ID[rw.id].desc) : rw.kind === 'trap' ? esc(TRAP_BY_ID[rw.id].desc) : rw.kind === 'roads' ? 'Damit kannst du den Weg der Gegner umbauen (Baumenü → Straßen).' : 'Für Upgrades und Wegstücke.'}</p>
+        ${rw.bonus ? `<p class="bonus">🎁 Bonus: <b>${esc(rewardCard(rw.bonus).name)}</b>${rw.bonus.kind === 'trap' ? ' (Falle)' : ''}</p>` : ''}
+        <div class="row">${isPlaceable ? '<button class="btn green big" id="rlPlace">📍 Jetzt platzieren</button>' : ''}${R.tutorial ? '' : '<button class="btn" id="rlOk">Einsammeln</button>'}</div>`;
+      w.classList.remove('hidden');
+      for (let i = 0; i < 3; i++) setTimeout(() => Particles.emit(Player.pos.x, 2, Player.pos.z, 50, c.color, { speed: 4, up: 5, life: 1.2, size: 0.3, tint: false }), i * 200);
+      const finish = place => {
+        $('#modalClose').classList.remove('hidden'); closeModal();
+        if (R.tutorial) { Tut.event('rewardClosed'); }
+        if (place && isPlaceable) { curTab = rw.kind === 'tower' ? 'towers' : 'traps'; setBuildOpen(true); Game.setBuild({ kind: rw.kind, id: rw.id }); }
+        renderBuildBar();
+      };
+      const p = $('#rlPlace'); if (p) p.onclick = () => finish(true);
+      const o = $('#rlOk'); if (o) o.onclick = () => finish(false);
+      if (!isPlaceable && R.tutorial) setTimeout(() => finish(false), 1500);
+    }, 4400);
+  }
+
   // ---------------- Neue Türme nach der Runde ----------------
   function picksHtml() {
     const P = Save.P, picks = P.pendingPicks;
@@ -680,26 +812,25 @@ const UI = (() => {
       <button class="btn green big" id="pmResume">▶ Weiterspielen</button>
       <button class="btn" id="pmShare">🔗 Grundstück teilen</button>
       <button class="btn" id="pmStats">📊 Statistiken</button>
-      <button class="btn red" id="pmMenu">🏠 Zum Hauptmenü (speichert)</button></div>
+      ${R && R.tutorial ? '' : '<button class="btn red" id="pmMenu">🏠 Zum Hauptmenü (speichert)</button>'}</div>
       <p class="note">Gespeichert wird nach jeder abgeschlossenen Welle. Verlässt du eine laufende Welle, beginnt sie beim Fortsetzen von vorn.</p>`, true);
     $('#pmResume').onclick = () => closeModal();
     $('#pmShare').onclick = () => shareScreen();
     $('#pmStats').onclick = () => statsScreen();
-    $('#pmMenu').onclick = () => { Save.save(); goMenu(); };
+    const pm = $('#pmMenu'); if (pm) pm.onclick = () => { Save.save(); goMenu(); };
   }
   function resultScreen(s, won) {
     const t = s.time; const tm = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
-    const h = `<div class="result"><div class="big">${won ? '🏆 SIEG!' : '💀 GAME OVER'}</div><div>${s.mode.icon} ${s.mode.name}</div>
+    const h = `<div class="result"><div class="big">${won ? '🏆 SIEG!' : '💀 GAME OVER'}</div><div>Du hast Welle ${s.waves + 1} erreicht</div>
       <div class="statgrid"><div><span>Überstandene Wellen</span><b>${s.waves}</b></div><div><span>Besiegte Gegner</span><b>${fmt(s.kills)}</b></div><div><span>Verdiente Münzen</span><b>${fmt(s.coins)}</b></div><div><span>Besiegte Bosse</span><b>${s.bosses}</b></div><div><span>Spielzeit</span><b>${tm}</b></div><div><span>Persönlicher Rekord</span><b>Welle ${Math.max(s.record, s.waves)}</b></div></div>
       ${won ? '<p>Belohnung: 💎100 🔮10</p>' : '<p>Deine Burg ist gefallen – aber du bekommst neue Türme für die nächste Runde!</p>'}
       <div id="rsPicks"></div>
-      <div class="row">${won && s.mode.id !== 'boss' ? '<button class="btn green" id="rsCont">♾️ Weiterspielen (Endlos)</button>' : ''}<button class="btn ${won ? '' : 'green'}" id="rsRetry">🔁 Neue Runde (Welle 1)</button><button class="btn gray" id="rsMenu">🏠 Hauptmenü</button></div></div>`;
+      <div class="row"><button class="btn ${won ? '' : 'green'}" id="rsRetry">🔁 Neue Runde (Welle 1)</button><button class="btn gray" id="rsMenu">🏠 Hauptmenü</button></div></div>`;
     openModal(won ? 'Sieg' : 'Niederlage', h, true);
     $('#modalClose').classList.add('hidden');
     const renderPicks = () => { $('#rsPicks').innerHTML = picksHtml(); bindPicks(renderPicks); };
     renderPicks();
     const done = () => $('#modalClose').classList.remove('hidden');
-    const c = $('#rsCont'); if (c) c.onclick = () => { done(); Game.continueEndless(); closeModal(); Game.R.paused = false; hud(true); };
     $('#rsRetry').onclick = () => { done(); Save.P.run = null; startGame(s.mode.id, Game.R.biome); };
     $('#rsMenu').onclick = () => { done(); goMenu(); };
     if (won) for (let i = 0; i < 6; i++) setTimeout(() => Particles.emit((Math.random() - 0.5) * 16, 2, (Math.random() - 0.5) * 10, 60, '#ffffff', { speed: 5, up: 6, life: 1.6, size: 0.35, tint: false }), i * 250);
@@ -758,9 +889,6 @@ const UI = (() => {
       $('#dOk').onclick = () => closeModal();
       refreshMenu();
     };
-    $('#rotateOk').onclick = () => { $('#rotateHint').classList.add('hidden'); rotateDismissed = true; };
-    const checkRot = () => { const portrait = innerHeight > innerWidth * 1.1 && innerWidth < 900; $('#rotateHint').classList.toggle('hidden', !portrait || rotateDismissed); };
-    addEventListener('resize', checkRot); checkRot();
     window.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const k = e.key.toLowerCase();
@@ -783,7 +911,6 @@ const UI = (() => {
     // Mausrad im Baumenü horizontal scrollen
     $('#bbItems').addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { $('#bbItems').scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
   }
-  let rotateDismissed = false;
 
   // Callbacks aus dem Spiel
   function hookGame() {
@@ -792,9 +919,11 @@ const UI = (() => {
       routeChanged: ok => { if (!ok && screen === 'game') toast('⚠️ Kein Weg vom Spawn zum Ziel!', 'bad'); },
       waveBanner: (w, boss) => banner(boss ? '👑 BOSSWELLE ' + w : 'WELLE ' + w, boss ? 'Ein mächtiger Boss naht!' : '', boss ? 'boss' : '', 1800),
       waveCleared: (w, bonus, income) => toast(`✅ Welle ${w} geschafft! +${bonus}${income ? ' +' + income + ' (Gold)' : ''} 🪙`, 'good'),
-      bossAppear: e => { if (e) banner('👑 ' + e.def.name, e.def.kind, 'boss', 2200); },
+      bossAppear: e => { if (e) banner('👑 ' + e.def.name, 'Besiege ihn für eine Belohnung!', 'boss', 2200); },
       newEnemy: def => toast(`📖 Neuer Gegner entdeckt: <b>${esc(def.name)}</b>`, ''),
-      gameOver: s => resultScreen(s, false),
+      gameOver: s => { Tut.stop(); resultScreen(s, false); },
+      tutorialEvent: (n, d) => Tut.event(n, d),
+      bossReward: (rw, def) => bossReward(rw, def),
       victory: s => resultScreen(s, true),
     });
     Save.on('levelup', info => {
@@ -806,5 +935,5 @@ const UI = (() => {
     Save.on('achievement', a => { Audio2.play('achievement'); toast(`🏆 Erfolg: <b>${esc(a.name)}</b> +💎${a.gems}${a.crystals ? ' 🔮' + a.crystals : ''}`, 'gold'); });
   }
 
-  return { show, toast, banner, hud, goMenu, startGame, renderBuildBar, bindEvents, hookGame, refreshMenu, closeModal, get screen() { return screen; } };
+  return { Tut, show, toast, banner, hud, goMenu, startGame, renderBuildBar, bindEvents, hookGame, refreshMenu, closeModal, get screen() { return screen; } };
 })();

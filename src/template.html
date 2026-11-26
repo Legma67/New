@@ -11,6 +11,7 @@
 <style>/*CSS*/</style>
 </head>
 <body>
+<div id="root">
 <canvas id="c"></canvas>
 <div id="floats"></div>
 
@@ -89,6 +90,7 @@
       <button data-bbclose="1" class="bb-close" title="Baumenü schließen (B)">✕</button>
       <button data-tab="towers" class="on">🏰 Türme</button>
       <button data-tab="roads">🛣️ Straßen</button>
+      <button data-tab="traps">🪤 Fallen</button>
       <button data-tab="decos">🌳 Deko</button>
       <button data-tab="tools">🧰 Werkzeuge</button>
     </div>
@@ -98,10 +100,11 @@
   <div class="tower-panel hidden" id="towerPanel"></div>
 </div>
 
+<div id="tut" class="hidden"></div>
 <div id="toasts"></div>
 <div id="banner" class="hidden"></div>
 <div id="modal" class="hidden"><div class="modal-box"><div class="modal-head"><h2 id="modalTitle"></h2><button class="xbtn" id="modalClose">✕</button></div><div class="modal-body" id="modalBody"></div></div></div>
-<div id="rotateHint" class="hidden"><div>📱↻<br>Drehe dein Gerät ins <b>Querformat</b> für das beste Spielerlebnis.<br><button class="btn small" id="rotateOk">Trotzdem spielen</button></div></div>
+</div>
 
 <script>/*THREE*/</script>
 <script>/*JS*/</script>

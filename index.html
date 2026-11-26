@@ -13,8 +13,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#1b2a4a;font-family:"T
 canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .hidden{display:none!important}
 button{font-family:inherit;cursor:pointer;touch-action:manipulation}
-:root{--ui:clamp(11px,1.45vmin + 4px,17px);--safe-l:env(safe-area-inset-left,0px);--safe-r:env(safe-area-inset-right,0px);--safe-b:env(safe-area-inset-bottom,0px)}
-body{font-size:var(--ui)}
+:root{--safe-l:env(safe-area-inset-left,0px);--safe-r:env(safe-area-inset-right,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+#root{position:fixed;left:0;top:0;width:100vw;height:100vh;overflow:hidden;container-type:size;container-name:root;transform-origin:0 0}
+body.portrait #root{transform:rotate(90deg) translateY(-100%)}
+#root>*{font-size:clamp(11px,1.45cqmin + 4px,17px)}
 .btn{border:0;border-radius:14px;padding:.65em 1.1em;font-weight:900;font-size:1em;color:#fff;letter-spacing:.02em;
   background:linear-gradient(#4fa3ff,#2c6fe0);box-shadow:0 4px 0 #1a4ba3,0 6px 14px rgba(0,0,0,.3);text-shadow:0 2px 0 rgba(0,0,0,.35);transition:transform .08s,filter .15s}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #1a4ba3}
@@ -29,23 +31,23 @@ body{font-size:var(--ui)}
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20}
 #loading{background:radial-gradient(circle at 50% 40%,#3a6ad8,#1b2a4a);z-index:100}
 .logo{display:flex;flex-direction:column;align-items:center;transform:rotate(-2deg);filter:drop-shadow(0 6px 0 rgba(0,0,0,.35))}
-.logo .l1{font-size:clamp(16px,3.6vmin,34px);font-weight:900;color:#ffe14d;-webkit-text-stroke:2px #6a3a00;letter-spacing:.08em}
-.logo .l2{font-size:clamp(30px,8vmin,78px);font-weight:900;color:#fff;-webkit-text-stroke:3px #1a3a8a;line-height:.95;background:linear-gradient(#fff,#bfe2ff);-webkit-background-clip:text;background-clip:text}
-.logo.small .l2{font-size:clamp(26px,7vmin,64px)}
-.loadbar{width:min(60vw,420px);height:18px;border-radius:10px;background:rgba(0,0,0,.35);margin-top:24px;overflow:hidden;border:3px solid rgba(255,255,255,.5)}
+.logo .l1{font-size:clamp(16px,3.6cqmin,34px);font-weight:900;color:#ffe14d;-webkit-text-stroke:2px #6a3a00;letter-spacing:.08em}
+.logo .l2{font-size:clamp(30px,8cqmin,78px);font-weight:900;color:#fff;-webkit-text-stroke:3px #1a3a8a;line-height:.95;background:linear-gradient(#fff,#bfe2ff);-webkit-background-clip:text;background-clip:text}
+.logo.small .l2{font-size:clamp(26px,7cqmin,64px)}
+.loadbar{width:min(60cqw,420px);height:18px;border-radius:10px;background:rgba(0,0,0,.35);margin-top:24px;overflow:hidden;border:3px solid rgba(255,255,255,.5)}
 .loadbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5fe07a,#ffe14d);transition:width .2s}
 .loadtxt{margin-top:10px;opacity:.85;font-weight:700}
 /* Hauptmenü */
-#mainmenu{background:linear-gradient(90deg,rgba(10,20,50,.55),rgba(10,20,50,0) 45%,rgba(10,20,50,0) 70%,rgba(10,20,50,.25));align-items:flex-start;padding-left:calc(4vw + var(--safe-l));gap:2vmin}
-#mainmenu .logo{align-items:flex-start;margin-top:4vmin}
-.menu-buttons{display:flex;flex-direction:column;gap:1.6vmin;width:min(46vw,460px)}
+#mainmenu{background:linear-gradient(90deg,rgba(10,20,50,.55),rgba(10,20,50,0) 45%,rgba(10,20,50,0) 70%,rgba(10,20,50,.25));align-items:flex-start;padding-left:calc(4cqw + var(--safe-l));gap:2cqmin}
+#mainmenu .logo{align-items:flex-start;margin-top:4cqmin}
+.menu-buttons{display:flex;flex-direction:column;gap:1.6cqmin;width:min(46cqw,460px)}
 .btn.big{font-size:1.6em;padding:.55em 1em;border-radius:18px}
 .btn.play{background:linear-gradient(#5fe07a,#22a03c);box-shadow:0 6px 0 #16702a,0 8px 20px rgba(0,0,0,.35);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
-.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4vmin}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4cqmin}
 .menu-grid .btn{font-size:.92em;padding:.7em .5em}
 .menu-top{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + var(--safe-r));display:flex;gap:10px;align-items:center}
-.menu-foot{position:fixed;bottom:8px;left:calc(4vw + var(--safe-l));opacity:.7;font-size:.8em}
+.menu-foot{position:fixed;bottom:8px;left:calc(4cqw + var(--safe-l));opacity:.7;font-size:.8em}
 .daily-btn{position:fixed;right:calc(16px + var(--safe-r));bottom:calc(16px + var(--safe-b));border:0;border-radius:16px;padding:.8em 1.1em;font-weight:900;font-size:1em;color:#4a2a00;background:linear-gradient(#ffe46a,#ffb320);box-shadow:0 5px 0 #a86f00;animation:pulse 1.6s infinite}
 .daily-btn.done{animation:none;filter:grayscale(.7);opacity:.8}
 .player-chip{display:flex;align-items:center;gap:.5em;background:rgba(15,25,55,.72);border:2px solid rgba(255,255,255,.25);border-radius:16px;padding:.35em .7em .35em .35em;backdrop-filter:blur(4px)}
@@ -72,7 +74,7 @@ body{font-size:var(--ui)}
 .wp-row.small{font-size:.8em;opacity:.95}
 .wp-bar{height:.55em;border-radius:6px;background:rgba(0,0,0,.4);overflow:hidden;margin:3px 0}
 .wp-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff7a3a,#ffe14d);transition:width .2s}
-.boss-bar{background:rgba(40,5,15,.85);border:2px solid #ff4d6a;border-radius:12px;padding:.3em .7em;width:min(46vw,440px)}
+.boss-bar{background:rgba(40,5,15,.85);border:2px solid #ff4d6a;border-radius:12px;padding:.3em .7em;width:min(46cqw,440px)}
 .bb-name{font-weight:900;color:#ffb3c0;text-align:center;font-size:.95em}
 .bb-track{position:relative;height:.8em;border-radius:6px;background:rgba(0,0,0,.5);overflow:hidden;margin-top:2px}
 .bb-track i{position:absolute;left:0;top:0;height:100%}
@@ -85,11 +87,11 @@ body{font-size:var(--ui)}
 .cam-ctl{position:fixed;left:calc(8px + var(--safe-l));top:calc(70px + env(safe-area-inset-top,0px));display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .cbtn{width:2.5em;height:2.5em;border-radius:12px;border:2px solid rgba(255,255,255,.3);background:rgba(15,25,55,.6);color:#fff;font-weight:900;font-size:1.05em}
 .cbtn:last-child{grid-column:span 2;width:auto}
-.wave-ctl{position:fixed;right:calc(8px + var(--safe-r));bottom:calc(8px + var(--safe-b));display:flex;flex-direction:column;gap:6px;align-items:stretch;width:min(30vw,210px)}
+.wave-ctl{position:fixed;right:calc(8px + var(--safe-r));bottom:calc(8px + var(--safe-b));display:flex;flex-direction:column;gap:6px;align-items:stretch;width:min(30cqw,210px)}
 .wavebtn{background:linear-gradient(#ff8a3a,#e0501a);box-shadow:0 4px 0 #9a3010,0 6px 14px rgba(0,0,0,.3);font-size:1em;padding:.7em .4em}
 .wavebtn.skip{background:linear-gradient(#b47aff,#7a3ae0);box-shadow:0 4px 0 #4f1fa0}
 .wc-row{display:flex;gap:6px}.wc-row .btn{flex:1}
-.build-bar{position:fixed;left:calc(8px + var(--safe-l));right:calc(min(30vw,210px) + 18px + var(--safe-r));bottom:calc(8px + var(--safe-b));background:rgba(15,25,55,.78);border:2px solid rgba(255,255,255,.25);border-radius:16px;padding:5px;backdrop-filter:blur(4px)}
+.build-bar{position:fixed;left:calc(8px + var(--safe-l));right:calc(min(30cqw,210px) + 18px + var(--safe-r));bottom:calc(8px + var(--safe-b));background:rgba(15,25,55,.78);border:2px solid rgba(255,255,255,.25);border-radius:16px;padding:5px;backdrop-filter:blur(4px)}
 .bb-tabs{display:flex;gap:4px;margin-bottom:5px}
 .bb-tabs button{flex:1;border:0;border-radius:10px;padding:.35em .2em;font-weight:900;font-size:.85em;color:#cfe0ff;background:rgba(255,255,255,.08)}
 .bb-tabs button.on{background:linear-gradient(#4fa3ff,#2c6fe0);color:#fff}
@@ -107,7 +109,7 @@ body{font-size:var(--ui)}
 .build-hint{position:fixed;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top,0px));z-index:11;background:rgba(15,25,55,.85);border-radius:12px;padding:.4em .9em;font-weight:700;font-size:.85em;display:flex;gap:.6em;align-items:center;white-space:nowrap}
 .build-hint .btn{pointer-events:auto}
 /* Turm-Panel */
-.tower-panel{position:fixed;left:calc(8px + var(--safe-l));top:calc(70px + env(safe-area-inset-top,0px));width:min(38vw,300px);max-height:calc(100% - 78px);overflow:auto;background:rgba(15,25,55,.92);border:3px solid #ffe14d;border-radius:18px;padding:.7em;z-index:12}
+.tower-panel{position:fixed;left:calc(8px + var(--safe-l));top:calc(70px + env(safe-area-inset-top,0px));width:min(38cqw,300px);max-height:calc(100% - 78px);overflow:auto;background:rgba(15,25,55,.92);border:3px solid #ffe14d;border-radius:18px;padding:.7em;z-index:12}
 .tp-head{display:flex;gap:.6em;align-items:center}
 .tp-head img{width:3.6em;height:3.6em;border-radius:12px;background:rgba(255,255,255,.08)}
 .tp-name{font-weight:900;font-size:1.05em;line-height:1.1}
@@ -128,22 +130,22 @@ body{font-size:var(--ui)}
 .tp-close{position:absolute;top:6px;right:8px;border:0;background:none;color:#fff;font-size:1.2em}
 /* Toasts & Banner */
 #toasts{position:fixed;top:calc(112px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:60;pointer-events:none}
-.toast{background:rgba(15,25,55,.92);border:2px solid rgba(255,255,255,.35);border-radius:12px;padding:.45em 1em;font-weight:800;animation:tin .25s;max-width:80vw;text-align:center}
+.toast{background:rgba(15,25,55,.92);border:2px solid rgba(255,255,255,.35);border-radius:12px;padding:.45em 1em;font-weight:800;animation:tin .25s;max-width:80cqw;text-align:center}
 .toast.good{border-color:#5fe07a}.toast.bad{border-color:#ff6a6a}.toast.gold{border-color:#ffd84a;background:rgba(80,50,0,.92)}
 .toast.out{opacity:0;transition:opacity .4s}
 @keyframes tin{from{transform:translateY(-10px);opacity:0}}
 #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:55;pointer-events:none}
-#banner .t1{font-size:clamp(34px,9vmin,90px);font-weight:900;color:#fff;-webkit-text-stroke:3px #1a3a8a;animation:bin .5s ease-out;text-align:center}
-#banner .t2{font-size:clamp(16px,3.5vmin,30px);font-weight:900;color:#ffe14d;-webkit-text-stroke:1px #6a3a00}
+#banner .t1{font-size:clamp(34px,9cqmin,90px);font-weight:900;color:#fff;-webkit-text-stroke:3px #1a3a8a;animation:bin .5s ease-out;text-align:center}
+#banner .t2{font-size:clamp(16px,3.5cqmin,30px);font-weight:900;color:#ffe14d;-webkit-text-stroke:1px #6a3a00}
 #banner.boss .t1{color:#ff5a6a;-webkit-text-stroke-color:#3a0010}
 @keyframes bin{from{transform:scale(2.2);opacity:0}}
 .float-text{position:fixed;left:0;top:0;font-weight:900;font-size:1em;pointer-events:none;-webkit-text-stroke:1px rgba(0,0,0,.6);z-index:9;white-space:nowrap}
 #floats{position:fixed;inset:0;pointer-events:none;z-index:9}
 /* Modal */
 #modal{position:fixed;inset:0;background:rgba(5,10,30,.6);display:flex;align-items:center;justify-content:center;z-index:70;backdrop-filter:blur(3px)}
-.modal-box{width:min(94vw,980px);height:min(92vh,720px);background:linear-gradient(#24386a,#172449);border:3px solid rgba(255,255,255,.35);border-radius:22px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:mpop .2s}
+.modal-box{width:min(94cqw,980px);height:min(92cqh,720px);background:linear-gradient(#24386a,#172449);border:3px solid rgba(255,255,255,.35);border-radius:22px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:mpop .2s}
 @keyframes mpop{from{transform:scale(.9);opacity:0}}
-.modal-box.compact{height:auto;max-height:92vh;width:min(94vw,560px)}
+.modal-box.compact{height:auto;max-height:92cqh;width:min(94cqw,560px)}
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:.5em .9em;background:rgba(0,0,0,.22)}
 .modal-head h2{margin:0;font-size:1.3em;font-weight:900;color:#ffe14d;-webkit-text-stroke:1px #6a3a00}
 .xbtn{border:0;background:linear-gradient(#ff6a6a,#d93a3a);color:#fff;font-weight:900;border-radius:10px;width:2.2em;height:2.2em;font-size:1em;box-shadow:0 3px 0 #962323}
@@ -209,28 +211,26 @@ h4.sec{margin:.6em 0 .4em;color:#8fe9ff;font-size:1em}
 textarea.code{width:100%;height:6em;border-radius:10px;border:2px solid rgba(255,255,255,.3);background:rgba(0,0,0,.3);color:#fff;font-family:monospace;font-size:.75em;padding:.5em;user-select:text;-webkit-user-select:text}
 .note{font-size:.82em;opacity:.85;background:rgba(0,0,0,.2);border-radius:10px;padding:.5em .7em;margin:.5em 0}
 .visit-bar{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:30;background:rgba(15,25,55,.9);border:2px solid #ffe14d;border-radius:14px;padding:.5em .8em;display:flex;gap:.6em;align-items:center;font-weight:800}
-#rotateHint{position:fixed;inset:0;background:rgba(10,20,50,.94);z-index:200;display:flex;align-items:center;justify-content:center;text-align:center;font-size:1.2em;padding:2em;line-height:1.6}
-#rotateHint div{font-size:1em}
-@media (max-height:430px){
+@container root (max-height:430px){
   :root{--ui:12px}
   .item{width:4.3em}.item img,.item .ic{height:2.5em;font-size:1.6em}
   .wave-panel{min-width:12em}
   .side-menu{gap:4px}.sbtn{width:2.4em;height:2.4em}
   .cam-ctl{top:calc(58px + env(safe-area-inset-top,0px))}.cam-ctl .cbtn{width:2.3em;height:2.3em}
-  .tower-panel{top:56px;max-height:calc(100% - 64px);width:min(44vw,300px);padding:.5em}
+  .tower-panel{top:56px;max-height:calc(100% - 64px);width:min(44cqw,300px);padding:.5em}
   body.tp-open .build-bar,body.tp-open .build-hint{display:none}
   .tp-stats{margin:.4em 0}
   #toasts{top:calc(108px + env(safe-area-inset-top,0px))}
   .build-hint{top:calc(58px + env(safe-area-inset-top,0px))}
-  .modal-box{height:96vh}
+  .modal-box{height:96cqh}
 
 }
-@media (max-width:700px) and (orientation:landscape){.build-bar{right:calc(30vw + 14px)}}
+@container root (max-width:700px){.build-bar{right:calc(30cqw + 14px)}}
 
 /* Spielfigur-Steuerung */
 .joy{position:fixed;left:calc(18px + var(--safe-l));bottom:calc(16px + var(--safe-b));width:128px;height:128px;border-radius:50%;background:rgba(15,25,55,.35);border:3px solid rgba(255,255,255,.45);touch-action:none;display:none}
 .joy-knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#bcd4ff);box-shadow:0 3px 8px rgba(0,0,0,.4)}
-.jump-btn{position:fixed;right:calc(min(30vw,210px) + 22px + var(--safe-r));bottom:calc(18px + var(--safe-b));width:76px;height:76px;border-radius:50%;border:3px solid rgba(255,255,255,.6);background:rgba(15,25,55,.55);color:#fff;font-size:1.9em;font-weight:900;line-height:.9;display:none;flex-direction:column;align-items:center;justify-content:center;touch-action:none}
+.jump-btn{position:fixed;right:calc(min(30cqw,210px) + 22px + var(--safe-r));bottom:calc(18px + var(--safe-b));width:76px;height:76px;border-radius:50%;border:3px solid rgba(255,255,255,.6);background:rgba(15,25,55,.55);color:#fff;font-size:1.9em;font-weight:900;line-height:.9;display:none;flex-direction:column;align-items:center;justify-content:center;touch-action:none}
 .jump-btn small{font-size:.32em}
 .jump-btn:active{transform:scale(.92);background:rgba(79,163,255,.6)}
 .build-toggle{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--safe-b));display:none}
@@ -244,15 +244,38 @@ body.touch:not(.build-open) #hud .jump-btn{display:flex}
 .picks{margin:.8em 0;background:rgba(255,225,77,.1);border:2px solid #ffe14d;border-radius:16px;padding:.6em}
 .picks h3{margin:.1em 0 .4em;color:#ffe14d}
 .pick-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:.6em}
-.pick-row .card{border-width:3px}.pick-row .card img{height:4.2em}
+.pick-row .card{border-width:3px}.pick-row .card img{height:3.2em}.pick-row .card .sub{font-size:.68em}
 .pick-row.done .card{opacity:.35;pointer-events:none}
 .pick-row.done .card.chosen{opacity:1;box-shadow:0 0 0 4px #5fe07a;animation:pulse 1.2s infinite}
 .swatches{display:flex;gap:6px}
 .swatches button{width:2em;height:2em;border-radius:8px;border:3px solid rgba(255,255,255,.3)}
 .swatches button.on{border-color:#fff;box-shadow:0 0 0 2px #ffe14d}
+
+/* Tutorial */
+#tut{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:58;width:min(560px,70cqw);background:linear-gradient(#fff8d6,#ffe9a0);color:#3a2a00;border:3px solid #ffb320;border-radius:18px;padding:.6em .8em;display:flex;gap:.7em;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#tut.pop{animation:mpop .25s}
+#tut .tut-face{font-size:2.2em}
+#tut .tut-text{flex:1;font-size:1em;line-height:1.35}
+#tut .btn{white-space:nowrap}
+.tut-hl{outline:4px solid #ffe14d!important;outline-offset:2px;animation:tutpulse 1s infinite;z-index:5}
+@keyframes tutpulse{50%{outline-color:#ff8a1a;outline-offset:6px}}
+body.tutorial .side-menu,body.tutorial .hud-tr .shopbtn,body.tutorial .wc-row,body.tutorial [data-tp=sell]{display:none!important}
+.item.info{width:11em;text-align:left;font-size:.8em;padding:.4em;opacity:.95;display:flex;align-items:center}
+.item.info.big{width:9em;font-size:.95em;flex-direction:column;align-items:flex-start;justify-content:center}
+/* Boss-Truhe */
+.roulette{position:relative;overflow:hidden;border:3px solid #ffe14d;border-radius:14px;background:rgba(0,0,0,.35);margin:.6em 0}
+.rl-strip{display:flex;gap:0;height:100%;will-change:transform}
+.rl-card{flex:0 0 7em;height:7.4em;overflow:hidden;margin:.4em .25em;border:3px solid;border-radius:12px;background:rgba(255,255,255,.08);text-align:center;padding:.2em}
+.rl-card img{width:100%;height:5em;object-fit:contain;display:block}.rl-card .ic{height:1.92em;font-size:2.6em;display:flex;align-items:center;justify-content:center}
+.rl-card .nm{font-size:.72em;font-weight:900;line-height:1.1}
+.rl-card.won{background:rgba(255,225,77,.35);box-shadow:0 0 18px #ffe14d}
+.rl-line{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:#ff3b5a;z-index:2;box-shadow:0 0 8px #ff3b5a}
+.rl-win h3{margin:.3em 0;font-size:1.25em}
+.rl-win .bonus{background:rgba(255,225,77,.15);border:2px dashed #ffe14d;border-radius:10px;padding:.35em .6em;display:inline-block}
 </style>
 </head>
 <body>
+<div id="root">
 <canvas id="c"></canvas>
 <div id="floats"></div>
 
@@ -331,6 +354,7 @@ body.touch:not(.build-open) #hud .jump-btn{display:flex}
       <button data-bbclose="1" class="bb-close" title="Baumenü schließen (B)">✕</button>
       <button data-tab="towers" class="on">🏰 Türme</button>
       <button data-tab="roads">🛣️ Straßen</button>
+      <button data-tab="traps">🪤 Fallen</button>
       <button data-tab="decos">🌳 Deko</button>
       <button data-tab="tools">🧰 Werkzeuge</button>
     </div>
@@ -340,10 +364,11 @@ body.touch:not(.build-open) #hud .jump-btn{display:flex}
   <div class="tower-panel hidden" id="towerPanel"></div>
 </div>
 
+<div id="tut" class="hidden"></div>
 <div id="toasts"></div>
 <div id="banner" class="hidden"></div>
 <div id="modal" class="hidden"><div class="modal-box"><div class="modal-head"><h2 id="modalTitle"></h2><button class="xbtn" id="modalClose">✕</button></div><div class="modal-body" id="modalBody"></div></div></div>
-<div id="rotateHint" class="hidden"><div>📱↻<br>Drehe dein Gerät ins <b>Querformat</b> für das beste Spielerlebnis.<br><button class="btn small" id="rotateOk">Trotzdem spielen</button></div></div>
+</div>
 
 <script>console.warn('Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160. Please use ES Modules or alternatives: https://threejs.org/docs/index.html#manual/en/introduction/Installation'),
 /**
@@ -373,6 +398,8 @@ const RARITIES = {
 // Tower types: bullet, splash, beam, slow, flame, sniper, poison, chain, mine, push, multi,
 //              drone, heal, buff, shock, aura, gold, meteor, blackhole
 const TOWERS = [
+  { id:'crossbow', name:'Armbrust', rarity:'common', cost:100, level:1, type:'bullet', dmg:24, range:3.8, rate:1.35, speed:20, dt:'phys', air:true,
+    body:'wood', head:'crossbow', c1:'#a8743f', c2:'#5a3a1c', c3:'#c9ced6', desc:'Dein erster Turm: schießt schwere Bolzen auf ein Ziel. Trifft auch Flieger.', lv5:'Doppelbolzen: trifft 2 Gegner' },
   { id:'cannon', name:'Kanonenturm', rarity:'common', cost:150, level:1, type:'splash', dmg:40, range:3.2, rate:0.8, speed:9, splash:0.9, dt:'explosive',
     body:'stone', head:'cannon', c1:'#8d8f99', c2:'#3b3f4a', c3:'#ffcc33', desc:'Feuert schwere Kanonenkugeln mit kleinem Flächenschaden.', lv5:'Riesenkugeln: +50% Explosionsradius' },
   { id:'archer', name:'Bogenschützenturm', rarity:'common', cost:100, level:1, type:'bullet', dmg:14, range:3.5, rate:2.2, speed:18, dt:'phys', air:true,
@@ -487,6 +514,7 @@ const ENEMIES = [
   { id:'magicdragon', name:'Magischer Drache', kind:'Magischer Drache', hp:2800, speed:1.1, reward:120, size:1.0, color:'#8a4dff', shape:'dragon', min:30, w:1, fly:true, resist:{ magic:0.6 }, glow:'#d0a0ff' },
   { id:'colossus', name:'Urzeitkoloss', kind:'Legendärer Boss', hp:9000, speed:0.55, reward:400, size:1.6, color:'#6b4f3a', shape:'golem', min:35, w:0.4, armor:0.5, mini:true },
   // ----- Bosse -----
+  { id:'boss_tut', name:'Kleiner Steinriese', kind:'Tutorial-Boss', hp:420, speed:0.42, reward:120, size:1.4, color:'#9a9282', shape:'golem', boss:true, min:999, glow:'#ffcc33' },
   { id:'boss_stone', name:'Steinriese', kind:'Bossgegner', hp:6000, speed:0.5, reward:600, size:1.9, color:'#8d8576', shape:'golem', boss:true, armor:0.4, abilities:['stomp','summon'], summon:'skeleton', min:999 },
   { id:'boss_fire', name:'Feuerdrache', kind:'Bossgegner', hp:16000, speed:0.7, reward:1200, size:1.8, color:'#e8361c', shape:'dragon', boss:true, fly:true, immune:['fire'], abilities:['rage','summon'], summon:'fireimp', min:999, glow:'#ff8800' },
   { id:'boss_ice', name:'Eiskönig', kind:'Bossgegner', hp:30000, speed:0.55, reward:2000, size:1.9, color:'#bfefff', shape:'knight', boss:true, immune:['ice','slow'], armor:0.4, abilities:['freeze','shieldregen'], shield:5000, crown:true, min:999, glow:'#e0fbff' },
@@ -578,11 +606,7 @@ const BOOSTS = [
 // Spielmodi
 // ------------------------------------------------------------
 const MODES = [
-  { id:'normal', name:'Normalmodus', icon:'🛡️', desc:'Klassisch: Überstehe 30 Wellen.', win:30, hp:1, speed:1, lives:20 },
-  { id:'endless', name:'Endlosmodus', icon:'♾️', desc:'Unbegrenzte Wellen. Wie weit kommst du?', win:0, hp:1, speed:1, lives:20 },
-  { id:'boss', name:'Bossmodus', icon:'👹', desc:'Jede Welle ein Boss. Besiege 10 Bosse.', win:10, hp:0.55, speed:1, lives:20, bossRush:true, unlock:5 },
-  { id:'hard', name:'Schwerer Modus', icon:'💀', desc:'Mehr Lebenspunkte, schnellere Gegner, 10 Leben.', win:30, hp:1.6, speed:1.2, lives:10, unlock:8 },
-  { id:'creative', name:'Kreativmodus', icon:'🎨', desc:'Unendlich Münzen, keine Niederlage. Baue und experimentiere!', win:0, hp:1, speed:1, lives:9999, creative:true },
+  { id:'endless', name:'Endlos', icon:'♾️', desc:'Unendlich viele Wellen – jede 5. Welle kommt ein Boss.', win:0, hp:1, speed:1, lives:20, bossEvery:5 },
 ];
 const MODE_BY_ID = Object.fromEntries(MODES.map(m => [m.id, m]));
 
@@ -592,12 +616,12 @@ const MODE_BY_ID = Object.fromEntries(MODES.map(m => [m.id, m]));
 const QUESTS = [
   { id:'q_kill100', name:'Monsterjäger', desc:'Besiege 100 Gegner.', stat:'kills', goal:100, reward:{ gems:15, xp:100 } },
   { id:'q_wave10', name:'Durchhalten', desc:'Überstehe insgesamt 10 Wellen.', stat:'wavesTotal', goal:10, reward:{ gems:15, xp:120 } },
-  { id:'q_tower5', name:'Baumeister', desc:'Baue 5 Türme.', stat:'towersBuilt', goal:5, reward:{ gems:10, xp:60 } },
+  { id:'q_tower5', name:'Baumeister', desc:'Platziere 5 Türme.', stat:'towersBuilt', goal:5, reward:{ gems:10, xp:60 } },
   { id:'q_up5', name:'Maximalstufe', desc:'Verbessere einen Turm auf Stufe 5.', stat:'maxTowerLevel', goal:5, reward:{ gems:25, xp:150 } },
   { id:'q_boss1', name:'Bossbezwinger', desc:'Besiege einen Boss.', stat:'bossKills', goal:1, reward:{ gems:30, crystals:3, xp:200 } },
   { id:'q_coins10k', name:'Schatzmeister', desc:'Verdiene 10.000 Münzen.', stat:'coinsEarned', goal:10000, reward:{ gems:25, xp:150 } },
   { id:'q_games3', name:'Stammspieler', desc:'Spiele drei Runden.', stat:'gamesPlayed', goal:3, reward:{ gems:10, xp:80 } },
-  { id:'q_road30', name:'Straßenbauer', desc:'Baue 30 Straßenfelder.', stat:'roadsBuilt', goal:30, reward:{ gems:10, xp:60 } },
+  { id:'q_road30', name:'Straßenbauer', desc:'Baue 15 Straßenfelder.', stat:'roadsBuilt', goal:15, reward:{ gems:10, xp:60 } },
   { id:'q_kill1000', name:'Legendärer Jäger', desc:'Besiege 1.000 Gegner.', stat:'kills', goal:1000, reward:{ gems:50, crystals:5, xp:500 } },
   { id:'q_wave50', name:'Unerschütterlich', desc:'Überstehe insgesamt 50 Wellen.', stat:'wavesTotal', goal:50, reward:{ gems:40, crystals:4, xp:400 } },
   { id:'q_deco10', name:'Gartenkünstler', desc:'Platziere 10 Dekorationen.', stat:'decoBuilt', goal:10, reward:{ gems:10, xp:60 } },
@@ -608,11 +632,11 @@ const QUESTS = [
 const DAILY_POOL = [
   { id:'d_kill', name:'Tägliche Jagd', desc:'Besiege {g} Gegner.', stat:'kills', goal:150, reward:{ gems:12, xp:100 } },
   { id:'d_wave', name:'Tägliche Wellen', desc:'Überstehe {g} Wellen.', stat:'wavesTotal', goal:8, reward:{ gems:12, xp:100 } },
-  { id:'d_build', name:'Täglicher Bau', desc:'Baue {g} Türme.', stat:'towersBuilt', goal:6, reward:{ gems:8, xp:60 } },
+  { id:'d_build', name:'Täglicher Bau', desc:'Platziere {g} Türme.', stat:'towersBuilt', goal:4, reward:{ gems:8, xp:60 } },
   { id:'d_upg', name:'Tägliches Training', desc:'Führe {g} Upgrades durch.', stat:'upgrades', goal:8, reward:{ gems:8, xp:60 } },
   { id:'d_coins', name:'Tägliches Gold', desc:'Verdiene {g} Münzen.', stat:'coinsEarned', goal:4000, reward:{ gems:12, xp:100 } },
   { id:'d_boss', name:'Täglicher Boss', desc:'Besiege {g} Boss.', stat:'bossKills', goal:1, reward:{ gems:20, crystals:2, xp:150 } },
-  { id:'d_road', name:'Tägliche Straßen', desc:'Baue {g} Straßenfelder.', stat:'roadsBuilt', goal:15, reward:{ gems:6, xp:40 } },
+  { id:'d_road', name:'Tägliche Straßen', desc:'Baue {g} Straßenfelder.', stat:'roadsBuilt', goal:6, reward:{ gems:6, xp:40 } },
 ];
 const ACHIEVEMENTS = [
   { id:'a_tower1', name:'Erster Turm', desc:'Baue deinen ersten Turm.', stat:'towersBuilt', goal:1, gems:5, icon:'🏰' },
@@ -639,13 +663,14 @@ const ACHIEVEMENTS = [
   { id:'a_deco25', name:'Landschaftsgärtner', desc:'Platziere 25 Dekorationen.', stat:'decoBuilt', goal:25, gems:15, icon:'🌸' },
   { id:'a_games10', name:'Veteran', desc:'Spiele 10 Runden.', stat:'gamesPlayed', goal:10, gems:20, icon:'🎮' },
   { id:'a_skip10', name:'Draufgänger', desc:'Überspringe 10 Wellen-Pausen.', stat:'skips', goal:10, gems:15, icon:'⏩' },
-  { id:'a_victory', name:'Triumph', desc:'Gewinne einen Spielmodus.', stat:'victories', goal:1, gems:50, crystals:5, icon:'🏆' },
-  { id:'a_hard', name:'Unbezwingbar', desc:'Gewinne den Schweren Modus.', stat:'hardVictories', goal:1, gems:100, crystals:15, icon:'💀' },
+  { id:'a_victory', name:'Tutorial gemeistert', desc:'Schließe das Tutorial ab.', stat:'tutorial', goal:1, gems:20, icon:'🎓' },
+  { id:'a_hard', name:'Unbezwingbar', desc:'Erreiche Welle 75 in einer Runde.', stat:'bestWave', goal:75, gems:100, crystals:15, icon:'💀' },
+  { id:'a_trap', name:'Fallensteller', desc:'Platziere 10 Fallen.', stat:'trapsBuilt', goal:10, gems:15, icon:'🪤' },
   { id:'a_perfect', name:'Makellos', desc:'Überstehe ab Welle 10 eine Welle ohne Lebensverlust.', stat:'perfectWaves', goal:1, gems:15, icon:'✨' },
   { id:'a_level10', name:'Aufsteiger', desc:'Erreiche Spielerlevel 10.', stat:'playerLevel', goal:10, gems:30, icon:'📈' },
   { id:'a_level25', name:'Kommandant', desc:'Erreiche Spielerlevel 25.', stat:'playerLevel', goal:25, gems:80, crystals:10, icon:'🎖️' },
-  { id:'a_collect15', name:'Sammler', desc:'Schalte 15 Türme frei.', stat:'towersUnlocked', goal:15, gems:30, icon:'📚' },
-  { id:'a_collect30', name:'Komplettist', desc:'Schalte alle 30 Türme frei.', stat:'towersUnlocked', goal:30, gems:150, crystals:30, icon:'🗃️' },
+  { id:'a_collect15', name:'Sammler', desc:'Besitze 15 verschiedene Türme.', stat:'towersUnlocked', goal:15, gems:30, icon:'📚' },
+  { id:'a_collect30', name:'Komplettist', desc:'Besitze alle 31 Türme.', stat:'towersUnlocked', goal:31, gems:150, crystals:30, icon:'🗃️' },
   { id:'a_seen20', name:'Monsterforscher', desc:'Entdecke 20 Gegnertypen.', stat:'enemiesSeen', goal:20, gems:20, icon:'🔍' },
   { id:'a_dmg1m', name:'Zerstörungskraft', desc:'Verursache 1.000.000 Schaden.', stat:'damage', goal:1000000, gems:40, icon:'💥' },
   { id:'a_titan', name:'Titanenbezwinger', desc:'Besiege den Ultimativen Titan.', stat:'titanKills', goal:1, gems:200, crystals:50, icon:'🗿' },
@@ -653,10 +678,60 @@ const ACHIEVEMENTS = [
   { id:'a_streak7', name:'Treue Seele', desc:'Hole 7 Tage in Folge die Tagesbelohnung.', stat:'bestStreak', goal:7, gems:50, crystals:5, icon:'📅' },
 ];
 
+// ------------------------------------------------------------
+// Fallen (werden auf Straßenfelder gelegt, nur von Bossen)
+// ------------------------------------------------------------
+const TRAPS = [
+  { id:'trap_spike', name:'Stachelfalle', rarity:'uncommon', icon:'🔺', color:'#b8bcc6', dmg:18, every:0.5, desc:'Verletzt alle Bodengegner, die darüberlaufen.' },
+  { id:'trap_glue', name:'Klebefalle', rarity:'uncommon', icon:'🟫', color:'#c9a227', slow:0.55, desc:'Gegner kleben fest und laufen viel langsamer.' },
+  { id:'trap_fire', name:'Feuerfalle', rarity:'rare', icon:'🔥', color:'#ff6a1a', burn:22, desc:'Setzt Gegner in Brand.' },
+  { id:'trap_bomb', name:'Sprengfalle', rarity:'rare', icon:'💣', color:'#3a3a3a', dmg:140, splash:1.2, rearm:5, desc:'Explodiert, wenn ein Gegner drauftritt. Lädt sich wieder auf.' },
+  { id:'trap_frost', name:'Frostfalle', rarity:'epic', icon:'❄️', color:'#9fe6ff', stun:1.2, rearm:6, desc:'Friert Gegner kurz komplett ein.' },
+];
+const TRAP_BY_ID = Object.fromEntries(TRAPS.map(t => [t.id, t]));
+const ROAD_PIECE_PRICE = 30;   // Münzen pro Wegstück
+
 const NEIGHBOR_NAMES = ['MaxBuilder', 'TurmTina', 'KanonenKai', 'LaserLena', 'Drachenjäger', 'PixelPaul'];
 
 // Spielerlevel: Freischaltungen pro Level
 function xpForLevel(lvl) { return Math.floor(120 * Math.pow(1.22, lvl - 1)); }
+
+// ---- view.js ----
+'use strict';
+// ============================================================
+//  Immer Querformat: hält man das Gerät hochkant, wird das
+//  ganze Spiel um 90° gedreht – ohne Hinweis-Meldung.
+// ============================================================
+const View = (() => {
+  let w = innerWidth, h = innerHeight, portrait = false;
+  const listeners = [];
+  function layout() {
+    const W = window.innerWidth, H = window.innerHeight;
+    portrait = H > W;
+    w = portrait ? H : W; h = portrait ? W : H;   // logische (Querformat-)Größe
+    const root = document.getElementById('root');
+    if (root) { root.style.width = w + 'px'; root.style.height = h + 'px'; }
+    document.body.classList.toggle('portrait', portrait);
+    listeners.forEach(f => f());
+  }
+  // Bildschirmkoordinaten -> Spielkoordinaten (berücksichtigt die Drehung)
+  function toLocal(cx, cy) { return portrait ? { x: cy, y: window.innerWidth - cx } : { x: cx, y: cy }; }
+  // Auf Android: Vollbild + Querformat sperren (wo der Browser es erlaubt)
+  let tried = false;
+  function tryLock() {
+    if (tried || !matchMedia('(pointer:coarse)').matches) return; tried = true;
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    try {
+      const p = req && req.call(el, { navigationUI: 'hide' });
+      if (p && p.then) p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
+    } catch (e) {}
+  }
+  window.addEventListener('resize', layout);
+  window.addEventListener('orientationchange', () => setTimeout(layout, 150));
+  window.addEventListener('pointerdown', tryLock, { once: false, passive: true });
+  return { layout, toLocal, onChange: f => listeners.push(f), get w() { return w; }, get h() { return h; }, get portrait() { return portrait; } };
+})();
 
 // ---- audio.js ----
 'use strict';
@@ -905,6 +980,15 @@ const Models = (() => {
         mesh(cone(0.09, 0.12, 8), M(c3), 0, 0.42, 0, h);
         const bow = mesh(tor(0.16, 0.015, 5, 14, Math.PI), M(c2), 0, 0.18, 0.12, h); bow.rotation.z = Math.PI / 2;
         tip.position.set(0, 0.2, 0.2); break;
+      }
+      case 'crossbow': {
+        mesh(box(0.16, 0.14, 0.5), M(c2), 0, 0.14, 0.05, h);
+        const arms = mesh(tor(0.24, 0.025, 5, 16, Math.PI), M(c1), 0, 0.16, 0.22, h); arms.rotation.x = Math.PI / 2; arms.rotation.z = Math.PI;
+        mesh(box(0.48, 0.01, 0.01), M('#eeeeee'), 0, 0.16, 0.2, h, false);
+        const bolt = mesh(cyl(0.015, 0.015, 0.42, 4), M(c3), 0, 0.2, 0.15, h, false); bolt.rotation.x = Math.PI / 2;
+        mesh(cone(0.03, 0.08, 4), M(c3), 0, 0.2, 0.38, h, false).rotation.x = Math.PI / 2;
+        mesh(box(0.08, 0.16, 0.08), M('#3a7bd5'), 0, 0.05, -0.15, h);
+        tip.position.set(0, 0.2, 0.42); ud.recoil = arms; break;
       }
       case 'dish': {
         mesh(cyl(0.08, 0.12, 0.15, 8), M(c2), 0, 0.07, 0, h);
@@ -1468,6 +1552,20 @@ const Models = (() => {
     return g;
   }
 
+  function makeTrap(def) {
+    const g = new THREE.Group();
+    mesh(box(0.8, 0.05, 0.8), M('#4a4a4a'), 0, 0.075, 0, g, false).receiveShadow = true;
+    const c = def.color;
+    switch (def.id) {
+      case 'trap_spike': for (let x = -1; x <= 1; x++) for (let z = -1; z <= 1; z++) mesh(cone(0.07, 0.22, 4), M(c), x * 0.24, 0.2, z * 0.24, g); break;
+      case 'trap_glue': mesh(cyl(0.36, 0.38, 0.04, 16), M(c, { e: '#6a5000', ei: 0.2 }), 0, 0.12, 0, g, false); for (let i = 0; i < 5; i++) mesh(sph(0.06, 6), M('#e0c040'), Math.cos(i) * 0.22, 0.13, Math.sin(i * 2) * 0.22, g, false); break;
+      case 'trap_fire': for (let i = 0; i < 4; i++) { const a = i / 4 * 6.28; mesh(cyl(0.05, 0.06, 0.08, 6), M('#2a2a2a'), Math.cos(a) * 0.22, 0.14, Math.sin(a) * 0.22, g, false); } { const f = mesh(cone(0.18, 0.3, 8), M('#ff8a1a', { e: '#ff5a00', ei: 1, o: 0.85 }), 0, 0.25, 0, g, false); g.userData.flame = f; } break;
+      case 'trap_bomb': mesh(sph(0.2, 12), M('#2a2a2a'), 0, 0.25, 0, g); mesh(cyl(0.02, 0.02, 0.14, 4), M('#a08060'), 0, 0.48, 0, g, false); { const l = mesh(sph(0.04, 6), M('#ff3020', { e: '#ff2000', ei: 1 }), 0, 0.56, 0, g, false); g.userData.led = l; } break;
+      case 'trap_frost': { const cr = mesh(oct(0.16), M(c, { e: '#5ad0ff', ei: 0.6 }), 0, 0.3, 0, g, false); cr.scale.y = 1.6; g.userData.spin = cr; for (let i = 0; i < 4; i++) { const a = i / 4 * 6.28; mesh(cone(0.05, 0.18, 4), M('#e0f8ff'), Math.cos(a) * 0.26, 0.17, Math.sin(a) * 0.26, g, false); } break; }
+    }
+    return g;
+  }
+
   function makeCastle(skin) {
     const g = new THREE.Group();
     const wall = M(skin.wall), roof = M(skin.roof), dark = M('#4a4038');
@@ -1545,7 +1643,7 @@ const Models = (() => {
     return g;
   }
 
-  return { makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
+  return { makeTrap, makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
 })();
 
 // ---- world.js ----
@@ -1665,7 +1763,7 @@ const World = (() => {
     resize();
   }
   function resize() {
-    const w = window.innerWidth, h = window.innerHeight;
+    const w = View.w, h = View.h;
     renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
   }
@@ -2094,13 +2192,13 @@ const CamCtl = (() => {
   function rotate(a) { tYaw += a; }
   function reset() {
     if (mode === 'follow') { tPitch = 0.5; tDist = 9; }
-    else { tYaw = 0; tPitch = 0.95; tDist = window.innerWidth < 900 ? 20 : 22; tTarget.set(0, 0, 0.6); }
+    else { tYaw = 0; tPitch = 0.95; tDist = View.w < 900 ? 20 : 22; tTarget.set(0, 0, 0.6); }
   }
   function setMode(m, followFn) { mode = m; if (followFn) follow = followFn; reset(); }
   function setAuto(v) { auto = v; if (!v) reset(); }
 
   function groundAt(cx, cy) {
-    ndc.set(cx / window.innerWidth * 2 - 1, -(cy / window.innerHeight) * 2 + 1);
+    ndc.set(cx / View.w * 2 - 1, -(cy / View.h) * 2 + 1);
     ray.setFromCamera(ndc, cam);
     return ray.ray.intersectPlane(plane, hit) ? hit.clone() : null;
   }
@@ -2115,9 +2213,12 @@ const CamCtl = (() => {
   }
   function clampTarget() { tTarget.x = THREE.MathUtils.clamp(tTarget.x, -GW / 2 - 4, GW / 2 + 4); tTarget.z = THREE.MathUtils.clamp(tTarget.z, -GH / 2 - 4, GH / 2 + 4); }
 
-  function onDown(e) {
+  // Ereignis mit Spielkoordinaten (bei gedrehter Ansicht umgerechnet)
+  const L = e => { const p = View.toLocal(e.clientX, e.clientY); return { pointerId: e.pointerId, pointerType: e.pointerType, button: e.button, target: e.target, clientX: p.x, clientY: p.y }; };
+  function onDown(ev) {
+    const e = L(ev);
     if (auto) return;
-    el.setPointerCapture?.(e.pointerId);
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType, button: e.button });
     moved = 0; downPos = { x: e.clientX, y: e.clientY, button: e.button };
     if (pointers.size === 1) {
@@ -2134,7 +2235,8 @@ const CamCtl = (() => {
       pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), ang: Math.atan2(b.y - a.y, b.x - a.x), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
     }
   }
-  function onMove(e) {
+  function onMove(ev) {
+    const e = L(ev);
     if (auto) return;
     const p = pointers.get(e.pointerId);
     if (!p) {
@@ -2159,7 +2261,8 @@ const CamCtl = (() => {
     else if (dragMode === 'pan') pan(dx, dy);
     else if (dragMode === 'paint') { const g = groundAt(e.clientX, e.clientY); handlers.hover && handlers.hover(g); handlers.paint && handlers.paint(g); }
   }
-  function onUp(e) {
+  function onUp(ev) {
+    const e = L(ev);
     const p = pointers.get(e.pointerId);
     if (!p) return;
     pointers.delete(e.pointerId);
@@ -2294,16 +2397,20 @@ const Save = (() => {
 
   function defaults() {
     return {
-      v: 1,
+      v: 2,
+      tutorialDone: false,
+      towerInv: { crossbow: 1 },               // Türme im Besitz (Anzahl) – nur von Bossen
+      trapInv: {},                             // Fallen im Besitz (Anzahl)
+      roadPieces: 4,                           // freie Wegstücke
       name: 'Spieler' + Math.floor(1000 + Math.random() * 9000),
       level: 1, xp: 0, gems: 50, crystals: 0,
-      unlocked: ['archer', 'cannon'],            // freigeschaltete Türme
+      unlocked: ['crossbow'],                  // jemals erhaltene Türme (Sammlung)
       owned: { skins: ['skin_default'], effects: ['fx_default'], castles: ['castle_default'], biomes: ['grass'], decos: [] },
       equipped: { skin: 'skin_default', effect: 'fx_default', castle: 'castle_default', biome: 'grass' },
       boosts: { boost_coins: 0, boost_lives: 0, boost_xp: 0 },
       stats: { kills: 0, bossKills: 0, titanKills: 0, wavesTotal: 0, bestWave: 0, towersBuilt: 0, roadsBuilt: 0, decoBuilt: 0, upgrades: 0, maxTowerLevel: 0,
         coinsEarned: 0, gamesPlayed: 0, skips: 0, victories: 0, hardVictories: 0, perfectWaves: 0, legendaryBuilt: 0, damage: 0, purchases: 0,
-        playTime: 0, livesLost: 0, sold: 0, gemsEarned: 0, bestStreak: 0 },
+        playTime: 0, livesLost: 0, trapsBuilt: 0, sold: 0, gemsEarned: 0, bestStreak: 0 },
       seen: {}, killsBy: {},
       achievements: {},                       // id -> Zeitstempel
       quests: {},                             // id -> 'claimed'
@@ -2327,6 +2434,11 @@ const Save = (() => {
       const raw = localStorage.getItem(SAVE_KEY);
       P = raw ? merge(defaults(), JSON.parse(raw)) : defaults();
     } catch (e) { P = defaults(); }
+    // Umstieg auf das neue System (Türme nur von Bossen)
+    if (P.v < 2) {
+      Object.assign(P, { v: 2, tutorialDone: false, towerInv: { crossbow: 1 }, trapInv: {}, roadPieces: 4, unlocked: ['crossbow'], run: null, pendingPicks: null, records: {} });
+      P.stats.bestWave = 0;
+    }
     if (!P.layout) P.layout = { roads: DEFAULT_ROADS.map(([x, z]) => [x, z, 'road_stone']), decos: [[2, 7, 'tree', 0], [3, 12, 'flowers', 0], [10, 1, 'lantern', 0], [16, 12, 'bush', 0], [20, 1, 'house', 1]] };
     refreshDaily();
     return P;
@@ -2344,7 +2456,8 @@ const Save = (() => {
   // ---------- Stats ----------
   function stat(key) {
     if (key === 'playerLevel') return P.level;
-    if (key === 'towersUnlocked') return P.unlocked.length;
+    if (key === 'towersUnlocked') return Object.keys(P.towerInv).filter(k => P.towerInv[k] > 0).length;
+    if (key === 'tutorial') return P.tutorialDone ? 1 : 0;
     if (key === 'enemiesSeen') return Object.keys(P.seen).length;
     return P.stats[key] || 0;
   }
@@ -2359,8 +2472,7 @@ const Save = (() => {
       P.xp -= xpForLevel(P.level); P.level++;
       const gems = 10 + P.level * 2;
       P.gems += gems; P.stats.gemsEarned += gems;
-      const newTowers = TOWERS.filter(t => t.level === P.level && !P.unlocked.includes(t.id));
-      newTowers.forEach(t => P.unlocked.push(t.id));
+      const newTowers = [];
       const newBiomes = BIOMES.filter(b => b.level === P.level && !P.owned.biomes.includes(b.id));
       newBiomes.forEach(b => P.owned.biomes.push(b.id));
       emit('levelup', { level: P.level, gems, towers: newTowers, biomes: newBiomes });
@@ -2425,6 +2537,36 @@ const Save = (() => {
     return { ...r, day, streak: P.daily.streak };
   }
 
+  // ---------- Inventar ----------
+  function addTower(id, n = 1) { P.towerInv[id] = (P.towerInv[id] || 0) + n; if (!P.unlocked.includes(id)) P.unlocked.push(id); checkAchievements(); }
+  function addTrap(id, n = 1) { P.trapInv[id] = (P.trapInv[id] || 0) + n; }
+  // Zufälliger Turm, je höher die Welle desto seltener
+  function rollTower(wave, exclude = []) {
+    const weight = t => ({ common: 10, uncommon: 9, rare: 3 + wave / 6, epic: 0.5 + wave / 12, legendary: wave / 25, mythic: wave / 45, secret: wave / 60 })[t.rarity];
+    const pool = TOWERS.filter(t => !exclude.includes(t.id) && weight(t) > 0);
+    let tot = pool.reduce((a, t) => a + weight(t), 0), r = Math.random() * tot;
+    for (const t of pool) { r -= weight(t); if (r <= 0) return t.id; }
+    return pool[0].id;
+  }
+  // Boss-Belohnung: Turm, Wegstücke, Falle oder Münzen
+  function rollFake(wave) {
+    const r = Math.random();
+    if (r < 0.7) return { kind: 'tower', id: rollTower(wave) };
+    if (r < 0.8) return { kind: 'roads', n: 6 };
+    if (r < 0.95) return { kind: 'trap', id: TRAPS[Math.floor(Math.random() * TRAPS.length)].id };
+    return { kind: 'coins', n: 500 };
+  }
+  function rollBossReward(wave, tutorial) {
+    if (tutorial) { const ids = ['crossbow', 'cannon', 'archer', 'ice', 'poison', 'crossbow']; return { kind: 'tower', id: ids[Math.floor(Math.random() * ids.length)] }; }
+    // Jeder Boss gibt immer eine Waffe – und oft noch einen Bonus obendrauf
+    const r = Math.random();
+    let bonus = null;
+    if (r < 0.3) bonus = { kind: 'roads', n: 4 + Math.floor(wave / 5) };
+    else if (r < 0.6) { const pool = wave < 15 ? TRAPS.slice(0, 3) : TRAPS; bonus = { kind: 'trap', id: pool[Math.floor(Math.random() * pool.length)].id }; }
+    else if (r < 0.8) bonus = { kind: 'coins', n: 100 + wave * 20 };
+    return { kind: 'tower', id: rollTower(wave), bonus };
+  }
+
   // ---------- Turm-Belohnung nach einer Runde ----------
   // Je mehr Wellen überstanden, desto mehr Auswahlen und desto seltenere Türme.
   function makeTowerPicks(waves) {
@@ -2433,7 +2575,7 @@ const Save = (() => {
     const picks = [];
     const taken = new Set();
     for (let i = 0; i < n; i++) {
-      const pool = TOWERS.filter(t => !P.unlocked.includes(t.id) && !taken.has(t.id) && weight(t) > 0);
+      const pool = TOWERS.filter(t => !taken.has(t.id) && weight(t) > 0);
       if (!pool.length) { picks.push({ gems: 25 + waves * 3 }); continue; }
       const opts = [];
       while (opts.length < 3 && pool.length) {
@@ -2449,7 +2591,7 @@ const Save = (() => {
   function choosePick(i, towerId) {
     const p = P.pendingPicks && P.pendingPicks[i]; if (!p || p.done) return false;
     if (p.gems) { P.gems += p.gems; P.stats.gemsEarned += p.gems; }
-    else if (p.options.includes(towerId) && !P.unlocked.includes(towerId)) P.unlocked.push(towerId);
+    else if (p.options.includes(towerId)) addTower(towerId);
     else return false;
     p.done = towerId || 'gems';
     checkAchievements(); save();
@@ -2459,7 +2601,7 @@ const Save = (() => {
   const openPicks = () => !!(P.pendingPicks && P.pendingPicks.some(q => !q.done));
   function tidyPicks() { if (P.pendingPicks && !openPicks()) P.pendingPicks = null; }
   return {
-    makeTowerPicks, choosePick, openPicks, tidyPicks,
+    makeTowerPicks, choosePick, openPicks, tidyPicks, addTower, addTrap, rollTower, rollBossReward, rollFake,
     load, save, saveSoon, reset, on, emit, stat, addStat, maxStat, addXP, grant, checkAchievements,
     questProgress, claimQuest, refreshDaily, dailyDef, dailyProgress, claimDaily, dailyRewardAvailable, claimDailyReward,
     get P() { return P; },
@@ -2480,6 +2622,7 @@ const Game = (() => {
   let R = null;                // laufende Runde
   let demo = false, demoTimer = 0;
   const towers = [], enemies = [], projectiles = [], mines = [], holes = [], bolts = [], rings = [], drones = [];
+  const traps = new Map();     // "x,z" -> {def, x, z, mesh, cd}
   let castle = null;
   let ghost = null, ghostKey = '', rangeRing = null, selRing = null;
   let buildSel = null, buildRot = 0;
@@ -2560,22 +2703,23 @@ const Game = (() => {
     const P = Save.P;
     R = {
       mode, biome: biomeId, wave: 0, phase: 'build',
-      coins: mode.creative ? 999999 : 600 + 100 * (P.boosts.boost_coins || 0),
+      coins: 100 + 100 * (P.boosts.boost_coins || 0),
       lives: mode.lives + (mode.creative ? 0 : 2 * (P.boosts.boost_lives || 0)),
       maxLives: 0, speed: 1, paused: false, over: false, won: false,
       waves: new Map(),           // welle -> {queue, alive, leaked, total}
       spawnQueue: [], spawnTimer: 0, pauseTimer: 0,
       stats: { kills: 0, coins: 0, bosses: 0, time: 0, towers: 0 },
-      boss: null, healTimer: 0,
+      boss: null, healTimer: 0, tutorial: !P.tutorialDone, hold: false,
     };
     R.maxLives = R.lives;
     if (snapshot) {
       Object.assign(R, { wave: snapshot.wave, coins: snapshot.coins, lives: snapshot.lives, maxLives: snapshot.maxLives || snapshot.lives, stats: snapshot.stats });
     }
     loadLayout(); placeCastle();
-    if (snapshot) for (const t of snapshot.towers) { const tw = spawnTower(TOWER_BY_ID[t.id], t.x, t.z, t.rot, false); if (tw) { tw.level = t.level; tw.invested = t.invested; tw.targeting = t.targeting || 'first'; tw.kills = t.kills || 0; Models.applyTowerLevel(tw.mesh, tw.level); } }
+    if (snapshot) for (const t of snapshot.towers) { if (!TOWER_BY_ID[t.id] || available('tower', t.id) <= 0 || grid[t.x][t.z]) continue; const tw = spawnTower(TOWER_BY_ID[t.id], t.x, t.z, t.rot, false); tw.level = t.level; tw.invested = t.invested; tw.targeting = t.targeting || 'first'; tw.kills = t.kills || 0; Models.applyTowerLevel(tw.mesh, tw.level); }
+    if (snapshot && snapshot.traps) for (const [id, x, z] of snapshot.traps) if (TRAP_BY_ID[id] && available('trap', id) > 0 && grid[x][z] && grid[x][z].type === 'road') spawnTrap(TRAP_BY_ID[id], x, z, false);
     if (!snapshot) { Save.addStat('gamesPlayed'); }
-    R.pauseTimer = mode.creative ? 0 : (Save.P.settings.autoStart ? 30 : 0); // erste Welle startet automatisch
+    R.pauseTimer = R.tutorial ? 0 : (Save.P.settings.autoStart ? 20 : 0); // erste Welle startet automatisch (im Tutorial erst nach dem Platzieren)
     World.setBuildOverlay(true);
     Audio2.setMood('build');
     snapshotRun();
@@ -2587,6 +2731,7 @@ const Game = (() => {
     Save.P.run = {
       mode: R.mode.id, biome: R.biome, wave: R.wave, coins: R.coins, lives: R.lives, maxLives: R.maxLives, stats: R.stats,
       towers: towers.map(t => ({ id: t.def.id, x: t.x, z: t.z, level: t.level, invested: t.invested, rot: t.rot, targeting: t.targeting, kills: t.kills })),
+      traps: [...traps.values()].map(t => [t.def.id, t.x, t.z]),
     };
     Save.saveSoon();
   }
@@ -2602,6 +2747,7 @@ const Game = (() => {
     for (const b of bolts) scene.remove(b.mesh); bolts.length = 0;
     for (const r of rings) scene.remove(r.mesh); rings.length = 0;
     for (const c of pickups) scene.remove(c.mesh); pickups.length = 0;
+    for (const t of traps.values()) scene.remove(t.mesh); traps.clear();
     Particles.clear();
     if (grid.length) for (let x = 0; x < GW; x++) for (let z = 0; z < GH; z++) if (grid[x][z] && grid[x][z].type === 'tower') grid[x][z] = null;
     select(null); setBuild(null);
@@ -2609,13 +2755,13 @@ const Game = (() => {
 
   // ---------------- Demo fürs Hauptmenü ----------------
   function startDemo() {
-    R = { mode: MODES[1], biome: Save.P.equipped.biome, wave: 8, phase: 'wave', coins: 0, lives: 999, maxLives: 999, speed: 1, paused: false, waves: new Map(), spawnQueue: [], spawnTimer: 0, stats: { kills: 0, coins: 0, bosses: 0, time: 0 }, healTimer: 0 };
+    R = { mode: MODES[0], biome: Save.P.equipped.biome, wave: 8, phase: 'wave', coins: 0, lives: 999, maxLives: 999, speed: 1, paused: false, waves: new Map(), spawnQueue: [], spawnTimer: 0, stats: { kills: 0, coins: 0, bosses: 0, time: 0 }, healTimer: 0 };
     clearEntities();
     demo = true;
     loadLayout(); placeCastle();
     if (!route) return;
     // Türme entlang der Strecke aufstellen (nur Deko, nicht gespeichert)
-    const ids = ['archer', 'cannon', 'ice', 'laser', 'fire', 'tesla', 'magic', 'rocket', 'crystal', 'plasma', 'gatling', 'meteor'];
+    const ids = ['crossbow', 'cannon', 'ice', 'laser', 'fire', 'tesla', 'magic', 'rocket', 'crystal', 'plasma', 'gatling', 'meteor'];
     let k = 0;
     for (let i = 2; i < route.tiles.length - 1 && k < ids.length; i += 3) {
       const [x, z] = route.tiles[i];
@@ -2653,28 +2799,34 @@ const Game = (() => {
     const isFixed = (x === SPAWN.x && z === SPAWN.z) || (x === GOAL.x && z === GOAL.z);
     const creative = R && R.mode.creative;
     if (sel.kind === 'road') {
-      if (R && R.phase === 'wave' && !creative) return { ok: false, why: 'Straßen nur zwischen den Wellen bauen' };
-      if (c && c.type === 'road' && c.road === sel.id) return { ok: false, why: 'Hier ist schon diese Straße' };
+      if (R && R.phase === 'wave') return { ok: false, why: 'Wege nur in der Pause zwischen den Wellen ändern' };
+      if (c && c.type === 'road' && c.road === sel.id) return { ok: false, why: 'Hier ist schon dieser Weg' };
       if (c && c.type !== 'road') return { ok: false, why: 'Feld ist belegt' };
       if (isFixed && c) return { ok: false, why: 'Start/Ziel-Feld' };
-      const cost = ROAD_BY_ID[sel.id].cost;
-      if (!creative && R && R.coins < cost) return { ok: false, why: 'Nicht genug Münzen' };
+      if (!c && Save.P.roadPieces <= 0) return { ok: false, why: 'Keine Wegstücke mehr – kaufe welche oder besiege Bosse' };
+      return { ok: true };
+    }
+    if (sel.kind === 'trap') {
+      if (!c || c.type !== 'road') return { ok: false, why: 'Fallen nur auf den Weg legen' };
+      if (isFixed) return { ok: false, why: 'Nicht auf Start/Ziel' };
+      if (traps.has(x + ',' + z)) return { ok: false, why: 'Hier liegt schon eine Falle' };
+      if (available('trap', sel.id) <= 0) return { ok: false, why: 'Keine Falle dieser Art mehr übrig' };
       return { ok: true };
     }
     if (sel.kind === 'erase') {
       if (!c) return { ok: false, why: 'Nichts zum Entfernen' };
-      if (c.type === 'tower') return { ok: false, why: 'Türme bitte über VERKAUFEN entfernen' };
+      if (c.type === 'tower') return { ok: false, why: 'Türme bitte antippen und AUFHEBEN' };
+      if (c.type === 'road' && traps.has(x + ',' + z)) return { ok: true };
       if (c.type === 'road') {
         if (isFixed) return { ok: false, why: 'Start- und Zielfeld sind fest' };
-        if (R && R.phase === 'wave' && !creative) return { ok: false, why: 'Straßen nur zwischen den Wellen ändern' };
+        if (R && R.phase === 'wave') return { ok: false, why: 'Wege nur in der Pause zwischen den Wellen ändern' };
         if (!World.findPath(grid, { x, z })) return { ok: false, why: 'Kein Weg mehr zum Ziel – nicht erlaubt!' };
       }
       return { ok: true };
     }
     if (c) return { ok: false, why: c.type === 'road' ? 'Nicht auf die Straße bauen' : 'Feld ist belegt' };
     if (sel.kind === 'tower') {
-      const def = TOWER_BY_ID[sel.id];
-      if (!creative && R.coins < def.cost) return { ok: false, why: 'Nicht genug Münzen' };
+      if (available('tower', sel.id) <= 0) return { ok: false, why: 'Du hast keinen weiteren Turm dieser Art' };
       return { ok: true };
     }
     if (sel.kind === 'deco') {
@@ -2692,6 +2844,7 @@ const Game = (() => {
       const def = sel.kind === 'move' ? sel.tower.def : TOWER_BY_ID[sel.id];
       g = Models.makeTower(def, rarityColor(def));
     } else if (sel.kind === 'deco') g = Models.makeDeco(sel.id, World.biome);
+    else if (sel.kind === 'trap') g = Models.makeTrap(TRAP_BY_ID[sel.id]);
     else {
       g = new THREE.Group();
       Models.mesh(Models.box(0.98, 0.08, 0.98), Models.M('#ffffff'), 0, 0.05, 0, g, false);
@@ -2726,14 +2879,14 @@ const Game = (() => {
   let paintLast = null, painted = 0;
   function paintStart(p) { paintLast = null; painted = 0; paint(p); }
   function paint(p) {
-    if (!buildSel || (buildSel.kind !== 'road' && buildSel.kind !== 'erase')) return;
+    if (!buildSel || (buildSel.kind !== 'road' && buildSel.kind !== 'erase' && buildSel.kind !== 'trap')) return;
     const t = worldToTile(p); if (!t) return;
     const k = t.x + ',' + t.z; if (k === paintLast) return; paintLast = k;
     if (tryPlace(t.x, t.z, true)) painted++;
   }
   function paintEnd(p, wasTap) {
     if (!buildSel) return;
-    if (buildSel.kind === 'road' || buildSel.kind === 'erase') { if (painted === 0 && wasTap) { const t = worldToTile(p); if (t) tryPlace(t.x, t.z, false); } }
+    if (buildSel.kind === 'road' || buildSel.kind === 'erase' || buildSel.kind === 'trap') { if (painted === 0 && wasTap) { const t = worldToTile(p); if (t) tryPlace(t.x, t.z, false); } }
     else if (wasTap || true) { const t = worldToTile(p); if (t) tryPlace(t.x, t.z, false); }
     paintLast = null;
   }
@@ -2751,10 +2904,8 @@ const Game = (() => {
     const creative = R.mode.creative;
     const pos = tileToWorld(x, z);
     if (sel.kind === 'road') {
-      const cost = ROAD_BY_ID[sel.id].cost;
       const old = grid[x][z];
-      if (old && old.type === 'road' && !creative) R.coins += ROAD_BY_ID[old.road].cost; // Umbau: alte Straße zurückerstatten
-      if (!creative) R.coins -= cost;
+      if (!old) Save.P.roadPieces--;           // neues Feld kostet ein Wegstück, Umfärben ist gratis
       grid[x][z] = { type: 'road', road: sel.id };
       World.rebuildRoads(grid, skin());
       Save.addStat('roadsBuilt'); Audio2.play('road');
@@ -2762,19 +2913,25 @@ const Game = (() => {
       recalcRoute(); saveLayout();
     } else if (sel.kind === 'erase') {
       const c = grid[x][z];
-      if (c.type === 'road') { if (!creative) R.coins += ROAD_BY_ID[c.road].cost; grid[x][z] = null; World.rebuildRoads(grid, skin()); recalcRoute(); }
+      if (c.type === 'road' && traps.has(x + ',' + z)) { removeTrap(x, z); }
+      else if (c.type === 'road') { Save.P.roadPieces++; grid[x][z] = null; World.rebuildRoads(grid, skin()); recalcRoute(); }
       else if (c.type === 'deco') { if (!creative) R.coins += Math.floor(DECO_BY_ID[c.id].cost * 0.5); const m = decoMeshes.get(x + ',' + z); scene.remove(m); decoMeshes.delete(x + ',' + z); grid[x][z] = null; }
       Audio2.play('sell'); saveLayout();
       Particles.emit(pos.x, 0.2, pos.z, 12, '#bbbbbb', { speed: 1.5, life: 0.5 });
     } else if (sel.kind === 'tower') {
       const def = TOWER_BY_ID[sel.id];
-      if (!creative) R.coins -= def.cost;
       spawnTower(def, x, z, buildRot, true);
+      ui.tutorialEvent && ui.tutorialEvent('placed', def.id);
+      if (available('tower', def.id) <= 0) setBuild(null);
       Save.addStat('towersBuilt'); R.stats.towers = (R.stats.towers || 0) + 1;
       if (RARITIES[def.rarity].order >= 4) Save.addStat('legendaryBuilt');
       Save.maxStat('maxTowerLevel', 1);
       Audio2.play('place');
-      if (!R.mode.creative) snapshotRun();
+      snapshotRun();
+    } else if (sel.kind === 'trap') {
+      spawnTrap(TRAP_BY_ID[sel.id], x, z, true);
+      Save.addStat('trapsBuilt'); Audio2.play('place'); snapshotRun();
+      if (available('trap', sel.id) <= 0) setBuild(null);
     } else if (sel.kind === 'deco') {
       const d = DECO_BY_ID[sel.id];
       if (!creative) R.coins -= d.cost;
@@ -2791,6 +2948,61 @@ const Game = (() => {
     }
     ui.hud && ui.hud();
     return true;
+  }
+
+  // Bestes freies Feld für einen Turm (meiste Wegfelder in Reichweite) – fürs Tutorial
+  function bestSpot(range) {
+    if (!route) return null;
+    let best = null, bv = -1;
+    for (let x = 0; x < GW; x++) for (let z = 0; z < GH; z++) {
+      if (grid[x][z]) continue;
+      const v = route.tiles.filter(([a, b]) => (a - x) ** 2 + (b - z) ** 2 <= range * range).length;
+      if (v > bv) { bv = v; best = { x, z }; }
+    }
+    return best;
+  }
+
+  // ---------------- Inventar / Fallen ----------------
+  function available(kind, id) {
+    if (kind === 'tower') return (Save.P.towerInv[id] || 0) - towers.filter(t => t.def.id === id).length;
+    if (kind === 'trap') { let n = 0; for (const t of traps.values()) if (t.def.id === id) n++; return (Save.P.trapInv[id] || 0) - n; }
+    return 0;
+  }
+  function buyRoadPieces(n) {
+    const cost = ROAD_PIECE_PRICE * n;
+    if (R.coins < cost) { ui.toast && ui.toast('Nicht genug Münzen', 'bad'); Audio2.play('error'); return false; }
+    R.coins -= cost; Save.P.roadPieces += n; Save.saveSoon(); Audio2.play('coin');
+    ui.toast && ui.toast(`🛣️ +${n} Wegstück${n > 1 ? 'e' : ''}`, 'good');
+    return true;
+  }
+  function spawnTrap(def, x, z, animate) {
+    const m = Models.makeTrap(def); m.position.copy(tileToWorld(x, z)); scene.add(m);
+    if (animate) { popIn(m); Particles.emit(m.position.x, 0.2, m.position.z, 16, def.color, { speed: 1.5, life: 0.5 }); }
+    traps.set(x + ',' + z, { def, x, z, mesh: m, cd: 0, tick: 0 });
+  }
+  function removeTrap(x, z) { const t = traps.get(x + ',' + z); if (!t) return; scene.remove(t.mesh); traps.delete(x + ',' + z); snapshotRun(); }
+  function updateTraps(dt, time) {
+    if (!traps.size) return;
+    const scale = Math.max(1, hpScale(Math.max(1, R.wave)) * 0.8);
+    for (const tr of traps.values()) {
+      const d = tr.def;
+      tr.cd = Math.max(0, tr.cd - dt); tr.tick -= dt;
+      if (tr.mesh.userData.spin) tr.mesh.userData.spin.rotation.y += dt * 2;
+      if (tr.mesh.userData.flame) tr.mesh.userData.flame.scale.y = 1 + Math.sin(time * 15 + tr.x) * 0.25;
+      if (tr.mesh.userData.led) tr.mesh.userData.led.visible = tr.cd <= 0 && Math.sin(time * 8) > 0;
+      const on = [];
+      for (const e of enemies) if (e.alive && !e.fly && Math.abs(e.pos.x - tr.mesh.position.x) < 0.5 && Math.abs(e.pos.z - tr.mesh.position.z) < 0.5) on.push(e);
+      if (!on.length) continue;
+      if (d.id === 'trap_spike' && tr.tick <= 0) { tr.tick = d.every; for (const e of on) damage(e, d.dmg * scale, 'phys', null); Particles.emit(tr.mesh.position.x, 0.2, tr.mesh.position.z, 4, '#dddddd', { speed: 1, life: 0.3 }); }
+      if (d.id === 'trap_glue') for (const e of on) applySlow(e, d.slow, 0.3);
+      if (d.id === 'trap_fire') for (const e of on) if (!(e.def.immune && e.def.immune.includes('fire'))) { e.burnDps = Math.max(e.burnT > 0 ? e.burnDps : 0, d.burn * scale); e.burnT = 2.5; }
+      if (d.id === 'trap_bomb' && tr.cd <= 0) {
+        tr.cd = d.rearm; const p = tr.mesh.position;
+        for (const e of enemies) if (e.alive && !e.fly && dist2(e.pos, p) < d.splash * d.splash) damage(e, d.dmg * scale, 'explosive', null);
+        Particles.emit(p.x, 0.3, p.z, 30, '#ff8a3a', { speed: 3, up: 2.5, life: 0.5 }); ring(p, d.splash, '#ff8a3a', 0.35); Audio2.play('explosion');
+      }
+      if (d.id === 'trap_frost' && tr.cd <= 0) { tr.cd = d.rearm; for (const e of on) applyStun(e, d.stun); ring(tr.mesh.position, 0.8, '#bfefff', 0.4); Particles.emit(tr.mesh.position.x, 0.3, tr.mesh.position.z, 20, '#dff8ff', { speed: 2, life: 0.5 }); Audio2.play('shoot_ice'); }
+    }
   }
 
   // ---------------- Türme ----------------
@@ -2844,7 +3056,7 @@ const Game = (() => {
     return s;
   }
   function upgradeCost(t) { return t.level >= MAX_TOWER_LEVEL ? 0 : Math.round(t.def.cost * UPGRADE_COST[t.level - 1]); }
-  function sellValue(t) { return Math.floor(t.invested * 0.7); }
+  function sellValue(t) { return Math.floor(Math.max(0, t.invested - t.def.cost) * 0.7); } // Upgrade-Münzen teilweise zurück
   function upgrade(t) {
     if (!t || t.level >= MAX_TOWER_LEVEL) return false;
     const c = upgradeCost(t);
@@ -2870,7 +3082,7 @@ const Game = (() => {
     grid[t.x][t.z] = null;
     Particles.emit(t.mesh.position.x, 0.4, t.mesh.position.z, 20, '#ffd700', { speed: 2, up: 2, life: 0.6 });
     Audio2.play('sell'); Save.addStat('sold');
-    floatText(t.mesh.position, '+' + v, '#ffd84a');
+    floatText(t.mesh.position, v ? '↩ +' + v + ' 🪙' : '↩ ins Inventar', '#ffd84a');
     select(null); snapshotRun(); ui.hud && ui.hud();
   }
   function select(t) {
@@ -2885,7 +3097,11 @@ const Game = (() => {
   function startMove(t) { setBuild({ kind: 'move', tower: t, id: 'move' }); ui.toast && ui.toast('Tippe auf ein freies Feld, um den Turm zu verschieben'); }
 
   // ---------------- Gegner ----------------
-  function hpScale(w) { return (1 + 0.155 * (w - 1)) * Math.pow(1.047, w - 1); }
+  function hpScale(w) { return (1 + 0.07 * (w - 1)) * Math.pow(1.022, w - 1) * (w > 30 ? Math.pow(1.045, w - 30) : 1); }
+  const BOSS_EVERY = 5;
+  function isBossWave(w) { return w % BOSS_EVERY === 0; }
+  function bossFor(w) { return w === BOSS_EVERY ? 'boss_tut' : BOSS_ORDER[(w / BOSS_EVERY - 2) % BOSS_ORDER.length]; }
+  function bossHp(w) { return w === BOSS_EVERY ? 420 : 950 * Math.pow(1.42, (w - 10) / 5) * (w > 30 ? Math.pow(1.045, w - 30) : 1); }
   function spawnEnemy(def, wave, hpMul = 1, d0 = 0, waveTag = null) {
     if (!route) return null;
     const mesh = Models.makeEnemy(def);
@@ -2956,8 +3172,9 @@ const Game = (() => {
     if (e.def.boss || e.def.mini) {
       if (e.def.boss) {
         R.stats.bosses++; shake = 0.8;
-        if (prog) { Save.addStat('bossKills'); if (e.def.id === 'boss_titan') Save.addStat('titanKills'); const g = { gems: 10 + Math.round(R.wave / 2), crystals: Math.max(1, Math.floor(R.wave / 10)) }; Save.grant(g); ui.toast && ui.toast(`👑 ${e.def.name} besiegt! +💎${g.gems} 🔮${g.crystals}`, 'gold'); }
-        else ui.toast && ui.toast(`👑 ${e.def.name} besiegt!`, 'good');
+        Save.addStat('bossKills'); if (e.def.id === 'boss_titan') Save.addStat('titanKills');
+        const g = { gems: 10 + Math.round(R.wave / 2), crystals: Math.max(1, Math.floor(R.wave / 10)) }; Save.grant(g);
+        giveBossReward(e);
       }
       ring(p, 3, e.def.glow || '#ffcc33', 0.8);
       if (R.boss === e) { R.boss = null; Audio2.setMood('wave'); ui.bossAppear && ui.bossAppear(null); }
@@ -2976,6 +3193,20 @@ const Game = (() => {
     }
     removeEnemy(e);
   }
+  // Belohnung für einen Boss: Turm, Wegstücke, Falle oder Münzen
+  function giveBossReward(e) {
+    const rw = Save.rollBossReward(R.wave, R.tutorial);
+    const apply = it => {
+      if (!it) return;
+      if (it.kind === 'tower') Save.addTower(it.id);
+      else if (it.kind === 'roads') Save.P.roadPieces += it.n;
+      else if (it.kind === 'trap') Save.addTrap(it.id);
+      else if (it.kind === 'coins') { R.coins += it.n; R.stats.coins += it.n; }
+    };
+    apply(rw); apply(rw.bonus);
+    Save.save();
+    ui.bossReward && ui.bossReward(rw, e.def);
+  }
   function removeEnemy(e) {
     scene.remove(e.mesh);
     const i = enemies.indexOf(e); if (i >= 0) enemies.splice(i, 1);
@@ -2993,6 +3224,7 @@ const Game = (() => {
     Particles.emit(World.castlePos.x, 1, World.castlePos.z, 20, '#ff3030', { speed: 2, up: 2, life: 0.6 });
     ui.toast && e.def.boss && ui.toast(`${e.def.name} hat die Burg erreicht! -${dmg} Leben`, 'bad');
     if (R.boss === e) { R.boss = null; ui.bossAppear && ui.bossAppear(null); }
+    if (e.def.boss && R.tutorial) giveBossReward(e);   // im Tutorial gibt es die Belohnung trotzdem
     e.alive = false;
     removeEnemy(e);
     if (R.lives <= 0 && !R.over) gameOver();
@@ -3000,31 +3232,22 @@ const Game = (() => {
 
   // ---------------- Wellen ----------------
   function makeWave(w) {
-    const mode = R.mode, list = [];
+    const list = [];
     const biome = BIOME_BY_ID[R.biome] || BIOMES[0];
-    const cyc = Math.floor((w - 1) / 50);
-    if (mode.bossRush) {
-      const b = BOSS_ORDER[(w - 1) % 5];
-      const target = 2500 * Math.pow(1.45, w - 1);
-      list.push({ id: b, hp: target / (ENEMY_BY_ID[b].hp * hpScale(w) * mode.hp), delay: 2 });
-      const esc = Math.min(30, 4 + w * 2);
-      for (let i = 0; i < esc; i++) list.push({ id: pickEnemy(Math.max(5, w * 4), biome), hp: 1, delay: 0.55 });
+    // Die ersten Wellen sind so gebaut, dass eine einzelne Armbrust sie schafft
+    const early = { 1: ['grunt', 'grunt', 'grunt'], 2: ['grunt', 'grunt', 'grunt', 'grunt'], 3: ['grunt', 'runner', 'grunt', 'runner', 'grunt'], 4: ['grunt', 'grunt', 'runner', 'slug', 'grunt', 'runner'] };
+    if (early[w]) { early[w].forEach(id => list.push({ id, hp: 1, delay: 1.6 })); return list; }
+    if (isBossWave(w)) {
+      const b = bossFor(w);
+      const esc = w === BOSS_EVERY ? 2 : Math.min(14, 2 + Math.floor(w / 4));
+      for (let i = 0; i < esc; i++) list.push({ id: w === BOSS_EVERY ? 'grunt' : pickEnemy(w, biome), hp: 1, delay: 1.0 });
+      list.push({ id: b, hp: bossHp(w) / (ENEMY_BY_ID[b].hp * hpScale(w)), delay: 2.5 });
       return list;
     }
-    let count = Math.min(90, 7 + Math.floor(w * 1.6));
-    if (w % 10 === 0) count = Math.floor(count * 0.6);
-    const interval = Math.max(0.26, 0.95 - w * 0.012);
-    for (let i = 0; i < count; i++) {
-      const id = pickEnemy(w, biome);
-      const burst = Math.random() < 0.15 ? 0.15 : interval;
-      list.push({ id, hp: 1, delay: burst });
-    }
-    if (w % 5 === 0 && w % 10 !== 0 && w >= 15) list.splice(Math.floor(count / 2), 0, { id: 'miniboss', hp: 1, delay: 1 });
-    if (w >= 35 && w % 7 === 0) list.push({ id: 'colossus', hp: 1, delay: 1.5 });
-    if (w % 10 === 0) {
-      const bi = (w / 10 - 1) % 5;
-      list.push({ id: BOSS_ORDER[bi], hp: (1 + cyc * 1.5) * Math.pow(1.04, Math.max(0, w - 50)) / hpScale(w), delay: 2.5 });
-    }
+    const count = Math.min(45, 4 + Math.floor(w * 0.8));
+    const interval = Math.max(0.35, 1.3 - w * 0.02);
+    for (let i = 0; i < count; i++) list.push({ id: pickEnemy(w, biome), hp: 1, delay: Math.random() < 0.15 ? 0.25 : interval });
+    if (w >= 40 && w % 7 === 0) list.push({ id: 'colossus', hp: 0.6, delay: 1.5 });
     return list;
   }
   function pickEnemy(w, biome) {
@@ -3038,7 +3261,7 @@ const Game = (() => {
   function startWave(early) {
     if (!R || R.over || demo) return;
     if (!route) { ui.toast && ui.toast('Kein gültiger Weg vom Spawn zum Ziel!', 'bad'); Audio2.play('error'); return; }
-    if (R.won && R.mode.win && !R.continueEndless) return;
+    if (R.hold) { ui.toast && ui.toast('Folge zuerst dem Tutorial 🙂', 'bad'); return; }
     if (R.phase === 'wave' && R.spawnQueue.length > 20) { ui.toast && ui.toast('Warte, bis mehr Gegner der aktuellen Welle erschienen sind', 'bad'); return; }
     const w = ++R.wave;
     const list = makeWave(w);
@@ -3060,6 +3283,7 @@ const Game = (() => {
     Audio2.play('waveStart');
     if (!R.boss) Audio2.setMood('wave');
     ui.waveBanner && ui.waveBanner(w, list.some(s => ENEMY_BY_ID[s.id].boss));
+    ui.tutorialEvent && ui.tutorialEvent('waveStart', w);
     ui.hud && ui.hud();
   }
   function setBuildOverlayForPhase() { World.setBuildOverlay(!!buildSel || R.phase === 'build'); }
@@ -3082,18 +3306,11 @@ const Game = (() => {
     Audio2.play('waveClear');
     ui.waveCleared && ui.waveCleared(w, bonus, income);
     if (R.waves.size === 0 && R.spawnQueue.length === 0) {
-      R.phase = 'build'; R.pauseTimer = Save.P.settings.autoStart ? 25 : 0;
+      R.phase = 'build'; R.pauseTimer = Save.P.settings.autoStart ? (R.tutorial ? 12 : 25) : 0;
       Audio2.setMood('build'); setBuildOverlayForPhase();
     }
-    if (R.mode.win && w >= R.mode.win && !R.won) {
-      R.won = true;
-      Save.addStat('victories'); if (R.mode.id === 'hard') Save.addStat('hardVictories');
-      Save.grant({ gems: 100, crystals: 10 });
-      R.pauseTimer = 0;
-      Audio2.setMood('victory'); Audio2.play('victory');
-      Save.P.run = null; Save.makeTowerPicks(w + 10); Save.save();
-      ui.victory && ui.victory(summary());
-    } else snapshotRun();
+    snapshotRun();
+    ui.tutorialEvent && ui.tutorialEvent('waveCleared', w);
     ui.hud && ui.hud();
   }
   function continueEndless() { R.continueEndless = true; R.won = true; snapshotRun(); Audio2.setMood('build'); }
@@ -3103,7 +3320,7 @@ const Game = (() => {
     const rec = Save.P.records[R.mode.id] || 0;
     const s = summary(); s.record = Math.max(rec, R.wave - 1);
     Save.P.run = null;
-    if (!R.mode.creative) Save.makeTowerPicks(s.waves); // neue Türme zur Auswahl
+    Save.makeTowerPicks(s.waves); // neue Türme zur Auswahl
     Save.save();
     ui.gameOver && ui.gameOver(s);
   }
@@ -3697,7 +3914,7 @@ const Game = (() => {
     for (let i = floats.length - 1; i >= 0; i--) {
       const f = floats[i]; f.t += dt; f.pos.y += dt * 0.8;
       _pv.copy(f.pos).project(World.camera);
-      f.el.style.transform = `translate(${(_pv.x * 0.5 + 0.5) * innerWidth}px, ${(-_pv.y * 0.5 + 0.5) * innerHeight}px) translate(-50%,-50%)`;
+      f.el.style.transform = `translate(${(_pv.x * 0.5 + 0.5) * View.w}px, ${(-_pv.y * 0.5 + 0.5) * View.h}px) translate(-50%,-50%)`;
       f.el.style.opacity = String(1 - f.t);
       if (f.t >= 1) { f.el.remove(); floats.splice(i, 1); }
     }
@@ -3731,7 +3948,7 @@ const Game = (() => {
           R.spawnTimer = R.spawnQueue.length ? R.spawnQueue[0].delay : 0;
           if (info) checkWaveDone(s.wave);
         }
-      } else if (R.phase === 'build' && R.pauseTimer > 0 && !(R.won && !R.continueEndless)) {
+      } else if (R.phase === 'build' && R.pauseTimer > 0 && !R.hold) {
         R.pauseTimer -= dt;
         if (R.pauseTimer <= 0) { R.pauseTimer = 0; startWave(false); }
       }
@@ -3748,6 +3965,7 @@ const Game = (() => {
     for (const t of towers) updateTower(t, dt, time);
     updateProjectiles(dt);
     updateMines(dt);
+    if (!demo) updateTraps(dt, time);
     updateHoles(dt, time);
     updateFx(dt);
     if (!demo) updatePickups(dt, time);
@@ -3805,9 +4023,9 @@ const Game = (() => {
   }
 
   return {
-    obstacles, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
+    bestSpot, obstacles, available, buyRoadPieces, isBossWave, removeTrap, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
     continueEndless, exportLayout, parseLayout, loadLayout, recalcRoute, placeCastle, snapshotRun, ui,
-    get R() { return R; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
+    get R() { return R; }, get traps() { return traps; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
     get enemies() { return enemies; }, get towers() { return towers; },
     stopDemo() { if (demo) { clearEntities(); demo = false; R = null; } },
     quit() { if (R && !demo && !R.over) snapshotRun(); clearEntities(); R = null; },
@@ -3928,7 +4146,7 @@ const UI = (() => {
     db.classList.toggle('done', !av); db.textContent = av ? '🎁 Tagesbelohnung abholen!' : '✅ Belohnung abgeholt';
   }
   function goMenu() {
-    closeModal(); Game.quit(); visiting = null; $('.visit-bar')?.remove();
+    closeModal(); Tut.stop(); Game.quit(); visiting = null; $('.visit-bar')?.remove();
     Player.remove(); CamCtl.setMode('free');
     show('menu'); refreshMenu();
     Game.startDemo(); CamCtl.setAuto(true); Audio2.setMood('menu');
@@ -3945,8 +4163,11 @@ const UI = (() => {
     Player.spawn(World.scene, Save.P.name, Save.P.settings.shirt, Save.P.settings.pants);
     setCamMode('follow');
     setBuildOpen(!isTouch());
-    if (!snapshot) banner('Welle 1 kommt in 30 Sekunden!', isTouch() ? 'Joystick: laufen · 🔨 BAUEN: Türme setzen' : 'WASD: laufen · Leertaste: springen · B: Baumenü', '', 3200);
-    else banner('Willkommen zurück!', `Welle ${snapshot.wave} · ${MODE_BY_ID[modeId].name}`, '', 2000);
+    Tut.stop();
+    if (Game.R.tutorial) { setBuildOpen(false); Tut.start(); }
+    if (Game.R.tutorial) banner('TUTORIAL', 'Lerne, wie man spielt', '', 2000);
+    else if (!snapshot) banner('Welle 1 kommt gleich!', 'Jede 5. Welle kommt ein Boss 👑', '', 2800);
+    else banner('Willkommen zurück!', `Weiter bei Welle ${snapshot.wave + 1}`, '', 2000);
     Save.save();
   }
 
@@ -3964,8 +4185,10 @@ const UI = (() => {
   function bindJoystick() {
     const joy = $('#joy'), knob = $('#joyKnob'); let id = null;
     const move = e => {
-      const r = joy.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, max = r.width / 2 - 10;
-      let dx = e.clientX - cx, dy = e.clientY - cy; const d = Math.hypot(dx, dy);
+      const r = joy.getBoundingClientRect();
+      const c = View.toLocal(r.left + r.width / 2, r.top + r.height / 2), p = View.toLocal(e.clientX, e.clientY);
+      const max = joy.offsetWidth / 2 - 10;
+      let dx = p.x - c.x, dy = p.y - c.y; const d = Math.hypot(dx, dy);
       if (d > max) { dx = dx / d * max; dy = dy / d * max; }
       knob.style.transform = `translate(${dx}px,${dy}px)`;
       Player.joy.x = dx / max; Player.joy.y = dy / max;
@@ -3992,19 +4215,20 @@ const UI = (() => {
     // Wellen-Anzeige
     let alive = 0, total = 0;
     for (const w of R.waves.values()) { alive += w.alive; total += w.total; }
-    const winTxt = R.mode.win && !R.continueEndless ? ` / ${R.mode.win}` : '';
-    $('#wpWave').textContent = `Welle ${R.wave}${winTxt}`;
-    $('#wpMode').textContent = R.mode.icon + ' ' + R.mode.name;
+    $('#wpWave').textContent = `Welle ${R.wave}`;
+    const toBoss = 5 - (R.wave % 5);
+    $('#wpMode').textContent = R.boss ? '👑 BOSS!' : (R.phase === 'wave' && Game.isBossWave(R.wave)) ? '👑 Bosswelle' : `👑 Boss in ${toBoss} Welle${toBoss > 1 ? 'n' : ''}`;
     $('#wpEnemies').textContent = R.phase === 'wave' ? `Gegner: ${alive} / ${total}` : 'Bauphase';
     $('#wpFill').style.width = (R.phase === 'wave' && total ? (1 - alive / total) * 100 : R.phase === 'build' ? 100 : 0) + '%';
     const nxt = R.wave + 1;
-    const nb = R.mode.bossRush || nxt % 10 === 0;
+    const nb = Game.isBossWave(nxt);
     $('#wpNext').textContent = R.phase === 'build' && R.pauseTimer > 0 ? `Nächste: ${nxt}${nb ? ' 👑' : ''} in ${Math.ceil(R.pauseTimer)}s` : `Nächste: ${nxt}${nb ? ' 👑 BOSS' : ''}`;
     const wb = $('#waveBtn');
     const label = R.phase === 'build' ? (R.wave === 0 ? '▶ WELLE STARTEN' : R.pauseTimer > 0 ? '⏩ WELLE ÜBERSPRINGEN' : '▶ NÄCHSTE WELLE') : '⏩ WELLE ÜBERSPRINGEN';
     if (wb.textContent !== label) wb.textContent = label;
     wb.classList.toggle('skip', R.phase !== 'build' || R.pauseTimer > 0);
-    wb.disabled = (R.won && R.mode.win && !R.continueEndless) || R.over;
+    wb.disabled = R.over || R.hold;
+    wb.classList.toggle('hidden', !!R.tutorial && (R.hold || R.wave === 0));
     $('#speedBtn').textContent = R.speed + 'x';
     $('#pauseBtn').textContent = R.paused ? '▶' : '❚❚';
     // Boss
@@ -4019,7 +4243,8 @@ const UI = (() => {
     const ready = QUESTS.some(q => P.quests[q.id] !== 'claimed' && Save.questProgress(q) >= q.goal) || P.daily.list.some(d => !d.claimed && Save.dailyProgress(d) >= Save.dailyDef(d).goal);
     $('#questDot').classList.toggle('hidden', !ready);
     // Baumenü-Preise aktualisieren
-    $$('#bbItems .item[data-cost]').forEach(el => { const c = +el.dataset.cost; const pr = el.querySelector('.pr'); if (pr) pr.classList.toggle('no', !R.mode.creative && R.coins < c); });
+    $$('#bbItems .item[data-cost]').forEach(el => { const c = +el.dataset.cost; const pr = el.querySelector('.pr'); if (pr) pr.classList.toggle('no', R.coins < c); });
+    const rp = $('#roadCount'); if (rp && rp.textContent !== String(P.roadPieces)) rp.textContent = P.roadPieces;
     if (Game.selected && !$('#towerPanel').classList.contains('hidden')) {
       const key = Game.selected.level + ':' + (R.coins >= Game.upgradeCost(Game.selected)) + ':' + Game.selected.kills;
       if (lastHud.tp !== key) { towerPanel(Game.selected); }
@@ -4028,24 +4253,36 @@ const UI = (() => {
 
   // ---------------- Baumenü ----------------
   function renderBuildBar() {
-    $$('#bbTabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === curTab));
     const P = Save.P, R = Game.R, sel = Game.buildSel;
+    const tut = R && R.tutorial;
+    $$('#bbTabs button[data-tab]').forEach(b => { b.classList.toggle('on', b.dataset.tab === curTab); b.classList.toggle('hidden', tut && b.dataset.tab !== 'towers'); });
     let h = '';
     const isSel = (k, id) => sel && sel.kind === k && sel.id === id ? ' sel' : '';
     if (curTab === 'towers') {
-      const list = TOWERS.slice().sort((a, b) => (P.unlocked.includes(b.id) - P.unlocked.includes(a.id)) || a.cost - b.cost);
-      list.forEach((t, i) => {
-        const un = P.unlocked.includes(t.id);
-        const poor = R && !R.mode.creative && R.coins < t.cost;
-        h += `<button class="item${un ? '' : ' locked'}${isSel('tower', t.id)}" data-kind="tower" data-id="${t.id}" ${un ? `data-cost="${t.cost}"` : ''} title="${esc(t.name)}">
-          <i class="rar" style="background:${RARITIES[t.rarity].color}"></i>${un ? '' : '<span class="lock">🔒</span>'}
-          ${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div><div class="pr${poor ? ' no' : ''}">${un ? '🪙' + fmt(t.cost) : (t.shop ? '🔮 Shop' : 'Lv ' + t.level)}</div></button>`;
+      const list = TOWERS.filter(t => (P.towerInv[t.id] || 0) > 0).sort((a, b) => RARITIES[a.rarity].order - RARITIES[b.rarity].order || a.cost - b.cost);
+      list.forEach(t => {
+        const av = Game.available('tower', t.id), tot = P.towerInv[t.id];
+        h += `<button class="item${av > 0 ? '' : ' locked'}${isSel('tower', t.id)}" data-kind="tower" data-id="${t.id}" title="${esc(t.name)}">
+          <i class="rar" style="background:${RARITIES[t.rarity].color}"></i>
+          ${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div><div class="pr">${av} / ${tot} frei</div></button>`;
       });
+      if (!tut) h += `<div class="item info">🎁 Neue Türme gibt es nur von <b>Bossen</b> (jede 5. Welle) und nach einer verlorenen Runde.</div>`;
+    } else if (curTab === 'traps') {
+      const list = TRAPS.filter(t => (P.trapInv[t.id] || 0) > 0);
+      list.forEach(t => {
+        const av = Game.available('trap', t.id);
+        h += `<button class="item${av > 0 ? '' : ' locked'}${isSel('trap', t.id)}" data-kind="trap" data-id="${t.id}" title="${esc(t.desc)}"><i class="rar" style="background:${RARITIES[t.rarity].color}"></i><div class="ic">${t.icon}</div><div class="nm">${esc(t.name)}</div><div class="pr">${av} / ${P.trapInv[t.id]} frei</div></button>`;
+      });
+      h += `<div class="item info">${list.length ? '🪤 Fallen legst du auf den Weg. Mit 🧹 Abreißen nimmst du sie wieder auf.' : '🪤 Noch keine Fallen. Bosse lassen manchmal Fallen fallen!'}</div>`;
     } else if (curTab === 'roads') {
+      h += `<div class="item info big">🛣️ Wegstücke: <b id="roadCount">${P.roadPieces}</b><br><small>Jedes neue Wegfeld braucht 1 Stück. Abreißen gibt es zurück.</small></div>`;
+      h += `<button class="item" data-tool="buyroad1" data-cost="${ROAD_PIECE_PRICE}"><div class="ic">➕</div><div class="nm">1 Wegstück kaufen</div><div class="pr">🪙${ROAD_PIECE_PRICE}</div></button>`;
+      h += `<button class="item" data-tool="buyroad5" data-cost="${ROAD_PIECE_PRICE * 5}"><div class="ic">📦</div><div class="nm">5 Wegstücke kaufen</div><div class="pr">🪙${ROAD_PIECE_PRICE * 5}</div></button>`;
       ROADS.forEach(r => {
-        h += `<button class="item${isSel('road', r.id)}" data-kind="road" data-id="${r.id}" data-cost="${r.cost}"><div class="ic"><span style="display:inline-block;width:1.4em;height:1.4em;border-radius:6px;background:${r.color};border:3px solid ${r.edge};${r.width < 0.8 ? 'transform:scaleX(.6)' : ''}"></span></div><div class="nm">${esc(r.name)}</div><div class="pr">🪙${r.cost}</div></button>`;
+        h += `<button class="item${isSel('road', r.id)}" data-kind="road" data-id="${r.id}"><div class="ic"><span style="display:inline-block;width:1.4em;height:1.4em;border-radius:6px;background:${r.color};border:3px solid ${r.edge};${r.width < 0.8 ? 'transform:scaleX(.6)' : ''}"></span></div><div class="nm">${esc(r.name)}</div><div class="pr">1 Stück</div></button>`;
       });
-      h += `<div class="item" style="width:9em;text-align:left;font-size:.85em;padding:.4em;opacity:.9">ℹ️ Kurven &amp; Kreuzungen entstehen automatisch, wenn du Felder verbindest. Ziehen zum Malen!</div>`;
+      h += `<button class="item${isSel('erase', 'erase')}" data-kind="erase" data-id="erase"><div class="ic">🧹</div><div class="nm">Weg abreißen</div><div class="pr">+1 Stück</div></button>`;
+      h += `<div class="item info">ℹ️ Wege nur in der Pause zwischen den Wellen ändern. Kurven &amp; Kreuzungen entstehen automatisch. Es muss immer ein Weg zur Burg führen.</div>`;
     } else if (curTab === 'decos') {
       DECOS.forEach(d => {
         if (d.shop && !P.owned.decos.includes(d.id)) return;
@@ -4053,11 +4290,11 @@ const UI = (() => {
       });
       h += `<button class="item" data-act="shop"><div class="ic">🛒</div><div class="nm">Mehr im Shop</div><div class="pr">💎</div></button>`;
     } else {
-      h += `<button class="item${isSel('erase', 'erase')}" data-kind="erase" data-id="erase"><div class="ic">🧹</div><div class="nm">Abreißen</div><div class="pr">Straße/Deko</div></button>`;
+      h += `<button class="item${isSel('erase', 'erase')}" data-kind="erase" data-id="erase"><div class="ic">🧹</div><div class="nm">Abreißen</div><div class="pr">Weg/Falle/Deko</div></button>`;
       h += `<button class="item" data-tool="rotate"><div class="ic">🔄</div><div class="nm">Drehen (R)</div><div class="pr">${Game.buildSel ? 'aktiv' : '&nbsp;'}</div></button>`;
       h += `<button class="item" data-tool="cancel"><div class="ic">✋</div><div class="nm">Auswahl aufheben</div><div class="pr">Esc</div></button>`;
       h += `<button class="item" data-tool="grid"><div class="ic">#️⃣</div><div class="nm">Raster</div><div class="pr">${P.settings.showGrid ? 'an' : 'aus'}</div></button>`;
-      h += `<button class="item" data-tool="sellall"><div class="ic">💰</div><div class="nm">Alle Türme verkaufen</div><div class="pr">70%</div></button>`;
+      h += `<button class="item" data-tool="sellall"><div class="ic">↩️</div><div class="nm">Alle Türme aufheben</div><div class="pr">ins Inventar</div></button>`;
     }
     $('#bbItems').innerHTML = h;
   }
@@ -4067,18 +4304,15 @@ const UI = (() => {
     const tool = el.dataset.tool;
     if (tool === 'rotate') return Game.rotateBuild();
     if (tool === 'cancel') return Game.setBuild(null);
+    if (tool === 'buyroad1' || tool === 'buyroad5') { if (Game.buyRoadPieces(tool === 'buyroad1' ? 1 : 5)) renderBuildBar(); return; }
     if (tool === 'grid') { Save.P.settings.showGrid = !Save.P.settings.showGrid; Save.saveSoon(); renderBuildBar(); return; }
     if (tool === 'sellall') {
       if (!Game.towers.length) return toast('Keine Türme vorhanden');
-      return confirmBox('Alle Türme für 70% des Wertes verkaufen?', () => { [...Game.towers].forEach(t => Game.sell(t)); });
+      return confirmBox('Alle Türme aufheben? Sie kommen zurück ins Inventar (Upgrades gehen verloren, 70% der Upgrade-Münzen gibt es zurück).', () => { [...Game.towers].forEach(t => Game.sell(t)); });
     }
     const kind = el.dataset.kind, id = el.dataset.id;
     if (!kind) return;
-    if (kind === 'tower' && !Save.P.unlocked.includes(id)) {
-      const t = TOWER_BY_ID[id];
-      toast(t.shop ? `🔒 ${t.name}: im Shop für 🔮 ${t.shop.crystals} Kristalle` : `🔒 ${t.name}: frei ab Level ${t.level} – oder im Shop`, 'bad');
-      return;
-    }
+    if ((kind === 'tower' || kind === 'trap') && Game.available(kind, id) <= 0) { toast('Schon alle platziert – tippe einen Turm an und hebe ihn auf, um ihn umzustellen', 'bad'); return; }
     Audio2.play('click');
     const s = Game.buildSel;
     if (s && s.kind === kind && s.id === id) Game.setBuild(null);
@@ -4088,9 +4322,9 @@ const UI = (() => {
     renderBuildBar();
     const h = $('#buildHint');
     if (!sel) { h.classList.add('hidden'); return; }
-    let name = sel.kind === 'tower' ? TOWER_BY_ID[sel.id].name : sel.kind === 'road' ? ROAD_BY_ID[sel.id].name : sel.kind === 'deco' ? DECO_BY_ID[sel.id].name : sel.kind === 'move' ? 'Turm verschieben' : 'Abreißen';
+    let name = sel.kind === 'tower' ? TOWER_BY_ID[sel.id].name : sel.kind === 'trap' ? TRAP_BY_ID[sel.id].name : sel.kind === 'road' ? ROAD_BY_ID[sel.id].name : sel.kind === 'deco' ? DECO_BY_ID[sel.id].name : sel.kind === 'move' ? 'Turm verschieben' : 'Abreißen';
     const touch = matchMedia('(pointer:coarse)').matches;
-    const how = sel.kind === 'road' || sel.kind === 'erase' ? (touch ? 'Tippen oder Finger ziehen' : 'Klicken oder ziehen') : (touch ? 'Aufs Feld tippen zum Platzieren' : 'Klicken zum Platzieren · R: drehen');
+    const how = sel.kind === 'road' || sel.kind === 'erase' || sel.kind === 'trap' ? (touch ? 'Tippen oder Finger ziehen' : 'Klicken oder ziehen') : (touch ? 'Aufs Feld tippen zum Platzieren' : 'Klicken zum Platzieren · R: drehen');
     h.innerHTML = `<b>${esc(name)}</b><span>${how}</span>${sel.kind !== 'road' && sel.kind !== 'erase' ? '<button class="btn small" data-tool="rotate">🔄</button>' : ''}<button class="btn small red" data-tool="cancel">✕</button>`;
     h.classList.remove('hidden');
   }
@@ -4132,9 +4366,9 @@ const UI = (() => {
       <div class="tp-spec">✨ ${esc(d.desc)}<br>${t.level >= 5 ? '👑 <b>' + esc(d.lv5) + '</b> (aktiv)' : '🔒 Stufe 5: ' + esc(d.lv5)}</div>
       ${hasTarget ? `<div class="tp-target">${[['first', 'Erster'], ['last', 'Letzter'], ['strong', 'Stärkster'], ['close', 'Nächster']].map(([k, n]) => `<button data-tp="tg" data-v="${k}" class="${t.targeting === k ? 'on' : ''}">${n}</button>`).join('')}</div>` : ''}
       <div class="tp-btns">
-        <button class="btn green" data-tp="up" ${maxed || (!R.mode.creative && R.coins < cost) ? 'disabled' : ''}>${maxed ? 'MAX' : 'UPGRADE<br>🪙' + fmt(cost)}</button>
-        <button class="btn red" data-tp="sell">SELL<br>🪙${fmt(Game.sellValue(t))}</button>
-        <button class="btn small wide gray" data-tp="move">↔ Verschieben</button>
+        <button class="btn green${R.tutorial && t.level === 1 ? ' tut-hl' : ''}" data-tp="up" ${maxed || R.coins < cost ? 'disabled' : ''}>${maxed ? 'MAX' : 'UPGRADE<br>🪙' + fmt(cost)}</button>
+        <button class="btn red" data-tp="sell">AUFHEBEN<br>${Game.sellValue(t) ? '↩ +🪙' + fmt(Game.sellValue(t)) : '↩ Inventar'}</button>
+        ${R.tutorial ? '' : '<button class="btn small wide gray" data-tp="move">↔ Verschieben</button>'}
       </div>`;
     el.classList.remove('hidden');
   }
@@ -4164,66 +4398,41 @@ const UI = (() => {
   let modalState = null;
   const rarityBadge = r => `<span class="rb" style="background:${RARITIES[r].color}">${RARITIES[r].name}</span>`;
 
-  // ---------------- PLAY / Modus-Auswahl ----------------
+  // ---------------- PLAY: direkt los (immer Endlos) ----------------
   function playDialog() {
     const P = Save.P;
-    menuMode = menuMode || 'normal';
-    let selBiome = P.equipped.biome;
-    const render = () => {
-      let h = '';
-      if (P.run && MODE_BY_ID[P.run.mode]) {
-        const m = MODE_BY_ID[P.run.mode];
-        h += `<div class="detail" style="align-items:center"><div style="font-size:2.4em">${m.icon}</div><div style="flex:1"><h3>Runde fortsetzen</h3><p>${m.name} · Welle ${P.run.wave} · ${P.run.towers.length} Türme · 🪙${fmt(P.run.coins)}</p></div><button class="btn green" id="pdCont">▶ FORTSETZEN</button></div>`;
-      }
-      h += `<h4 class="sec">Spielmodus wählen</h4><div class="modes">`;
-      for (const m of MODES) {
-        const locked = m.unlock && P.level < m.unlock;
-        h += `<div class="mode${menuMode === m.id ? ' on' : ''}${locked ? ' locked' : ''}" data-mode="${m.id}"><div class="mi">${m.icon}</div><div class="mn">${m.name}</div><div class="md">${m.desc}</div><div class="sub" style="font-size:.75em">${locked ? '🔒 ab Level ' + m.unlock : 'Rekord: Welle ' + (P.records[m.id] || 0)}</div></div>`;
-      }
-      h += `</div><h4 class="sec">Landschaft (Biom)</h4><div class="biomes">`;
-      for (const b of BIOMES) {
-        const own = P.owned.biomes.includes(b.id);
-        h += `<div class="biome${selBiome === b.id ? ' on' : ''}${own ? '' : ' locked'}" data-biome="${b.id}" style="background:linear-gradient(${b.sky},${b.ground})">${own ? '' : '🔒 '}${b.name}</div>`;
-      }
-      h += `</div><div class="row" style="margin-top:1em"><button class="btn big green" id="pdStart">▶ NEUE RUNDE STARTEN</button></div>`;
-      if (P.run) h += `<p class="note">⚠️ Eine neue Runde ersetzt die gespeicherte Runde. Dein Grundstück (Straßen &amp; Deko) bleibt erhalten.</p>`;
-      $('#modalBody').innerHTML = h;
-      $$('.mode').forEach(el => el.onclick = () => { const m = MODE_BY_ID[el.dataset.mode]; if (m.unlock && P.level < m.unlock) return toast(`🔒 Ab Level ${m.unlock}`, 'bad'); menuMode = m.id; Audio2.play('click'); render(); });
-      $$('.biome').forEach(el => el.onclick = () => { if (!P.owned.biomes.includes(el.dataset.biome)) { const b = BIOME_BY_ID[el.dataset.biome]; return toast(`🔒 ${b.name}: ab Level ${b.level} oder im Shop`, 'bad'); } selBiome = el.dataset.biome; Audio2.play('click'); render(); });
-      $('#pdStart').onclick = () => { Audio2.play('click'); P.run = null; startGame(menuMode, selBiome); };
-      const c = $('#pdCont'); if (c) c.onclick = () => { Audio2.play('click'); startGame(P.run.mode, P.run.biome, P.run); };
-    };
-    openModal('▶ PLAY', '');
-    render();
+    if (!P.tutorialDone) return startGame('endless', P.equipped.biome);
+    if (P.run) return startGame('endless', P.run.biome, P.run);
+    startGame('endless', P.equipped.biome);
   }
 
   // ---------------- Inventar / Türme / Sammlung ----------------
   function towerDetail(t) {
-    const P = Save.P; const un = P.unlocked.includes(t.id);
+    const P = Save.P; const own = P.towerInv[t.id] || 0;
     const rows = [1, 2, 3, 4, 5].map(l => {
       const d = t.dmg * LEVEL_DMG[l - 1], r = t.range ? t.range + LEVEL_RANGE[l - 1] : 0, s = t.rate * LEVEL_RATE[l - 1];
-      const cost = l === 1 ? t.cost : Math.round(t.cost * UPGRADE_COST[l - 2]);
-      return `<tr><td>Stufe ${l}</td><td>${t.dmg ? fmt(d) : '–'}</td><td>${r ? r.toFixed(1) : '–'}</td><td>${t.rate && t.type !== 'beam' ? s.toFixed(2) : '–'}</td><td>🪙${fmt(cost)}</td></tr>`;
+      const cost = l === 1 ? 0 : Math.round(t.cost * UPGRADE_COST[l - 2]);
+      return `<tr><td>Stufe ${l}</td><td>${t.dmg ? fmt(d) : '–'}</td><td>${r ? r.toFixed(1) : '–'}</td><td>${t.rate && t.type !== 'beam' ? s.toFixed(2) : '–'}</td><td>${cost ? '🪙' + fmt(cost) : '–'}</td></tr>`;
     }).join('');
     const tags = [t.air ? '✈️ Trifft Flieger' : '', t.ground ? '🦶 Nur Boden' : '', t.detect ? '👁️ Erkennt Unsichtbare' : '', t.pierce ? '🛡️ Durchschlägt Rüstung' : ''].filter(Boolean).join(' · ');
     return `<div class="detail">${Thumbs.img('tower5', t.id)}<div style="flex:1"><h3>${esc(t.name)} ${rarityBadge(t.rarity)}</h3><p>${esc(t.desc)}</p><p>👑 Stufe 5: ${esc(t.lv5)}</p><p style="opacity:.8">${tags || ''}</p>
-      <p>${un ? '✅ Freigeschaltet' : t.shop ? `🔒 Im Shop für 🔮 ${t.shop.crystals}` : `🔒 Ab Spielerlevel ${t.level} (oder im Shop)`}</p>
-      <table class="lvt"><tr><th></th><th>Schaden</th><th>Reichw.</th><th>Rate</th><th>Kosten</th></tr>${rows}</table></div></div>`;
+      <p>${own ? `✅ Im Besitz: ${own}x` : '🔒 Noch nicht erhalten – Bosse geben dir neue Türme!'}</p>
+      <table class="lvt"><tr><th></th><th>Schaden</th><th>Reichw.</th><th>Rate</th><th>Upgrade</th></tr>${rows}</table></div></div>`;
   }
   function towersScreen(title = '🏰 TOWERS') {
     const P = Save.P;
     let q = '', rar = 'all', sort = 'cost', own = 'all', det = null;
     openModal(title, '');
     const render = () => {
-      let list = TOWERS.filter(t => (!q || t.name.toLowerCase().includes(q)) && (rar === 'all' || t.rarity === rar) && (own === 'all' || (own === 'own') === P.unlocked.includes(t.id)));
+      let list = TOWERS.filter(t => (!q || t.name.toLowerCase().includes(q)) && (rar === 'all' || t.rarity === rar) && (own === 'all' || (own === 'own') === !!P.towerInv[t.id]));
       const sorters = { cost: (a, b) => a.cost - b.cost, name: (a, b) => a.name.localeCompare(b.name), rarity: (a, b) => RARITIES[b.rarity].order - RARITIES[a.rarity].order, dmg: (a, b) => b.dmg * b.rate - a.dmg * a.rate, range: (a, b) => b.range - a.range };
       list.sort(sorters[sort]);
       let h = `<div class="filters"><input id="fq" placeholder="🔍 Suchen…" value="${esc(q)}"><select id="fr"><option value="all">Alle Seltenheiten</option>${Object.entries(RARITIES).map(([k, r]) => `<option value="${k}" ${rar === k ? 'selected' : ''}>${r.name}</option>`).join('')}</select>
-        <select id="fo"><option value="all">Alle</option><option value="own" ${own === 'own' ? 'selected' : ''}>Freigeschaltet</option><option value="locked" ${own === 'locked' ? 'selected' : ''}>Gesperrt</option></select>
+        <select id="fo"><option value="all">Alle</option><option value="own" ${own === 'own' ? 'selected' : ''}>Im Besitz</option><option value="locked" ${own === 'locked' ? 'selected' : ''}>Noch nicht erhalten</option></select>
         <select id="fs">${[['cost', 'Kosten'], ['name', 'Name'], ['rarity', 'Seltenheit'], ['dmg', 'Schaden'], ['range', 'Reichweite']].map(([k, n]) => `<option value="${k}" ${sort === k ? 'selected' : ''}>Sortieren: ${n}</option>`).join('')}</select></div>
-        <div style="font-size:.85em;margin-bottom:.5em">Freigeschaltet: <b>${P.unlocked.length} / ${TOWERS.length}</b></div>`;
+        <div style="font-size:.85em;margin-bottom:.5em">Im Besitz: <b>${Save.stat('towersUnlocked')} / ${TOWERS.length}</b> verschiedene Türme · Neue Türme gibt es von Bossen.</div>`;
       if (det) h += towerDetail(TOWER_BY_ID[det]);
-      h += `<div class="cards">${list.map(t => { const un = P.unlocked.includes(t.id); return `<div class="card${un ? '' : ' locked'}" data-t="${t.id}" style="border-color:${RARITIES[t.rarity].color}">${un ? '' : '<span class="tag">🔒</span>'}${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}<div class="sub">🪙${fmt(t.cost)}</div></div>`; }).join('') || '<p>Keine Türme gefunden.</p>'}</div>`;
+      h += `<div class="cards">${list.map(t => { const n = P.towerInv[t.id] || 0; return `<div class="card${n ? '' : ' locked'}" data-t="${t.id}" style="border-color:${RARITIES[t.rarity].color}"><span class="tag">${n ? n + 'x' : '🔒'}</span>${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}</div>`; }).join('') || '<p>Keine Türme gefunden.</p>'}</div>`;
       $('#modalBody').innerHTML = h;
       const fq = $('#fq'); fq.oninput = () => { q = fq.value.toLowerCase(); const pos = fq.selectionStart; render(); const n = $('#fq'); n.focus(); n.setSelectionRange(pos, pos); };
       $('#fr').onchange = e => { rar = e.target.value; render(); };
@@ -4238,14 +4447,17 @@ const UI = (() => {
     let tab = 'towers', q = '', rar = 'all';
     openModal('🎒 INVENTORY', '');
     const render = () => {
-      const tabs = [['towers', '🏰 Türme'], ['skins', '🛣️ Straßen-Skins'], ['effects', '✨ Effekte'], ['castles', '🏯 Burgen'], ['biomes', '🌍 Biome'], ['decos', '🗿 Spezialgebäude'], ['boosts', '⚡ Boosts']];
+      const tabs = [['towers', '🏰 Türme'], ['traps', '🪤 Fallen & Wege'], ['skins', '🛣️ Straßen-Skins'], ['effects', '✨ Effekte'], ['castles', '🏯 Burgen'], ['biomes', '🌍 Biome'], ['decos', '🗿 Spezialgebäude'], ['boosts', '⚡ Boosts']];
       let h = `<div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>
         <div class="filters"><input id="iq" placeholder="🔍 Suchen…" value="${esc(q)}"><select id="ir"><option value="all">Alle Seltenheiten</option>${Object.entries(RARITIES).map(([k, r]) => `<option value="${k}" ${rar === k ? 'selected' : ''}>${r.name}</option>`).join('')}</select></div>`;
       const match = (name, r) => (!q || name.toLowerCase().includes(q)) && (rar === 'all' || r === rar);
       let cards = '';
       if (tab === 'towers') {
-        cards = TOWERS.filter(t => P.unlocked.includes(t.id) && match(t.name, t.rarity)).map(t => `<div class="card" style="border-color:${RARITIES[t.rarity].color}">${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}</div>`).join('');
-        cards += `<div class="card" data-go="towers"><div class="ic">📚</div><div class="nm">Alle Türme ansehen</div><div class="sub">${P.unlocked.length}/${TOWERS.length}</div></div>`;
+        cards = TOWERS.filter(t => P.towerInv[t.id] && match(t.name, t.rarity)).map(t => `<div class="card" style="border-color:${RARITIES[t.rarity].color}"><span class="tag">${P.towerInv[t.id]}x</span>${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}</div>`).join('');
+        cards += `<div class="card" data-go="towers"><div class="ic">📚</div><div class="nm">Alle Türme ansehen</div><div class="sub">${Save.stat('towersUnlocked')}/${TOWERS.length}</div></div>`;
+      } else if (tab === 'traps') {
+        cards = `<div class="card"><div class="ic">🛣️</div><div class="nm">Wegstücke</div><div class="sub">${P.roadPieces} Stück</div></div>`;
+        cards += TRAPS.filter(t => P.trapInv[t.id] && match(t.name, t.rarity)).map(t => `<div class="card" style="border-color:${RARITIES[t.rarity].color}"><span class="tag">${P.trapInv[t.id]}x</span><div class="ic">${t.icon}</div><div class="nm">${esc(t.name)}</div>${rarityBadge(t.rarity)}<div class="sub">${esc(t.desc)}</div></div>`).join('');
       } else if (tab === 'skins' || tab === 'effects' || tab === 'castles') {
         const list = tab === 'skins' ? ROAD_SKINS : tab === 'effects' ? EFFECTS : CASTLES;
         const slot = tab === 'skins' ? 'skin' : tab === 'effects' ? 'effect' : 'castle';
@@ -4255,7 +4467,7 @@ const UI = (() => {
           return `<div class="card${eq ? ' eq' : ''}" style="border-color:${RARITIES[i.rarity].color}">${eq ? '<span class="tag">✅</span>' : ''}${pic}<div class="nm">${esc(i.name)}</div>${rarityBadge(i.rarity)}<button class="btn small ${eq ? 'gray' : 'green'} buy" data-eq="${slot}" data-id="${i.id}" ${eq ? 'disabled' : ''}>${eq ? 'Ausgerüstet' : 'Ausrüsten'}</button></div>`;
         }).join('');
       } else if (tab === 'biomes') {
-        cards = BIOMES.filter(b => P.owned.biomes.includes(b.id) && match(b.name, 'common')).map(b => `<div class="card${P.equipped.biome === b.id ? ' eq' : ''}"><div class="ic" style="background:linear-gradient(${b.sky},${b.ground});border-radius:10px">🌍</div><div class="nm">${esc(b.name)}</div><div class="sub">In PLAY auswählbar</div></div>`).join('');
+        cards = BIOMES.filter(b => P.owned.biomes.includes(b.id) && match(b.name, 'common')).map(b => { const eq = P.equipped.biome === b.id; return `<div class="card${eq ? ' eq' : ''}"><div class="ic" style="background:linear-gradient(${b.sky},${b.ground});border-radius:10px">🌍</div><div class="nm">${esc(b.name)}</div><button class="btn small ${eq ? 'gray' : 'green'} buy" data-eq="biome" data-id="${b.id}" ${eq ? 'disabled' : ''}>${eq ? 'Ausgewählt' : 'Auswählen'}</button><div class="sub">gilt ab der nächsten Runde</div></div>`; }).join('');
       } else if (tab === 'decos') {
         cards = DECOS.filter(d => d.shop && P.owned.decos.includes(d.id) && match(d.name, 'rare')).map(d => `<div class="card">${Thumbs.img('deco', d.id)}<div class="nm">${esc(d.name)}</div><div class="sub">Im Baumenü unter Deko</div></div>`).join('');
       } else if (tab === 'boosts') {
@@ -4276,6 +4488,7 @@ const UI = (() => {
     if (slot === 'skin') Game.rebuildRoadsVisual();
     if (slot === 'effect') Particles.setTint(EFFECTS.find(e => e.id === id));
     if (slot === 'castle') Game.placeCastle();
+    if (slot === 'biome' && screen === 'menu') { World.buildEnvironment(BIOME_BY_ID[id], Save.P.name); Game.startDemo(); }
     toast('✅ Ausgerüstet', 'good');
   }
   function collectionScreen() {
@@ -4298,17 +4511,17 @@ const UI = (() => {
 
   // ---------------- Shop ----------------
   function shopScreen() {
-    const P = Save.P; let tab = 'towers';
+    const P = Save.P; let tab = 'roads';
     openModal('🛒 SHOP', '');
     const towerPrice = t => t.shop ? { crystals: t.shop.crystals } : { gems: Math.max(40, t.level * 14) };
     const render = () => {
-      const tabs = [['towers', '🏰 Neue Türme'], ['decos', '🗿 Besondere Gebäude'], ['skins', '🛣️ Straßen-Skins'], ['biomes', '🌍 Landschaften'], ['effects', '✨ Effekte'], ['castles', '🏯 Burgen'], ['boosts', '⚡ Boosts']];
+      const tabs = [['roads', '🛣️ Wegstücke'], ['decos', '🗿 Besondere Gebäude'], ['skins', '🛣️ Straßen-Skins'], ['biomes', '🌍 Landschaften'], ['effects', '✨ Effekte'], ['castles', '🏯 Burgen'], ['boosts', '⚡ Boosts']];
       let h = `<div class="cur-row" style="margin-bottom:.6em"><div class="res gems"><span>💎</span><b>${fmt(P.gems)}</b></div><div class="res crys"><span>🔮</span><b>${fmt(P.crystals)}</b></div></div>
         <div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>`;
       const price = p => p.crystals ? `🔮 ${p.crystals}` : p.gems ? `💎 ${p.gems}` : 'Gratis';
       const afford = p => (p.crystals ? P.crystals >= p.crystals : P.gems >= (p.gems || 0));
       let items = [];
-      if (tab === 'towers') items = TOWERS.filter(t => !P.unlocked.includes(t.id)).map(t => ({ id: t.id, name: t.name, desc: t.desc + (t.shop ? '' : ` (Sonst frei ab Lv ${t.level})`), rarity: t.rarity, price: towerPrice(t), pic: Thumbs.img('tower', t.id) }));
+      if (tab === 'roads') items = [{ id: 'roads10', name: '10 Wegstücke', desc: `Du hast ${P.roadPieces}. Damit kannst du den Weg der Gegner verlängern und umbauen.`, rarity: 'uncommon', price: { gems: 40 }, pic: '<div class="ic">🛣️</div>' }, { id: 'roads30', name: '30 Wegstücke', desc: 'Großes Paket für ein langes Labyrinth.', rarity: 'rare', price: { gems: 100 }, pic: '<div class="ic">🏗️</div>' }];
       if (tab === 'decos') items = DECOS.filter(d => d.shop).map(d => ({ id: d.id, name: d.name, desc: 'Dekoratives Spezialgebäude für dein Grundstück.', rarity: 'rare', price: { gems: d.cost }, owned: P.owned.decos.includes(d.id), pic: Thumbs.img('deco', d.id) }));
       if (tab === 'skins') items = ROAD_SKINS.map(s => ({ id: s.id, name: s.name, desc: s.desc, rarity: s.rarity, price: s.crystals ? { crystals: s.crystals } : { gems: s.gems }, owned: P.owned.skins.includes(s.id), sw: s.tint }));
       if (tab === 'effects') items = EFFECTS.map(s => ({ id: s.id, name: s.name, desc: s.desc, rarity: s.rarity, price: s.crystals ? { crystals: s.crystals } : { gems: s.gems }, owned: P.owned.effects.includes(s.id), sw: s.tint }));
@@ -4320,7 +4533,7 @@ const UI = (() => {
         return `<div class="card" style="border-color:${RARITIES[i.rarity].color}" title="${esc(i.desc)}">${pic}<div class="nm">${esc(i.name)}</div>${rarityBadge(i.rarity)}<div class="sub" style="min-height:2.6em">${esc(i.desc)}</div>
           <button class="btn small ${i.owned ? 'gray' : afford(i.price) ? 'gold' : 'gray'} buy" data-buy="${tab}" data-id="${i.id}" ${i.owned ? 'disabled' : ''}>${i.owned ? '✅ Besitzt du' : price(i.price)}</button></div>`;
       }).join('') || '<p>🎉 Alles freigeschaltet!</p>'}</div>
-      <p class="note">💎 Edelsteine bekommst du durch Levelaufstiege, Bosse, Aufgaben, Erfolge und die Tagesbelohnung. 🔮 Kristalle gibt es für Bosse und besondere Erfolge. Es gibt keine Echtgeld-Käufe.</p>`;
+      <p class="note">🏰 Türme kann man nicht kaufen – die gibt es nur von Bossen! 💎 Edelsteine bekommst du durch Levelaufstiege, Bosse, Aufgaben, Erfolge und die Tagesbelohnung. Es gibt keine Echtgeld-Käufe.</p>`;
       $('#modalBody').innerHTML = h;
       $$('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; Audio2.play('click'); render(); });
       $$('[data-buy]').forEach(b => b.onclick = () => {
@@ -4328,7 +4541,7 @@ const UI = (() => {
         const it = items.find(i => i.id === id); const p = it.price;
         if (!afford(p)) { Audio2.play('error'); return toast('Nicht genug ' + (p.crystals ? 'Kristalle 🔮' : 'Edelsteine 💎'), 'bad'); }
         if (p.crystals) P.crystals -= p.crystals; else P.gems -= p.gems || 0;
-        if (cat === 'towers') P.unlocked.push(id);
+        if (cat === 'roads') P.roadPieces += id === 'roads10' ? 10 : 30;
         else if (cat === 'decos') P.owned.decos.push(id);
         else if (cat === 'boosts') P.boosts[id] = (P.boosts[id] || 0) + 1;
         else P.owned[cat].push(id);
@@ -4382,8 +4595,8 @@ const UI = (() => {
     const t = s.playTime; const pt = `${Math.floor(t / 3600)}h ${Math.floor(t / 60) % 60}m`;
     const rows = [['Besiegte Gegner', fmt(s.kills)], ['Besiegte Bosse', fmt(s.bossKills)], ['Überstandene Wellen', fmt(s.wavesTotal)], ['Beste Welle', s.bestWave], ['Gebaute Türme', fmt(s.towersBuilt)], ['Gebaute Straßen', fmt(s.roadsBuilt)],
       ['Dekorationen', fmt(s.decoBuilt)], ['Upgrades', fmt(s.upgrades)], ['Verdiente Münzen', fmt(s.coinsEarned)], ['Verursachter Schaden', fmt(s.damage)], ['Gespielte Runden', s.gamesPlayed], ['Siege', s.victories],
-      ['Verlorene Leben', fmt(s.livesLost)], ['Perfekte Wellen', s.perfectWaves], ['Spielzeit', pt], ['Edelsteine verdient', fmt(s.gemsEarned)], ['Entdeckte Gegner', Object.keys(P.seen).length + ' / ' + ENEMIES.length], ['Freigeschaltete Türme', P.unlocked.length + ' / 30']];
-    let h = `<div class="statgrid">${rows.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join('')}</div><h4 class="sec">🏅 Rekorde</h4><div class="statgrid">${MODES.map(m => `<div><span>${m.icon} ${m.name}</span><b>Welle ${P.records[m.id] || 0}</b></div>`).join('')}</div>`;
+      ['Verlorene Leben', fmt(s.livesLost)], ['Perfekte Wellen', s.perfectWaves], ['Spielzeit', pt], ['Edelsteine verdient', fmt(s.gemsEarned)], ['Entdeckte Gegner', Object.keys(P.seen).length + ' / ' + ENEMIES.length], ['Verschiedene Türme', Save.stat('towersUnlocked') + ' / ' + TOWERS.length], ['Türme insgesamt', Object.values(P.towerInv).reduce((a, b) => a + b, 0)], ['Wegstücke', P.roadPieces]];
+    let h = `<div class="statgrid">${rows.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join('')}</div><h4 class="sec">🏅 Rekord</h4><div class="statgrid"><div><span>♾️ Beste Welle</span><b>Welle ${P.records.endless || 0}</b></div></div>`;
     const R = Game.R;
     if (R && !Game.demo) h += `<h4 class="sec">⚔️ Aktuelle Runde</h4><div class="statgrid"><div><span>Welle</span><b>${R.wave}</b></div><div><span>Besiegt</span><b>${R.stats.kills}</b></div><div><span>Münzen verdient</span><b>${fmt(R.stats.coins)}</b></div><div><span>Bosse</span><b>${R.stats.bosses}</b></div><div><span>Türme</span><b>${Game.towers.length}</b></div></div>`;
     openModal('📊 Statistiken', h);
@@ -4466,6 +4679,143 @@ const UI = (() => {
     $('#vAdopt').onclick = () => confirmBox(`Das Grundstück von ${esc(L.name)} als dein eigenes übernehmen? Dein aktuelles Straßennetz wird ersetzt.`, () => { Save.P.layout = { roads: L.roads, decos: L.decos }; Save.P.run = null; Save.save(); bar.remove(); visiting = null; toast('✅ Grundstück übernommen', 'good'); goMenu(); });
   }
 
+  // ---------------- Tutorial (Pflicht, nicht überspringbar) ----------------
+  const Tut = (() => {
+    let step = null, marker = null, moveStart = null, pollT = null;
+    const box = () => $('#tut');
+    function say(html, btn, onBtn) {
+      const b = box();
+      b.innerHTML = `<div class="tut-face">🧙</div><div class="tut-text">${html}</div>${btn ? `<button class="btn green" id="tutBtn">${btn}</button>` : ''}`;
+      b.classList.remove('hidden'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+      if (btn) $('#tutBtn').onclick = () => { Audio2.play('click'); onBtn(); };
+    }
+    function hide() { box().classList.add('hidden'); }
+    function hl(sel) { $$('.tut-hl').forEach(e => e.classList.remove('tut-hl')); if (sel) $$(sel).forEach(e => e.classList.add('tut-hl')); }
+    function showMarker(on, at) {
+      if (marker) { World.scene.remove(marker); marker = null; }
+      if (!on) return;
+      const sp = at || Game.bestSpot(TOWER_BY_ID.crossbow.range); if (!sp) return;
+      marker = new THREE.Group();
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.48, 32), new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false }));
+      ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; marker.add(ring);
+      const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.45, 4), new THREE.MeshBasicMaterial({ color: 0xffe14d }));
+      arrow.rotation.x = Math.PI; arrow.position.y = 1.2; marker.add(arrow);
+      marker.position.copy(tileToWorld(sp.x, sp.z)); marker.userData.arrow = arrow;
+      World.scene.add(marker);
+    }
+    function tick(t) { if (marker) { marker.userData.arrow.position.y = 1.1 + Math.sin(t * 5) * 0.15; marker.rotation.y = t; } }
+    function go(s) {
+      step = s; const R = Game.R; const touch = isTouch();
+      clearInterval(pollT);
+      if (s === 'welcome') {
+        R.hold = true; hl(null);
+        say('<b>Willkommen!</b> Aus dem lila Portal kommen Monster. Sie laufen den Weg entlang zu deiner Burg. <b>Halte sie auf!</b>', 'Weiter ▶', () => go('move'));
+      } else if (s === 'move') {
+        moveStart = Player.pos.clone();
+        say(touch ? 'Lauf mit dem <b>Joystick</b> unten links ein bisschen herum. Mit <b>⤒</b> springst du.' : 'Lauf mit <b>W A S D</b> herum. Mit der <b>Leertaste</b> springst du, mit der Maus drehst du die Kamera.');
+        hl(touch ? '#joy' : null);
+        pollT = setInterval(() => { if (Player.pos.distanceTo(moveStart) > 2.5) go('place'); }, 200);
+      } else if (s === 'place') {
+        say(`Du hast genau <b>eine Armbrust</b>. ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle die Armbrust und tippe' : 'Wähle unten die Armbrust und klicke'} auf das <b>leuchtende Feld</b> neben dem Weg.`);
+        hl(document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle');
+        showMarker(true);
+        pollT = setInterval(() => { if (step === 'place') hl(document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle'); }, 400);
+      } else if (s === 'wave1') {
+        showMarker(false); hl(null); setBuildOpen(false);
+        say('Super! Deine Armbrust schießt <b>ganz von allein</b>. Gleich kommt Welle 1 …');
+        R.hold = false; setTimeout(() => { if (step === 'wave1' && Game.R && Game.R.phase === 'build') Game.startWave(false); }, 2500);
+      } else if (s === 'fighting') {
+        say('Pass auf die Gegner auf! 💪 Jede besiegte Kreatur gibt dir <b>Münzen</b>.');
+        setTimeout(() => { if (step === 'fighting') hide(); }, 4500);
+      } else if (s === 'upgrade') {
+        R.hold = true; R.pauseTimer = 0;
+        const t = Game.towers[0];
+        if (t) { R.coins = Math.max(R.coins, Game.upgradeCost(t)); showMarker(true, { x: t.x, z: t.z }); }
+        say(`Du hast Münzen verdient! 🪙 Tippe auf deine <b>Armbrust</b> und drücke <b>UPGRADE</b>, damit sie stärker wird.`);
+        pollT = setInterval(() => { const t = Game.towers[0]; if (t && t.level >= 2) go('cont'); else if (t && !Game.selected) { hl(null); } }, 300);
+      } else if (s === 'cont') {
+        Game.select(null); hl(null); showMarker(false); R.hold = false; R.pauseTimer = 6;
+        say('Stark! ⬆️ Upgrades machen Türme stärker – und man sieht es am Turm. Weiter geht\'s!');
+        setTimeout(() => { if (step === 'cont') hide(); }, 4000);
+      } else if (s === 'bosswarn') {
+        R.hold = true; R.pauseTimer = 0;
+        say('⚠️ <b>Achtung!</b> Jede <b>5. Welle</b> kommt ein <b>BOSS</b>. Besiege ihn – dann bekommst du eine <b>neue Waffe</b>!', 'Los geht\'s! ▶', () => { R.hold = false; hide(); step = 'boss'; Game.startWave(false); });
+      } else if (s === 'place2') {
+        R.hold = true; R.pauseTimer = 0; showMarker(true);
+        say(`Deine neue Waffe ist da! 🎁 ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle sie aus' : 'Wähle sie unten aus'} und stelle sie neben den Weg.`);
+        pollT = setInterval(() => { hl(document.body.classList.contains('build-open') ? '#bbItems .item:not(.locked)' : '#buildToggle'); }, 400);
+      } else if (s === 'done') {
+        hl(null); showMarker(false); setBuildOpen(!touch);
+        say('<b>Perfekt – Tutorial geschafft!</b> 🎓<br>Ab jetzt kommen die Wellen <b>automatisch</b>. Jede 5. Welle kommt ein Boss. Bosse geben dir <b>Türme, Wege und Fallen</b>. Mit Wegstücken kannst du den Weg der Gegner umbauen!', 'Spielen! ▶', () => {
+          Save.P.tutorialDone = true; R.tutorial = false; R.hold = false; R.pauseTimer = 15;
+          Save.checkAchievements(); Save.save(); hide(); step = null;
+          document.body.classList.remove('tutorial'); renderBuildBar(); Game.snapshotRun();
+        });
+      }
+    }
+    function event(name, data) {
+      const R = Game.R; if (!R || !R.tutorial) return;
+      if (name === 'placed' && step === 'place') go('wave1');
+      else if (name === 'placed' && step === 'place2') { clearInterval(pollT); go('done'); }
+      else if (name === 'waveStart' && step === 'wave1') go('fighting');
+      else if (name === 'waveCleared' && data === 2) go('upgrade');
+      else if (name === 'waveCleared' && data === 4) go('bosswarn');
+      else if (name === 'rewardClosed') go('place2');
+    }
+    function start() { document.body.classList.add('tutorial'); go('welcome'); }
+    function stop() { clearInterval(pollT); showMarker(false); hide(); hl(null); step = null; document.body.classList.remove('tutorial'); }
+    return { start, stop, event, tick, get step() { return step; } };
+  })();
+
+  // ---------------- Boss-Truhe (Belohnung mit Glücksrad-Streifen) ----------------
+  function rewardCard(rw) {
+    if (rw.kind === 'tower') { const t = TOWER_BY_ID[rw.id]; return { html: Thumbs.img('tower', rw.id), name: t.name, color: RARITIES[t.rarity].color, sub: RARITIES[t.rarity].name }; }
+    if (rw.kind === 'trap') { const t = TRAP_BY_ID[rw.id]; return { html: `<div class="ic">${t.icon}</div>`, name: t.name, color: RARITIES[t.rarity].color, sub: 'Falle' }; }
+    if (rw.kind === 'roads') return { html: '<div class="ic">🛣️</div>', name: `${rw.n} Wegstücke`, color: '#9b9a94', sub: 'Wege' };
+    return { html: '<div class="ic">💰</div>', name: `${rw.n} Münzen`, color: '#ffd700', sub: 'Münzen' };
+  }
+  function bossReward(rw, bossDef) {
+    const R = Game.R;
+    const fake = () => Save.rollFake(R.wave + 10);
+    const strip = []; for (let i = 0; i < 36; i++) strip.push(i === 30 ? rw : fake());
+    const cards = strip.map(r => { const c = rewardCard(r); return `<div class="rl-card" style="border-color:${c.color}">${c.html}<div class="nm">${esc(c.name)}</div></div>`; }).join('');
+    openModal('🎁 Boss-Truhe', `<div class="result"><div class="big">👑 ${esc(bossDef.name)} besiegt!</div><p>Mal sehen, was in der Truhe ist …</p>
+      <div class="roulette"><div class="rl-line"></div><div class="rl-strip" id="rlStrip">${cards}</div></div>
+      <div id="rlWin" class="rl-win hidden"></div></div>`, true);
+    $('#modalClose').classList.add('hidden');
+    const stripEl = $('#rlStrip');
+    requestAnimationFrame(() => {
+      const card = stripEl.children[30]; const wrap = stripEl.parentElement;
+      const target = card.offsetLeft + card.offsetWidth / 2 - wrap.clientWidth / 2 + (Math.random() - 0.5) * card.offsetWidth * 0.5;
+      stripEl.style.transition = 'transform 4.2s cubic-bezier(.08,.75,.12,1)';
+      stripEl.style.transform = `translateX(${-target}px)`;
+      let last = 0; const t0 = performance.now();
+      const tickSnd = () => { const t = performance.now() - t0; if (t > 4200) return; const pos = -new DOMMatrix(getComputedStyle(stripEl).transform).m41; const idx = Math.floor(pos / card.offsetWidth); if (idx !== last) { last = idx; Audio2.play('click'); } requestAnimationFrame(tickSnd); };
+      tickSnd();
+    });
+    setTimeout(() => {
+      const c = rewardCard(rw);
+      stripEl.children[30].classList.add('won');
+      Audio2.play('achievement');
+      const isPlaceable = rw.kind === 'tower' || rw.kind === 'trap';
+      const w = $('#rlWin');
+      w.innerHTML = `<h3>Du bekommst: <span style="color:${c.color}">${esc(c.name)}</span>!</h3><p>${rw.kind === 'tower' ? esc(TOWER_BY_ID[rw.id].desc) : rw.kind === 'trap' ? esc(TRAP_BY_ID[rw.id].desc) : rw.kind === 'roads' ? 'Damit kannst du den Weg der Gegner umbauen (Baumenü → Straßen).' : 'Für Upgrades und Wegstücke.'}</p>
+        ${rw.bonus ? `<p class="bonus">🎁 Bonus: <b>${esc(rewardCard(rw.bonus).name)}</b>${rw.bonus.kind === 'trap' ? ' (Falle)' : ''}</p>` : ''}
+        <div class="row">${isPlaceable ? '<button class="btn green big" id="rlPlace">📍 Jetzt platzieren</button>' : ''}${R.tutorial ? '' : '<button class="btn" id="rlOk">Einsammeln</button>'}</div>`;
+      w.classList.remove('hidden');
+      for (let i = 0; i < 3; i++) setTimeout(() => Particles.emit(Player.pos.x, 2, Player.pos.z, 50, c.color, { speed: 4, up: 5, life: 1.2, size: 0.3, tint: false }), i * 200);
+      const finish = place => {
+        $('#modalClose').classList.remove('hidden'); closeModal();
+        if (R.tutorial) { Tut.event('rewardClosed'); }
+        if (place && isPlaceable) { curTab = rw.kind === 'tower' ? 'towers' : 'traps'; setBuildOpen(true); Game.setBuild({ kind: rw.kind, id: rw.id }); }
+        renderBuildBar();
+      };
+      const p = $('#rlPlace'); if (p) p.onclick = () => finish(true);
+      const o = $('#rlOk'); if (o) o.onclick = () => finish(false);
+      if (!isPlaceable && R.tutorial) setTimeout(() => finish(false), 1500);
+    }, 4400);
+  }
+
   // ---------------- Neue Türme nach der Runde ----------------
   function picksHtml() {
     const P = Save.P, picks = P.pendingPicks;
@@ -4506,26 +4856,25 @@ const UI = (() => {
       <button class="btn green big" id="pmResume">▶ Weiterspielen</button>
       <button class="btn" id="pmShare">🔗 Grundstück teilen</button>
       <button class="btn" id="pmStats">📊 Statistiken</button>
-      <button class="btn red" id="pmMenu">🏠 Zum Hauptmenü (speichert)</button></div>
+      ${R && R.tutorial ? '' : '<button class="btn red" id="pmMenu">🏠 Zum Hauptmenü (speichert)</button>'}</div>
       <p class="note">Gespeichert wird nach jeder abgeschlossenen Welle. Verlässt du eine laufende Welle, beginnt sie beim Fortsetzen von vorn.</p>`, true);
     $('#pmResume').onclick = () => closeModal();
     $('#pmShare').onclick = () => shareScreen();
     $('#pmStats').onclick = () => statsScreen();
-    $('#pmMenu').onclick = () => { Save.save(); goMenu(); };
+    const pm = $('#pmMenu'); if (pm) pm.onclick = () => { Save.save(); goMenu(); };
   }
   function resultScreen(s, won) {
     const t = s.time; const tm = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
-    const h = `<div class="result"><div class="big">${won ? '🏆 SIEG!' : '💀 GAME OVER'}</div><div>${s.mode.icon} ${s.mode.name}</div>
+    const h = `<div class="result"><div class="big">${won ? '🏆 SIEG!' : '💀 GAME OVER'}</div><div>Du hast Welle ${s.waves + 1} erreicht</div>
       <div class="statgrid"><div><span>Überstandene Wellen</span><b>${s.waves}</b></div><div><span>Besiegte Gegner</span><b>${fmt(s.kills)}</b></div><div><span>Verdiente Münzen</span><b>${fmt(s.coins)}</b></div><div><span>Besiegte Bosse</span><b>${s.bosses}</b></div><div><span>Spielzeit</span><b>${tm}</b></div><div><span>Persönlicher Rekord</span><b>Welle ${Math.max(s.record, s.waves)}</b></div></div>
       ${won ? '<p>Belohnung: 💎100 🔮10</p>' : '<p>Deine Burg ist gefallen – aber du bekommst neue Türme für die nächste Runde!</p>'}
       <div id="rsPicks"></div>
-      <div class="row">${won && s.mode.id !== 'boss' ? '<button class="btn green" id="rsCont">♾️ Weiterspielen (Endlos)</button>' : ''}<button class="btn ${won ? '' : 'green'}" id="rsRetry">🔁 Neue Runde (Welle 1)</button><button class="btn gray" id="rsMenu">🏠 Hauptmenü</button></div></div>`;
+      <div class="row"><button class="btn ${won ? '' : 'green'}" id="rsRetry">🔁 Neue Runde (Welle 1)</button><button class="btn gray" id="rsMenu">🏠 Hauptmenü</button></div></div>`;
     openModal(won ? 'Sieg' : 'Niederlage', h, true);
     $('#modalClose').classList.add('hidden');
     const renderPicks = () => { $('#rsPicks').innerHTML = picksHtml(); bindPicks(renderPicks); };
     renderPicks();
     const done = () => $('#modalClose').classList.remove('hidden');
-    const c = $('#rsCont'); if (c) c.onclick = () => { done(); Game.continueEndless(); closeModal(); Game.R.paused = false; hud(true); };
     $('#rsRetry').onclick = () => { done(); Save.P.run = null; startGame(s.mode.id, Game.R.biome); };
     $('#rsMenu').onclick = () => { done(); goMenu(); };
     if (won) for (let i = 0; i < 6; i++) setTimeout(() => Particles.emit((Math.random() - 0.5) * 16, 2, (Math.random() - 0.5) * 10, 60, '#ffffff', { speed: 5, up: 6, life: 1.6, size: 0.35, tint: false }), i * 250);
@@ -4584,9 +4933,6 @@ const UI = (() => {
       $('#dOk').onclick = () => closeModal();
       refreshMenu();
     };
-    $('#rotateOk').onclick = () => { $('#rotateHint').classList.add('hidden'); rotateDismissed = true; };
-    const checkRot = () => { const portrait = innerHeight > innerWidth * 1.1 && innerWidth < 900; $('#rotateHint').classList.toggle('hidden', !portrait || rotateDismissed); };
-    addEventListener('resize', checkRot); checkRot();
     window.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const k = e.key.toLowerCase();
@@ -4609,7 +4955,6 @@ const UI = (() => {
     // Mausrad im Baumenü horizontal scrollen
     $('#bbItems').addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { $('#bbItems').scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
   }
-  let rotateDismissed = false;
 
   // Callbacks aus dem Spiel
   function hookGame() {
@@ -4618,9 +4963,11 @@ const UI = (() => {
       routeChanged: ok => { if (!ok && screen === 'game') toast('⚠️ Kein Weg vom Spawn zum Ziel!', 'bad'); },
       waveBanner: (w, boss) => banner(boss ? '👑 BOSSWELLE ' + w : 'WELLE ' + w, boss ? 'Ein mächtiger Boss naht!' : '', boss ? 'boss' : '', 1800),
       waveCleared: (w, bonus, income) => toast(`✅ Welle ${w} geschafft! +${bonus}${income ? ' +' + income + ' (Gold)' : ''} 🪙`, 'good'),
-      bossAppear: e => { if (e) banner('👑 ' + e.def.name, e.def.kind, 'boss', 2200); },
+      bossAppear: e => { if (e) banner('👑 ' + e.def.name, 'Besiege ihn für eine Belohnung!', 'boss', 2200); },
       newEnemy: def => toast(`📖 Neuer Gegner entdeckt: <b>${esc(def.name)}</b>`, ''),
-      gameOver: s => resultScreen(s, false),
+      gameOver: s => { Tut.stop(); resultScreen(s, false); },
+      tutorialEvent: (n, d) => Tut.event(n, d),
+      bossReward: (rw, def) => bossReward(rw, def),
       victory: s => resultScreen(s, true),
     });
     Save.on('levelup', info => {
@@ -4632,7 +4979,7 @@ const UI = (() => {
     Save.on('achievement', a => { Audio2.play('achievement'); toast(`🏆 Erfolg: <b>${esc(a.name)}</b> +💎${a.gems}${a.crystals ? ' 🔮' + a.crystals : ''}`, 'gold'); });
   }
 
-  return { show, toast, banner, hud, goMenu, startGame, renderBuildBar, bindEvents, hookGame, refreshMenu, closeModal, get screen() { return screen; } };
+  return { Tut, show, toast, banner, hud, goMenu, startGame, renderBuildBar, bindEvents, hookGame, refreshMenu, closeModal, get screen() { return screen; } };
 })();
 
 // ---- main.js ----
@@ -4642,6 +4989,7 @@ const UI = (() => {
 // ============================================================
 (function boot() {
   const setLoad = (p, t) => { document.getElementById('loadfill').style.width = p + '%'; if (t) document.getElementById('loadtxt').textContent = t; };
+  View.layout();
   setLoad(10, 'Lade Spielstand …');
   const P = Save.load();
   Audio2.setVolumes(P.settings.sfx, P.settings.music);
@@ -4667,6 +5015,7 @@ const UI = (() => {
       Thumbs.warm(TOWERS.filter(t => P.unlocked.includes(t.id)).map(t => ['tower', t.id]));
       setLoad(90, 'Fast fertig …');
       UI.goMenu();
+      if (!P.tutorialDone) UI.startGame('endless', P.equipped.biome);   // allererster Start: sofort ins Tutorial
       setLoad(100);
       setTimeout(() => document.getElementById('loading').classList.add('hidden'), 250);
     } catch (e) {
@@ -4680,7 +5029,7 @@ const UI = (() => {
   window.addEventListener('pointerdown', unlock, { passive: true });
   window.addEventListener('keydown', unlock);
 
-  window.addEventListener('resize', () => World.renderer && World.resize());
+  View.onChange(() => World.renderer && World.resize());
   const persist = () => { if (Game.R && !Game.demo) Game.snapshotRun(); Save.save(); };
   document.addEventListener('visibilitychange', () => { if (document.hidden) { persist(); if (Game.R && !Game.demo && !Game.R.over) Game.R.paused = true; } });
   window.addEventListener('pagehide', persist);
@@ -4697,6 +5046,7 @@ const UI = (() => {
     CamCtl.update(dt);
     Game.update(dt, t);
     World.update(dt, t);
+    UI.Tut.tick(t);
     hudT -= dt;
     if (hudT <= 0) { hudT = 0.1; UI.hud(); }
     World.renderer.render(World.scene, World.camera);

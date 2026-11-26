@@ -11,7 +11,7 @@ const Save = (() => {
 
   function defaults() {
     return {
-      v: 3,
+      v: 4,
       tutorialDone: false,
       towerInv: { crossbow: [1] },             // Türme im Besitz: id -> Anzahl je Fusionsstufe [+0, +1, … +9]
       trapInv: {},                             // Fallen im Besitz (Anzahl)
@@ -33,7 +33,7 @@ const Save = (() => {
       pendingPicks: null,                     // Turm-Belohnung nach der letzten Runde
       layout: null,                           // {roads:[[x,z,id]], decos:[[x,z,id,rot]]}
       run: null,                              // laufende Runde (Snapshot nach jeder Welle)
-      settings: { music: 0.45, sfx: 0.7, quality: (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'medium' : 'high'), particles: true, autoStart: true, showGrid: true, damageNumbers: true, shirt: '#e03a3a', pants: '#2f5bd0' },
+      settings: { music: 0.45, sfx: 0.7, quality: (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'medium' : 'high'), particles: true, autoStart: false, showGrid: true, damageNumbers: true, shirt: '#e03a3a', pants: '#2f5bd0' },
     };
   }
   function merge(base, src) {
@@ -58,6 +58,8 @@ const Save = (() => {
       for (const k in P.towerInv) if (typeof P.towerInv[k] === 'number') P.towerInv[k] = [P.towerInv[k]];
       P.run = null; P.v = 3;
     }
+    // v4: Wellen starten standardmäßig nicht mehr von allein
+    if (P.v < 4) { P.settings.autoStart = false; P.v = 4; }
     if (!P.layout) P.layout = { roads: DEFAULT_ROADS.map(([x, z]) => [x, z, 'road_stone']), decos: [[2, 7, 'tree', 0], [3, 12, 'flowers', 0], [10, 1, 'lantern', 0], [16, 12, 'bush', 0], [20, 1, 'house', 1]] };
     refreshDaily();
     return P;

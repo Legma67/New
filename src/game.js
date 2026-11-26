@@ -108,7 +108,7 @@ const Game = (() => {
     if (snapshot) for (const t of snapshot.towers) { const pl = t.plus || 0; if (!TOWER_BY_ID[t.id] || available('tower', t.id, pl) <= 0 || grid[t.x][t.z]) continue; const tw = spawnTower(TOWER_BY_ID[t.id], t.x, t.z, t.rot, false, pl); tw.targeting = t.targeting || 'first'; tw.kills = t.kills || 0; }
     if (snapshot && snapshot.traps) for (const [id, x, z] of snapshot.traps) if (TRAP_BY_ID[id] && available('trap', id) > 0 && grid[x][z] && grid[x][z].type === 'road') spawnTrap(TRAP_BY_ID[id], x, z, false);
     if (!snapshot) { Save.addStat('gamesPlayed'); }
-    R.pauseTimer = R.tutorial ? 0 : (Save.P.settings.autoStart ? 20 : 0); // erste Welle startet automatisch (im Tutorial erst nach dem Platzieren)
+    R.pauseTimer = 0; // Wellen starten nur, wenn der Spieler auf den Knopf drückt
     World.setBuildOverlay(true);
     Audio2.setMood('build');
     snapshotRun();
@@ -125,6 +125,7 @@ const Game = (() => {
     Save.saveSoon();
   }
   function clearEntities() {
+    for (const f of floats) f.el.remove(); floats.length = 0;
     for (const t of towers) removeTowerMesh(t);
     towers.length = 0;
     for (const e of enemies) scene.remove(e.mesh);
@@ -178,7 +179,20 @@ const Game = (() => {
     rangeRing.visible = false;
     if (sel) select(null);
     World.setBuildOverlay(!!sel || (R && R.phase === 'build'));
+    updateTileOverlay();
     ui.buildChanged && ui.buildChanged(sel);
+  }
+  // Freie Felder für die aktuelle Bauauswahl hervorheben
+  function updateTileOverlay() {
+    const sel = buildSel;
+    if (!sel || demo || !grid.length) { World.showTiles(null); return; }
+    const list = [];
+    for (let x = 0; x < GW; x++) for (let z = 0; z < GH; z++) {
+      const c = grid[x][z];
+      if (sel.kind === 'tower' || sel.kind === 'deco' || sel.kind === 'move') { if (!c) list.push([x, z]); }
+      else if (sel.kind === 'trap') { if (c && c.type === 'road' && !traps.has(x + ',' + z) && !((x === SPAWN.x && z === SPAWN.z) || (x === GOAL.x && z === GOAL.z))) list.push([x, z]); }
+    }
+    World.showTiles(list, sel.kind === 'trap' ? 0xffb347 : 0xffffff);
   }
   function rotateBuild() { buildRot = (buildRot + 1) % 4; if (ghost) ghost.rotation.y = buildRot * Math.PI / 2; Audio2.play('click'); }
 
@@ -335,6 +349,7 @@ const Game = (() => {
       Particles.emit(pos.x, 0.2, pos.z, 16, '#ffe14d', { speed: 1.6, life: 0.5 });
       Audio2.play('place'); setBuild(null); select(t); snapshotRun();
     }
+    updateTileOverlay();
     ui.hud && ui.hud();
     return true;
   }
@@ -385,7 +400,7 @@ const Game = (() => {
   function removeTrap(x, z) { const t = traps.get(x + ',' + z); if (!t) return; scene.remove(t.mesh); traps.delete(x + ',' + z); snapshotRun(); }
   function updateTraps(dt, time) {
     if (!traps.size) return;
-    const scale = Math.max(1, hpScale(Math.max(1, R.wave)) * 0.8);
+    const scale = Math.max(0.5, hpScale(Math.max(1, R.wave)) * R.mode.hp * 0.9);
     for (const tr of traps.values()) {
       const d = tr.def;
       tr.cd = Math.max(0, tr.cd - dt); tr.tick -= dt;
@@ -605,7 +620,7 @@ const Game = (() => {
       const child = ENEMY_BY_ID[e.def.splitInto];
       for (let i = 0; i < e.def.split; i++) {
         const c = spawnEnemy(child, R.wave, 1, Math.max(0, e.d - 0.15 * i), e.wave);
-        if (c && e.wave && R.waves.get(e.wave)) R.waves.get(e.wave).alive++;
+        if (c && e.wave && R.waves.get(e.wave)) { R.waves.get(e.wave).alive++; R.waves.get(e.wave).total++; }
       }
     }
     removeEnemy(e);
@@ -626,6 +641,7 @@ const Game = (() => {
   }
   function removeEnemy(e) {
     scene.remove(e.mesh);
+    e.mesh.traverse(o => { if (o.isMesh && (o.userData.ownMat || o.material.isMeshBasicMaterial) && o.material.dispose) o.material.dispose(); });
     const i = enemies.indexOf(e); if (i >= 0) enemies.splice(i, 1);
     if (!demo && e.wave && R.waves.has(e.wave)) {
       const w = R.waves.get(e.wave); w.alive--;
@@ -679,8 +695,10 @@ const Game = (() => {
     if (!R || R.over || demo) return;
     if (!route) { ui.toast && ui.toast('Kein gültiger Weg vom Spawn zum Ziel!', 'bad'); Audio2.play('error'); return; }
     if (R.hold) { ui.toast && ui.toast('Folge zuerst dem Tutorial 🙂', 'bad'); return; }
+    if (R.tutorial && R.phase === 'wave') { ui.toast && ui.toast('Im Tutorial erst die aktuelle Welle schaffen 🙂', 'bad'); return; }
     R.skipCd = Math.max(0, ((R.skipUntil || 0) - performance.now()) / 1000);
-    if (early !== 'auto' && R.skipCd > 0) { ui.toast && ui.toast(`⏳ Noch ${Math.ceil(R.skipCd)} Sekunden warten`, 'bad'); Audio2.play('error'); return; }
+    // Sperre gilt nur fürs Überspringen (Welle läuft noch)
+    if (early !== 'auto' && R.phase === 'wave' && R.skipCd > 0) { ui.toast && ui.toast(`⏳ Noch ${Math.ceil(R.skipCd)} Sekunden warten`, 'bad'); Audio2.play('error'); return; }
     if (R.phase === 'wave' && R.spawnQueue.length > 20) { ui.toast && ui.toast('Warte, bis mehr Gegner der aktuellen Welle erschienen sind', 'bad'); return; }
     const w = ++R.wave;
     const list = makeWave(w);
@@ -726,7 +744,7 @@ const Game = (() => {
     Audio2.play('waveClear');
     ui.waveCleared && ui.waveCleared(w, bonus, income);
     if (R.waves.size === 0 && R.spawnQueue.length === 0) {
-      R.phase = 'build'; R.pauseTimer = Save.P.settings.autoStart ? (R.tutorial ? 12 : 25) : 0;
+      R.phase = 'build'; R.pauseTimer = Save.P.settings.autoStart && !R.tutorial ? 25 : 0;
       Audio2.setMood('build'); setBuildOverlayForPhase();
     }
     snapshotRun();
@@ -1149,9 +1167,8 @@ const Game = (() => {
       e.revealed = false;
       if (e.def.flicker && Math.sin(time * 2 + e.anim) > 0.3) { e.revealed = true; continue; }
       for (const t of towers) {
-        const det = t.def.detect || t.level >= 4;
-        if (!det && !t.def.reveal) continue;
-        const r = towerStats(t).range || 2;
+        const det = t.def.detect || t.def.reveal || t.level >= 4;
+        const r = (towerStats(t).range || 2) * (det ? 1 : 0.4);
         if (dist2(t.mesh.position, e.pos) <= r * r) { e.revealed = true; break; }
       }
     }
@@ -1253,7 +1270,7 @@ const Game = (() => {
         case 'summon': {
           e.abilT[i] = 9;
           const sd = ENEMY_BY_ID[e.def.summon];
-          for (let k = 0; k < 2; k++) { const c = spawnEnemy(sd, R.wave, 0.5, Math.max(0, e.d - 0.3 - k * 0.25), e.wave); if (c && e.wave && R.waves.get(e.wave)) R.waves.get(e.wave).alive++; }
+          for (let k = 0; k < 2; k++) { const c = spawnEnemy(sd, R.wave, 0.5, Math.max(0, e.d - 0.3 - k * 0.25), e.wave); if (c && e.wave && R.waves.get(e.wave)) { R.waves.get(e.wave).alive++; R.waves.get(e.wave).total++; } }
           Particles.emit(e.pos.x, 0.6, e.pos.z, 30, e.def.glow || '#ff4040', { speed: 2, up: 2, life: 0.6 });
           break;
         }
@@ -1429,7 +1446,7 @@ const Game = (() => {
 
   // ---------------- Teilen / Import ----------------
   function exportLayout() {
-    const data = { v: 1, n: Save.P.name, r: Save.P.layout.roads, d: Save.P.layout.decos, t: towers.map(t => [t.def.id, t.x, t.z, t.plus]) };
+    const data = { v: 1, n: Save.P.name, r: Save.P.layout.roads, d: Save.P.layout.decos, t: demo ? [] : towers.map(t => [t.def.id, t.x, t.z, t.plus]) };
     return 'BYOTD:' + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   }
   function parseLayout(code) {
@@ -1446,7 +1463,7 @@ const Game = (() => {
   return {
     fuse, bestSpot, obstacles, available, buyRoadPieces, isBossWave, removeTrap, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
     continueEndless, exportLayout, parseLayout, loadLayout, recalcRoute, placeCastle, snapshotRun, ui,
-    get R() { return R; }, get traps() { return traps; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
+    get R() { return R; }, get traps() { return traps; }, get _grid() { return grid; }, get _floats() { return floats.length; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
     get enemies() { return enemies; }, get towers() { return towers; },
     stopDemo() { if (demo) { clearEntities(); demo = false; R = null; } },
     quit() { if (R && !demo && !R.over) snapshotRun(); clearEntities(); R = null; },

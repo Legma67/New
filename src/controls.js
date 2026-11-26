@@ -11,7 +11,7 @@ const CamCtl = (() => {
   let follow = null;                 // () => Vector3
   const pointers = new Map();
   let dragMode = null, last = null, pinch = null, moved = 0, downPos = null;
-  const handlers = { tap: null, hover: null, paint: null, paintEnd: null, toolActive: () => false };
+  const handlers = { tap: null, hover: null, paint: null, paintEnd: null, toolActive: () => false, anyTool: () => false };
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
   const keys = new Set();
 
@@ -23,7 +23,7 @@ const CamCtl = (() => {
     window.addEventListener('pointercancel', onUp);
     el.addEventListener('wheel', e => { e.preventDefault(); zoom(e.deltaY > 0 ? 1.12 : 0.89); }, { passive: false });
     el.addEventListener('contextmenu', e => e.preventDefault());
-    window.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; keys.add(e.key.toLowerCase()); });
+    window.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; keys.add(e.key.toLowerCase()); });
     window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
     window.addEventListener('blur', () => keys.clear());
   }
@@ -67,6 +67,7 @@ const CamCtl = (() => {
       else dragMode = tool ? 'paint' : freeDrag;
       last = { x: e.clientX, y: e.clientY };
       if (dragMode === 'paint') { const p = groundAt(e.clientX, e.clientY); handlers.hover && handlers.hover(p); handlers.paintStart && handlers.paintStart(p, e.pointerType); }
+      else if (handlers.anyTool && handlers.anyTool() && handlers.hover) handlers.hover(groundAt(e.clientX, e.clientY));   // Vorschau beim Antippen
     } else if (pointers.size === 2) {
       if (dragMode === 'paint') handlers.paintCancel && handlers.paintCancel();
       dragMode = 'pinch';

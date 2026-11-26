@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const src = f => fs.readFileSync(path.join(__dirname, 'src', f), 'utf8');
 const order = ['data.js', 'view.js', 'audio.js', 'models.js', 'world.js', 'controls.js', 'player.js', 'save.js', 'game.js', 'ui.js', 'main.js'];
+for (const f of order) { try { new Function(src(f)); } catch (e) { console.error('SYNTAXFEHLER in', f, e.message); process.exit(1); } }
 const js = order.map(f => `// ---- ${f} ----\n` + src(f)).join('\n');
 const three = fs.readFileSync(path.join(__dirname, 'vendor', 'three.min.js'), 'utf8');
 let html = src('template.html');

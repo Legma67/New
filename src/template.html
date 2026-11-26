@@ -87,16 +87,18 @@
   <button class="build-toggle btn gold" id="buildToggle">🔨 BAUEN</button>
   <div class="build-bar" id="buildBar">
     <div class="bb-tabs" id="bbTabs">
-      <button data-bbclose="1" class="bb-close" title="Baumenü schließen (B)">✕</button>
-      <button data-tab="towers" class="on">🏰 Türme</button>
-      <button data-tab="roads">🛣️ Straßen</button>
-      <button data-tab="traps">🪤 Fallen</button>
-      <button data-tab="decos">🌳 Deko</button>
-      <button data-tab="tools">🧰 Werkzeuge</button>
+      <button data-tab="towers" class="on"><span class="ti">🏰</span><span class="tl">Türme</span><i class="cnt"></i></button>
+      <button data-tab="traps"><span class="ti">🪤</span><span class="tl">Fallen</span><i class="cnt"></i></button>
+      <button data-tab="roads"><span class="ti">🛣️</span><span class="tl">Wege</span><i class="cnt"></i></button>
+      <button data-tab="decos"><span class="ti">🌳</span><span class="tl">Deko</span></button>
+      <button data-tab="tools"><span class="ti">🧰</span><span class="tl">Mehr</span></button>
     </div>
-    <div class="bb-items" id="bbItems"></div>
+    <div class="bb-main">
+      <div class="bb-head" id="bbHead"></div>
+      <div class="bb-items" id="bbItems"></div>
+    </div>
+    <button data-bbclose="1" class="bb-close" title="Baumenü schließen (B)">✕</button>
   </div>
-  <div class="build-hint hidden" id="buildHint"></div>
   <div class="tower-panel hidden" id="towerPanel"></div>
 </div>
 

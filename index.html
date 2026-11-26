@@ -91,23 +91,6 @@ body.portrait #root{transform:rotate(90deg) translateY(-100%)}
 .wavebtn{background:linear-gradient(#ff8a3a,#e0501a);box-shadow:0 4px 0 #9a3010,0 6px 14px rgba(0,0,0,.3);font-size:1em;padding:.7em .4em}
 .wavebtn.skip{background:linear-gradient(#b47aff,#7a3ae0);box-shadow:0 4px 0 #4f1fa0}
 .wc-row{display:flex;gap:6px}.wc-row .btn{flex:1}
-.build-bar{position:fixed;left:calc(8px + var(--safe-l));right:calc(min(30cqw,210px) + 18px + var(--safe-r));bottom:calc(8px + var(--safe-b));background:rgba(15,25,55,.78);border:2px solid rgba(255,255,255,.25);border-radius:16px;padding:5px;backdrop-filter:blur(4px)}
-.bb-tabs{display:flex;gap:4px;margin-bottom:5px}
-.bb-tabs button{flex:1;border:0;border-radius:10px;padding:.35em .2em;font-weight:900;font-size:.85em;color:#cfe0ff;background:rgba(255,255,255,.08)}
-.bb-tabs button.on{background:linear-gradient(#4fa3ff,#2c6fe0);color:#fff}
-.bb-items{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;padding-bottom:2px;touch-action:pan-x}
-.bb-items::-webkit-scrollbar{height:5px}.bb-items::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:3px}
-.item{flex:0 0 auto;width:4.9em;border-radius:12px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.15);padding:3px;text-align:center;position:relative;color:#fff}
-.item img,.item .ic{width:100%;height:3.1em;object-fit:contain;display:flex;align-items:center;justify-content:center;font-size:1.9em}
-.item .nm{font-size:.62em;font-weight:800;line-height:1.05;height:2.2em;overflow:hidden;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere;hyphens:auto;-webkit-hyphens:auto}
-.item .pr{font-size:.75em;font-weight:900;color:#ffe14d}
-.item .pr.no{color:#ff7a7a}
-.item.sel{border-color:#ffe14d;background:rgba(255,225,77,.22);box-shadow:0 0 0 2px #ffe14d inset}
-.item.locked{filter:grayscale(1) brightness(.6)}
-.item .lock{position:absolute;top:2px;right:4px;font-size:.9em}
-.item .rar{position:absolute;left:3px;top:3px;width:.6em;height:.6em;border-radius:50%}
-.build-hint{position:fixed;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top,0px));z-index:11;background:rgba(15,25,55,.85);border-radius:12px;padding:.4em .9em;font-weight:700;font-size:.85em;display:flex;gap:.6em;align-items:center;white-space:nowrap}
-.build-hint .btn{pointer-events:auto}
 /* Turm-Panel */
 .tower-panel{position:fixed;left:calc(8px + var(--safe-l));top:calc(70px + env(safe-area-inset-top,0px));width:min(38cqw,300px);max-height:calc(100% - 78px);overflow:auto;background:rgba(15,25,55,.92);border:3px solid #ffe14d;border-radius:18px;padding:.7em;z-index:12}
 .tp-head{display:flex;gap:.6em;align-items:center}
@@ -213,19 +196,16 @@ textarea.code{width:100%;height:6em;border-radius:10px;border:2px solid rgba(255
 .visit-bar{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:30;background:rgba(15,25,55,.9);border:2px solid #ffe14d;border-radius:14px;padding:.5em .8em;display:flex;gap:.6em;align-items:center;font-weight:800}
 @container root (max-height:430px){
   :root{--ui:12px}
-  .item{width:4.3em}.item img,.item .ic{height:2.5em;font-size:1.6em}
-  .wave-panel{min-width:12em}
+  .item{width:4.3em}  .wave-panel{min-width:12em}
   .side-menu{gap:4px}.sbtn{width:2.4em;height:2.4em}
   .cam-ctl{top:calc(58px + env(safe-area-inset-top,0px))}.cam-ctl .cbtn{width:2.3em;height:2.3em}
   .tower-panel{top:56px;max-height:calc(100% - 64px);width:min(44cqw,300px);padding:.5em}
-  body.tp-open .build-bar,body.tp-open .build-hint{display:none}
-  .tp-stats{margin:.4em 0}
+  body.tp-open .build-bar,body.tp-open   .tp-stats{margin:.4em 0}
   #toasts{top:calc(108px + env(safe-area-inset-top,0px))}
-  .build-hint{top:calc(58px + env(safe-area-inset-top,0px))}
-  .modal-box{height:96cqh}
+    .modal-box{height:96cqh}
 
 }
-@container root (max-width:700px){.build-bar{right:calc(30cqw + 14px)}}
+
 
 /* Spielfigur-Steuerung */
 .joy{position:fixed;left:calc(18px + var(--safe-l));bottom:calc(16px + var(--safe-b));width:128px;height:128px;border-radius:50%;background:rgba(15,25,55,.35);border:3px solid rgba(255,255,255,.45);touch-action:none;display:none}
@@ -235,9 +215,7 @@ textarea.code{width:100%;height:6em;border-radius:10px;border:2px solid rgba(255
 .jump-btn:active{transform:scale(.92);background:rgba(79,163,255,.6)}
 .build-toggle{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--safe-b));display:none}
 .build-toggle:active{transform:translateX(-50%) translateY(3px)}
-.bb-tabs .bb-close{flex:0 0 2.4em;background:linear-gradient(#ff6a6a,#d93a3a);color:#fff}
-body:not(.build-open) .build-bar{display:none}
-body:not(.build-open) #hud .build-toggle{display:block}
+body:not(.build-open) body:not(.build-open) #hud .build-toggle{display:block}
 body.touch:not(.build-open):not(.tp-open) #hud .joy{display:block}
 body.touch:not(.build-open) #hud .jump-btn{display:flex}
 #camMode{font-size:.8em}
@@ -260,8 +238,6 @@ body.touch:not(.build-open) #hud .jump-btn{display:flex}
 .tut-hl{outline:4px solid #ffe14d!important;outline-offset:2px;animation:tutpulse 1s infinite;z-index:5}
 @keyframes tutpulse{50%{outline-color:#ff8a1a;outline-offset:6px}}
 body.tutorial .side-menu,body.tutorial .hud-tr .shopbtn,body.tutorial .wc-row,body.tutorial [data-tp=sell]{display:none!important}
-.item.info{width:11em;text-align:left;font-size:.8em;padding:.4em;opacity:.95;display:flex;align-items:center}
-.item.info.big{width:9em;font-size:.95em;flex-direction:column;align-items:flex-start;justify-content:center}
 /* Boss-Truhe */
 .roulette{position:relative;overflow:hidden;border:3px solid #ffe14d;border-radius:14px;background:rgba(0,0,0,.35);margin:.6em 0}
 .rl-strip{display:flex;gap:0;height:100%;will-change:transform}
@@ -275,12 +251,61 @@ body.tutorial .side-menu,body.tutorial .hud-tr .shopbtn,body.tutorial .wc-row,bo
 
 /* Fusion */
 .plus{font-weight:900;-webkit-text-stroke:1px #1b1b2e;font-size:1.1em}
-.item .pl,.card .pl{position:absolute;left:4px;top:14px;font-weight:900;font-size:.95em;-webkit-text-stroke:1px #1b1b2e;z-index:2}
 .card .pl{top:4px;left:8px;font-size:1.3em}
 .card.canfuse{box-shadow:0 0 0 3px #b47aff inset;animation:pulse 1.6s infinite}
 .fuse-ok{color:#d3a3ff;font-weight:900}
 .fuse-box .tp-stats{max-width:28em}
 .btn.purple:disabled{filter:grayscale(.6) brightness(.8)}
+.wavebtn.ready{animation:pulse 1.4s infinite}
+
+/* ===== Baumenü (Hotbar) ===== */
+.build-bar{position:fixed;left:calc(8px + var(--safe-l));right:calc(min(30cqw,210px) + 18px + var(--safe-r));bottom:calc(8px + var(--safe-b));display:flex;gap:6px;
+  background:linear-gradient(180deg,rgba(28,42,84,.92),rgba(14,22,48,.94));border:2px solid rgba(255,255,255,.28);border-radius:18px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+.bb-tabs{display:flex;flex-direction:column;gap:4px;flex:0 0 auto}
+.bb-tabs button{position:relative;display:flex;align-items:center;gap:.35em;border:0;border-radius:11px;padding:.28em .6em .28em .4em;font-weight:900;font-size:.78em;color:#cfe0ff;background:rgba(255,255,255,.07);text-align:left;min-width:6.4em}
+.bb-tabs button .ti{font-size:1.25em}
+.bb-tabs button.on{background:linear-gradient(#4fa3ff,#2c6fe0);color:#fff;box-shadow:0 3px 0 #1a4ba3}
+.bb-tabs .cnt{margin-left:auto;font-style:normal;background:#ffe14d;color:#4a2a00;border-radius:8px;padding:0 .4em;font-size:.85em}
+.bb-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.bb-head{display:flex;align-items:center;gap:.5em;min-height:2.3em;padding:.15em .5em;border-radius:11px;background:rgba(0,0,0,.25);font-size:.85em}
+.bb-head.active{background:linear-gradient(90deg,rgba(255,225,77,.22),rgba(255,225,77,.05));box-shadow:inset 0 0 0 2px rgba(255,225,77,.6)}
+.bb-head .hp{width:2.2em;height:2.2em;display:flex;align-items:center;justify-content:center}.bb-head .hp img{width:100%;height:100%;object-fit:contain}
+.bb-head .ht{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15}
+.bb-head .ht small{opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bb-head .hb{border:0;border-radius:10px;padding:.35em .7em;font-weight:900;color:#fff;background:linear-gradient(#4fa3ff,#2c6fe0);box-shadow:0 3px 0 #1a4ba3;font-size:.95em;white-space:nowrap}
+.bb-head .hb.x{background:linear-gradient(#ff6a6a,#d93a3a);box-shadow:0 3px 0 #962323}
+.bb-head .hb.buy{background:linear-gradient(#ffd84a,#f0a81a);color:#4a2a00;box-shadow:0 3px 0 #a86f00}
+.bb-head .hb.buy.no{filter:grayscale(.8) brightness(.75)}
+.bb-head .rp{font-weight:900;background:rgba(255,255,255,.1);border-radius:9px;padding:.2em .6em}
+.bb-items{display:flex;gap:7px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;padding:2px 2px 4px;touch-action:pan-x;scroll-snap-type:x proximity}
+.bb-items::-webkit-scrollbar{height:5px}.bb-items::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:3px}
+.item{--rc:#5c6b8a;position:relative;flex:0 0 auto;width:5.6em;border-radius:13px;padding:4px 3px 3px;text-align:center;color:#fff;scroll-snap-align:start;
+  background:radial-gradient(120% 80% at 50% 0%,color-mix(in srgb,var(--rc) 45%,transparent),rgba(255,255,255,.04) 70%),rgba(10,16,36,.6);
+  border:2px solid color-mix(in srgb,var(--rc) 70%,#fff 0%);box-shadow:inset 0 -3px 0 rgba(0,0,0,.35);transition:transform .12s}
+.item .pic{height:3.3em;display:flex;align-items:center;justify-content:center}
+.item .pic img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))}
+.item .emo{font-size:2em}
+.item .sw{display:inline-block;width:1.6em;height:1.6em;border-radius:7px;border:4px solid}
+.bb-head .sw{display:inline-block;width:1.4em;height:1.4em;border-radius:6px;border:3px solid}
+.item .nm{font-size:.64em;font-weight:900;line-height:1.05;height:2.15em;display:flex;align-items:center;justify-content:center;overflow:hidden;overflow-wrap:anywhere;hyphens:auto}
+.item .ft{font-size:.66em;font-weight:900;border-radius:6px;background:rgba(0,0,0,.35);padding:1px 0;margin-top:1px}
+.item .ft.ok{color:#8ff0a8}.item .ft.no{color:#ff9a9a}
+.item .pl{position:absolute;left:3px;top:3px;z-index:2;border-radius:7px;padding:0 .35em;font-weight:900;font-size:.72em;color:#1b1b2e;box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.item .fz{position:absolute;right:3px;top:2px;z-index:2;font-size:.9em;animation:pulse 1.2s infinite}
+.item.sel{transform:translateY(-3px) scale(1.04);border-color:#ffe14d;box-shadow:0 0 0 2px #ffe14d,0 6px 14px rgba(255,225,77,.35)}
+.item.locked{filter:grayscale(.85) brightness(.6)}
+.item:active{transform:scale(.95)}
+.bb-items .empty{align-self:center;opacity:.85;font-weight:800;font-size:.85em;padding:0 1em;white-space:nowrap}
+.card .pl{position:absolute;top:4px;left:8px;font-size:1.3em;font-weight:900;-webkit-text-stroke:1px #1b1b2e;z-index:2}
+.bb-close{position:absolute;top:-12px;right:-12px;width:2em;height:2em;border-radius:50%;border:2px solid #fff;background:linear-gradient(#ff6a6a,#d93a3a);color:#fff;font-weight:900;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+@container root (max-height:430px){
+  .bb-tabs button{min-width:0;padding:.25em .4em}.bb-tabs .tl{display:none}.bb-tabs .cnt{position:absolute;top:-4px;right:-6px}
+  .item{width:4.9em}.item .pic{height:2.6em}.item .emo{font-size:1.6em}
+  .bb-head{min-height:2em;font-size:.78em}
+}
+@container root (max-width:700px){.build-bar{right:calc(30cqw + 14px)}}
+body.tut-on #toasts{top:calc(190px + env(safe-area-inset-top,0px))}
+@container root (max-height:430px){body.tut-on #toasts{top:auto;bottom:calc(150px + var(--safe-b))}}
 </style>
 </head>
 <body>
@@ -360,16 +385,18 @@ body.tutorial .side-menu,body.tutorial .hud-tr .shopbtn,body.tutorial .wc-row,bo
   <button class="build-toggle btn gold" id="buildToggle">🔨 BAUEN</button>
   <div class="build-bar" id="buildBar">
     <div class="bb-tabs" id="bbTabs">
-      <button data-bbclose="1" class="bb-close" title="Baumenü schließen (B)">✕</button>
-      <button data-tab="towers" class="on">🏰 Türme</button>
-      <button data-tab="roads">🛣️ Straßen</button>
-      <button data-tab="traps">🪤 Fallen</button>
-      <button data-tab="decos">🌳 Deko</button>
-      <button data-tab="tools">🧰 Werkzeuge</button>
+      <button data-tab="towers" class="on"><span class="ti">🏰</span><span class="tl">Türme</span><i class="cnt"></i></button>
+      <button data-tab="traps"><span class="ti">🪤</span><span class="tl">Fallen</span><i class="cnt"></i></button>
+      <button data-tab="roads"><span class="ti">🛣️</span><span class="tl">Wege</span><i class="cnt"></i></button>
+      <button data-tab="decos"><span class="ti">🌳</span><span class="tl">Deko</span></button>
+      <button data-tab="tools"><span class="ti">🧰</span><span class="tl">Mehr</span></button>
     </div>
-    <div class="bb-items" id="bbItems"></div>
+    <div class="bb-main">
+      <div class="bb-head" id="bbHead"></div>
+      <div class="bb-items" id="bbItems"></div>
+    </div>
+    <button data-bbclose="1" class="bb-close" title="Baumenü schließen (B)">✕</button>
   </div>
-  <div class="build-hint hidden" id="buildHint"></div>
   <div class="tower-panel hidden" id="towerPanel"></div>
 </div>
 
@@ -891,11 +918,18 @@ const Audio2 = (() => {
 // ============================================================
 const Models = (() => {
   const matCache = new Map();
+  let pbr = true;
+  function setPBR(v) { pbr = v; matCache.clear(); }
   function M(color, opt = {}) {
     const key = color + '|' + (opt.e || '') + '|' + (opt.o ?? 1) + '|' + (opt.ei ?? 1) + '|' + (opt.side || 0);
     let m = matCache.get(key);
     if (!m) {
-      m = new THREE.MeshLambertMaterial({ color });
+      if (pbr) {
+        // Metallisch wirkende Farben (Gold, Silber, Stahl) bekommen etwas Glanz
+        const c = new THREE.Color(color), hsl = {}; c.getHSL(hsl);
+        const gold = hsl.h > 0.1 && hsl.h < 0.17 && hsl.s > 0.7 && hsl.l > 0.4;
+        m = new THREE.MeshStandardMaterial({ color, roughness: gold ? 0.35 : 0.72, metalness: gold ? 0.6 : 0.05, envMapIntensity: gold ? 1 : 0.45 });
+      } else m = new THREE.MeshLambertMaterial({ color });
       if (opt.e) { m.emissive = new THREE.Color(opt.e); m.emissiveIntensity = opt.ei ?? 1; }
       if (opt.o !== undefined && opt.o < 1) { m.transparent = true; m.opacity = opt.o; m.depthWrite = false; }
       if (opt.side) m.side = THREE.DoubleSide;
@@ -1649,7 +1683,7 @@ const Models = (() => {
     }
     mesh(box(0.58, 0.82, 0.32), sh, 0, 1.41, 0, g);
     mesh(box(0.58, 0.08, 0.33), M('#222'), 0, 1.02, 0, g);
-    const faceMat = new THREE.MeshLambertMaterial({ map: faceTex });
+    const faceMat = pbr ? new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.7 }) : new THREE.MeshLambertMaterial({ map: faceTex });
     const head = new THREE.Mesh(box(0.52, 0.52, 0.52), [skin, skin, skin, skin, faceMat, skin]);
     head.position.y = 2.1; head.castShadow = true; g.add(head);
     // Kappe
@@ -1660,7 +1694,7 @@ const Models = (() => {
     return g;
   }
 
-  return { makeTrap, makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
+  return { setPBR, makeTrap, makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
 })();
 
 // ---- world.js ----
@@ -1686,6 +1720,9 @@ const World = (() => {
   let scene, renderer, camera, sun, hemi;
   let envGroup, plotGroup, roadGroup, arrowGroup, gridLines, neighborGroup;
   let biome = BIOMES[0];
+  let pbr = true, pmrem = null, envTex = null, sky = null, skyMat = null, grass = null, grassMat = null, tileMesh = null, gridPref = true;
+  const envObstacles = [];
+  const mat = (o = {}) => pbr ? new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0, envMapIntensity: 0.45, ...o }) : new THREE.MeshLambertMaterial(o);
   let water = null, waterMat = null;
   const roadMeshes = new Map();
   const texCache = {};
@@ -1725,11 +1762,16 @@ const World = (() => {
   }
   function grassTex() {
     return canvasTex('grass_' + biome.id, (g, s) => {
-      g.fillStyle = '#ffffff'; g.fillRect(0, 0, s, s);
-      const rnd = mulberry(7);
-      for (let i = 0; i < 700; i++) { g.fillStyle = `hsla(0,0%,${80 + rnd() * 20}%,0.5)`; g.fillRect(rnd() * s, rnd() * s, 2, 3); }
-      g.strokeStyle = 'rgba(0,0,0,0.10)'; g.lineWidth = 2; g.strokeRect(0, 0, s, s);
-    }, 64);
+      const h = s / 2, rnd = mulberry(7);
+      for (let i = 0; i < 4; i++) {
+        const x = (i % 2) * h, y = (i >> 1) * h, light = (i === 0 || i === 3);
+        g.fillStyle = light ? '#ffffff' : '#e9e9e9'; g.fillRect(x, y, h, h);
+        for (let k = 0; k < 260; k++) { g.fillStyle = `hsla(0,0%,${light ? 82 + rnd() * 18 : 74 + rnd() * 18}%,0.55)`; g.fillRect(x + rnd() * h, y + rnd() * h, 2, 4); }
+        const gr = g.createLinearGradient(x, y, x, y + h); gr.addColorStop(0, 'rgba(255,255,255,0.10)'); gr.addColorStop(1, 'rgba(0,0,0,0.07)');
+        g.fillStyle = gr; g.fillRect(x, y, h, h);
+        g.strokeStyle = 'rgba(0,0,0,0.09)'; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, h - 2, h - 2);
+      }
+    }, 128);
   }
   function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
   function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -1754,13 +1796,16 @@ const World = (() => {
     renderer.shadowMap.enabled = quality !== 'low';
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;   // filmischer, satter Look
+    renderer.toneMappingExposure = 0.92;
+    pbr = quality !== 'low';
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(50, 1, 0.1, 400);
-    hemi = new THREE.HemisphereLight(0xffffff, 0x6a8a4a, 1.25); scene.add(hemi);
-    sun = new THREE.DirectionalLight(0xfff2d6, 2.1);
+    hemi = new THREE.HemisphereLight(0xffffff, 0x6a8a4a, pbr ? 0.55 : 1.2); scene.add(hemi);
+    sun = new THREE.DirectionalLight(0xfff0d0, pbr ? 2.4 : 2.1);
     sun.position.set(-14, 26, 12);
     sun.castShadow = true;
-    const ss = quality === 'high' ? 2048 : 1024;
+    const ss = quality === 'high' ? 2048 : quality === 'medium' ? 1536 : 1024;
     sun.shadow.mapSize.set(ss, ss);
     Object.assign(sun.shadow.camera, { left: -17, right: 17, top: 13, bottom: -13, near: 1, far: 70 });
     sun.shadow.bias = -0.0015; sun.shadow.normalBias = 0.02;
@@ -1791,9 +1836,11 @@ const World = (() => {
     while (envGroup.children.length) envGroup.remove(envGroup.children[0]);
     while (plotGroup.children.length) plotGroup.remove(plotGroup.children[0]);
     while (neighborGroup.children.length) neighborGroup.remove(neighborGroup.children[0]);
-    scene.background = new THREE.Color(b.sky);
-    scene.fog = new THREE.Fog(b.fog, 45, 120);
-    hemi.color.set(0xffffff); hemi.groundColor.set(b.ground2);
+    scene.background = new THREE.Color(b.fog);
+    scene.fog = new THREE.Fog(b.fog, 50, 140);
+    hemi.color.set(new THREE.Color(b.sky).lerp(new THREE.Color('#ffffff'), 0.55)); hemi.groundColor.set(b.ground2);
+    envObstacles.length = 0;
+    buildSky(b);
     const rnd = mulberry(1234);
 
     // Großer Boden mit Farbvariation
@@ -1809,12 +1856,12 @@ const World = (() => {
     }
     gg.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
     gg.computeVertexNormals();
-    const ground = new THREE.Mesh(gg, new THREE.MeshLambertMaterial({ vertexColors: true }));
+    const ground = new THREE.Mesh(gg, mat({ vertexColors: true, roughness: 1 }));
     ground.receiveShadow = true; envGroup.add(ground);
 
     // Grundstück (erhöhte Baufläche)
-    const plotMat = new THREE.MeshLambertMaterial({ color: b.plot, map: grassTex() });
-    plotMat.map.wrapS = plotMat.map.wrapT = THREE.RepeatWrapping; plotMat.map.repeat.set(GW, GH);
+    const plotMat = mat({ color: b.plot, map: grassTex(), roughness: 0.95 });
+    plotMat.map.wrapS = plotMat.map.wrapT = THREE.RepeatWrapping; plotMat.map.repeat.set(GW / 2, GH / 2);
     const plot = new THREE.Mesh(new THREE.BoxGeometry(GW, 0.3, GH), [Models.M(b.ground2), Models.M(b.ground2), plotMat, Models.M(b.ground2), Models.M(b.ground2), Models.M(b.ground2)]);
     plot.position.y = -0.15; plot.receiveShadow = true; plotGroup.add(plot);
     // Rand
@@ -1836,7 +1883,7 @@ const World = (() => {
     gridLines.visible = false; plotGroup.add(gridLines);
 
     // Portal & Burg
-    const portal = Models.makePortal(); portal.position.set(sp.x - 1.0, 0, sp.z); portal.rotation.y = Math.PI / 2; plotGroup.add(portal);
+    const portal = Models.makePortal(); portal.position.set(sp.x - 1.0, 0, sp.z); portal.rotation.y = Math.PI / 2; portal.traverse(o => o.userData.noMerge = true); plotGroup.add(portal);
     World.portal = portal;
     // Wege vom Portal / zur Burg
     for (const [p, dx] of [[sp, -1], [gl, 1]]) {
@@ -1864,11 +1911,19 @@ const World = (() => {
         void main(){ vUv=uv; vec3 p=position; float h=sin(p.x*1.3+t*1.6)*0.06+cos(p.y*1.1+t*1.2)*0.06; p.z+=h; vH=h;
         gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);} `,
       fragmentShader: `uniform float t; uniform vec3 c; uniform float lava; varying vec2 vUv; varying float vH;
-        void main(){ float s=sin(vUv.x*40.0+t*2.0)*sin(vUv.y*36.0-t*1.5);
-        vec3 col=c*(0.85+vH*2.0)+vec3(smoothstep(0.75,1.0,s))*0.35;
-        if(lava>0.5){ col=mix(vec3(0.9,0.2,0.0),vec3(1.0,0.75,0.1),smoothstep(-0.4,0.9,s)); }
-        float edge=smoothstep(0.5,0.42,length(vUv-0.5));
-        gl_FragColor=vec4(col, (lava>0.5?1.0:0.82)*edge);} `,
+        void main(){
+          vec2 p=vUv*18.0; float r=length(vUv-0.5);
+          float s=sin(p.x*2.2+t*2.0+sin(p.y*1.3+t))*sin(p.y*2.0-t*1.5+sin(p.x*0.9));
+          float sparkle=smoothstep(0.82,1.0,s);
+          vec3 deep=c*0.55, shallow=mix(c,vec3(1.0),0.25);
+          vec3 col=mix(deep,shallow,smoothstep(0.05,0.45,r))+vec3(sparkle)*0.45+vH*0.8;
+          float foam=smoothstep(0.40,0.44,r)*smoothstep(0.5,0.45,r)*(0.6+0.4*sin(t*2.0+atan(vUv.y-0.5,vUv.x-0.5)*8.0));
+          col=mix(col,vec3(1.0),foam*0.8);
+          if(lava>0.5){ col=mix(vec3(0.85,0.15,0.0),vec3(1.0,0.8,0.15),smoothstep(-0.5,0.9,s))+foam*vec3(0.4,0.1,0.0); }
+          float edge=smoothstep(0.5,0.46,r);
+          gl_FragColor=vec4(col,(lava>0.5?1.0:0.88)*edge);
+          #include <colorspace_fragment>
+        } `,
     });
     for (const [x, z, r] of [[-20, 12, 6], [22, -13, 5], [-8, -16, 4], [16, 15, 4.5]]) {
       const wg = new THREE.PlaneGeometry(r * 2, r * 2, 24, 24);
@@ -1888,13 +1943,15 @@ const World = (() => {
         if (Math.abs(z - sp.z) < 1.6 && x < -GW / 2 && x > -GW / 2 - 4) continue;
         if (Math.abs(z - gl.z) < 1.6 && x > GW / 2 && x < GW / 2 + 4) continue;
         const o = fn(x, z); o.position.set(x, 0, z); o.rotation.y = rnd() * 6.28; envGroup.add(o); placed++;
+        if (o.userData.obstacle) envObstacles.push({ x, z, r: o.userData.obstacle, h: 2 });
       }
     };
-    place(70, () => Models.makeTree(b.tree, b.leaf, 0.9 + rnd() * 0.8));
+    place(70, () => { const s = 0.9 + rnd() * 0.8, t = Models.makeTree(b.tree, b.leaf, s); t.userData.obstacle = 0.18 * s; return t; });
     place(40, () => Models.makeDeco('bush', b));
     place(30, () => Models.makeDeco('rock', b));
     place(40, () => Models.makeDeco('flowers', b));
-    place(6, () => { const h = Models.makeDeco('house', b); h.scale.setScalar(1.6); return h; }, 18, 34);
+    place(6, () => { const h = Models.makeDeco('house', b); h.scale.setScalar(1.6); h.userData.obstacle = 0.75; return h; }, 18, 34);
+    buildGrass(b, inPlot, inPond, inNeighbor, rnd);
     // Laternen und Zäune an den Rändern
     for (let x = -GW / 2; x <= GW / 2; x += 5.5) for (const z of [-GH / 2 - 0.9, GH / 2 + 0.9]) { const l = Models.makeDeco('lantern', b); l.position.set(x, 0, z); envGroup.add(l); }
     // Dekorative Wege um das Grundstück
@@ -1912,12 +1969,133 @@ const World = (() => {
     for (let i = 0; i < 10; i++) {
       const c = new THREE.Group();
       for (let j = 0; j < 4; j++) Models.mesh(Models.ico(1.2 + rnd(), 1), Models.M('#ffffff', { o: 0.9 }), j * 1.3 - 2, rnd() * 0.5, rnd() - 0.5, c, false);
-      c.position.set((rnd() - 0.5) * 120, 18 + rnd() * 8, (rnd() - 0.5) * 100); envGroup.add(c); World.clouds.push(c);
+      c.position.set((rnd() - 0.5) * 120, 18 + rnd() * 8, (rnd() - 0.5) * 100); c.traverse(o => o.userData.noMerge = true); envGroup.add(c); World.clouds.push(c);
     }
 
     // Nachbar-Grundstücke (andere Spieler-Bauflächen)
     buildNeighbors(b);
+    mergeStatic(envGroup); mergeStatic(neighborGroup); mergeStatic(plotGroup);
   }
+
+  // Statische Objekte (Bäume, Steine, Zäune, Berge …) pro Material zu je einem Mesh zusammenfassen.
+  // Spart hunderte Zeichenaufrufe – wichtig für flüssiges Spielen auf dem Handy.
+  function mergeStatic(root) {
+    root.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
+    const buckets = new Map(), victims = [];
+    const m4 = new THREE.Matrix4(), nm = new THREE.Matrix3();
+    root.traverse(o => {
+      if (!o.isMesh || o.isInstancedMesh || o.userData.noMerge || Array.isArray(o.material) || o.material.isShaderMaterial) return;
+      const g = o.geometry; if (!g.attributes.position || !g.attributes.normal) return;
+      const key = o.material.uuid + '|' + (o.castShadow ? 1 : 0) + '|' + (o.receiveShadow ? 1 : 0);
+      let b = buckets.get(key); if (!b) buckets.set(key, b = { mat: o.material, cast: o.castShadow, recv: o.receiveShadow, parts: [], uv: !!g.attributes.uv, col: !!g.attributes.color });
+      b.uv = b.uv && !!g.attributes.uv; b.col = b.col && !!g.attributes.color;
+      m4.multiplyMatrices(inv, o.matrixWorld);
+      b.parts.push({ g: g.index ? g.toNonIndexed() : g, m: m4.clone() });
+      victims.push(o);
+    });
+    for (const b of buckets.values()) {
+      if (b.parts.length < 2) continue;
+      let n = 0; for (const p of b.parts) n += p.g.attributes.position.count;
+      const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = b.uv ? new Float32Array(n * 2) : null, col = b.col ? new Float32Array(n * 3) : null;
+      let off = 0; const v = new THREE.Vector3();
+      for (const p of b.parts) {
+        const P = p.g.attributes.position, N = p.g.attributes.normal, U = p.g.attributes.uv, C = p.g.attributes.color;
+        nm.getNormalMatrix(p.m);
+        for (let i = 0; i < P.count; i++) {
+          v.fromBufferAttribute(P, i).applyMatrix4(p.m); pos.set([v.x, v.y, v.z], (off + i) * 3);
+          v.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); nor.set([v.x, v.y, v.z], (off + i) * 3);
+          if (uv) uv.set([U.getX(i), U.getY(i)], (off + i) * 2);
+          if (col) col.set([C.getX(i), C.getY(i), C.getZ(i)], (off + i) * 3);
+        }
+        off += P.count;
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+      if (uv) g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); if (col) g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      g.computeBoundingSphere();
+      const mesh = new THREE.Mesh(g, b.mat); mesh.castShadow = b.cast; mesh.receiveShadow = b.recv; mesh.userData.merged = true;
+      root.add(mesh);
+      for (const p of b.parts) p.done = true;
+    }
+    // Nur die wirklich zusammengefassten Originale entfernen
+    const mergedKeys = new Set([...buckets].filter(([k, b]) => b.parts.length >= 2).map(([k]) => k));
+    for (const o of victims) { const key = o.material.uuid + '|' + (o.castShadow ? 1 : 0) + '|' + (o.receiveShadow ? 1 : 0); if (mergedKeys.has(key) && o.parent) o.parent.remove(o); }
+  }
+
+  // Himmelskuppel mit Farbverlauf + Sonne; daraus wird auch das Umgebungslicht (Reflexionen) berechnet
+  function buildSky(b) {
+    if (sky) scene.remove(sky);
+    const top = new THREE.Color(b.sky).multiplyScalar(0.85), hor = new THREE.Color(b.fog), bot = new THREE.Color(b.ground2);
+    skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, fog: false,
+      uniforms: { top: { value: top }, hor: { value: hor }, bot: { value: bot }, sunDir: { value: sun.position.clone().normalize() } },
+      vertexShader: `varying vec3 vD; void main(){ vD=normalize(position); vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.0); gl_Position=p.xyww; }`,
+      fragmentShader: `uniform vec3 top,hor,bot,sunDir; varying vec3 vD;
+        void main(){ float y=vD.y; vec3 c=y>0.0?mix(hor,top,pow(smoothstep(0.0,0.75,y),0.7)):mix(hor,bot,smoothstep(0.0,-0.25,y));
+          float sd=max(dot(normalize(vD),normalize(sunDir)),0.0); c+=vec3(1.0,0.92,0.7)*(pow(sd,600.0)*2.5+pow(sd,12.0)*0.18);
+          gl_FragColor=vec4(c,1.0);
+          #include <colorspace_fragment>
+        }`,
+    });
+    sky = new THREE.Mesh(new THREE.SphereGeometry(300, 32, 16), skyMat); sky.renderOrder = -1; sky.frustumCulled = false;
+    scene.add(sky);
+    if (pbr) {
+      if (!pmrem) pmrem = new THREE.PMREMGenerator(renderer);
+      const es = new THREE.Scene(); const s2 = sky.clone(); es.add(s2);
+      if (envTex) envTex.dispose();
+      envTex = pmrem.fromScene(es, 0.02).texture;
+      scene.environment = envTex;
+    }
+  }
+  // Viele kleine Grashalme (eine einzige InstancedMesh, wiegt sich im Wind)
+  function buildGrass(b, inPlot, inPond, inNeighbor, rnd) {
+    if (grass) { envGroup.remove(grass); grass = null; }
+    if (b.lava || b.id === 'iceworld') return;
+    const N = pbr ? 3200 : 1400;
+    const g = new THREE.ConeGeometry(0.028, 0.26, 3, 1, true); g.translate(0, 0.13, 0);
+    grassMat = mat({ color: '#ffffff', roughness: 1, side: THREE.DoubleSide });
+    grassMat.onBeforeCompile = sh => {
+      sh.uniforms.time = { value: 0 }; grassMat.userData.sh = sh;
+      sh.vertexShader = 'uniform float time;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+        vec4 wp = instanceMatrix * vec4(0.0,0.0,0.0,1.0);
+        float sway = sin(time*1.8 + wp.x*0.7 + wp.z*0.5) * 0.05 * position.y / 0.26;
+        transformed.x += sway; transformed.z += sway*0.6;`);
+    };
+    grass = new THREE.InstancedMesh(g, grassMat, N);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+    const c1 = new THREE.Color(b.leaf).lerp(new THREE.Color(b.ground), 0.4), c2 = new THREE.Color(b.ground).offsetHSL(0, 0.05, 0.08), col = new THREE.Color();
+    let i = 0, tries = 0;
+    while (i < N && tries++ < N * 6) {
+      const r = 6 + Math.pow(rnd(), 0.8) * 34, a = rnd() * Math.PI * 2;
+      const x = Math.cos(a) * r * 1.2, z = Math.sin(a) * r;
+      if (inPlot(x, z, 0.8) || inPond(x, z) || inNeighbor(x, z) || Math.abs(x) > 30 || Math.abs(z) > 30) continue;
+      const cl = 1 + Math.floor(rnd() * 3);
+      for (let k = 0; k < cl && i < N; k++, i++) {
+        e.set((rnd() - 0.5) * 0.4, rnd() * 6.28, (rnd() - 0.5) * 0.4); q.setFromEuler(e);
+        const s = 0.7 + rnd() * 0.8; sc.set(s, s * (0.8 + rnd() * 0.6), s);
+        v.set(x + (rnd() - 0.5) * 0.35, -0.02, z + (rnd() - 0.5) * 0.35);
+        m4.compose(v, q, sc); grass.setMatrixAt(i, m4);
+        col.copy(c1).lerp(c2, rnd()); grass.setColorAt(i, col);
+      }
+    }
+    grass.count = i; grass.receiveShadow = true;
+    envGroup.add(grass);
+  }
+  // Bau-Raster: zeigt freie Felder an, wenn man etwas bauen möchte
+  function showTiles(tiles, color) {
+    if (!tileMesh) {
+      const g = new THREE.PlaneGeometry(0.9, 0.9); g.rotateX(-Math.PI / 2);
+      tileMesh = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, depthWrite: false }), GW * GH);
+      tileMesh.renderOrder = 2; scene.add(tileMesh);
+    }
+    if (!tiles || !tiles.length) { tileMesh.visible = false; return; }
+    const m4 = new THREE.Matrix4();
+    tiles.forEach(([x, z], i) => { const p = tileToWorld(x, z); m4.makeTranslation(p.x, 0.035, p.z); tileMesh.setMatrixAt(i, m4); });
+    tileMesh.count = tiles.length; tileMesh.instanceMatrix.needsUpdate = true;
+    tileMesh.material.color.set(color || 0xffffff); tileMesh.visible = true;
+  }
+  function setGridPref(on) { gridPref = on; if (gridLines && !on) gridLines.visible = false; }
 
   function buildNeighbors(b) {
     const rnd = mulberry(99);
@@ -1948,19 +2126,20 @@ const World = (() => {
     }
     const key = 'rm_' + def.id + '_' + color + '_' + emissive;
     if (!texCache[key]) {
-      const m = new THREE.MeshLambertMaterial({ color, map: roadTex(def.pattern) });
+      const m = mat({ color, map: roadTex(def.pattern), roughness: 0.9 });
       if (emissive) { m.emissive = new THREE.Color(emissive); m.emissiveIntensity = 0.35; }
       texCache[key] = m;
     }
     return texCache[key];
   }
   function rebuildRoads(grid, skin) {
-    for (const g of roadMeshes.values()) roadGroup.remove(g);
+    while (roadGroup.children.length) { const o = roadGroup.children[0]; roadGroup.remove(o); if (o.userData.merged) o.geometry.dispose(); }
     roadMeshes.clear();
     for (let x = 0; x < GW; x++) for (let z = 0; z < GH; z++) {
       const c = grid[x][z];
       if (c && c.type === 'road') addRoadMesh(grid, x, z, skin);
     }
+    mergeStatic(roadGroup);   // alle Wegfelder zu wenigen Meshes zusammenfassen
   }
   function isRoadAt(grid, x, z) {
     if (x === SPAWN.x - 1 && z === SPAWN.z) return true;
@@ -2089,10 +2268,23 @@ const World = (() => {
       arrowGroup.add(m);
     }
   }
-  function setBuildOverlay(on) { if (gridLines) gridLines.visible = on; arrowGroup.visible = true; }
+  function setBuildOverlay(on) { if (gridLines) gridLines.visible = on && gridPref; arrowGroup.visible = true; }
 
+  let moteT = 0;
   function update(dt, t) {
     if (waterMat) waterMat.uniforms.t.value = t;
+    if (grassMat && grassMat.userData.sh) grassMat.userData.sh.uniforms.time.value = t;
+    if (tileMesh && tileMesh.visible) tileMesh.material.opacity = 0.22 + 0.12 * Math.sin(t * 4);
+    // Stimmungs-Partikel je nach Biom (Pollen, Schnee, Glühwürmchen, Asche …)
+    moteT -= dt;
+    if (moteT <= 0 && camera) {
+      moteT = 0.12;
+      const b = biome, x = (Math.random() - 0.5) * 30, z = (Math.random() - 0.5) * 20;
+      if (b.id === 'snow' || b.id === 'iceworld') Particles.emit(x, 7, z, 2, '#ffffff', { speed: 0.3, up: -0.6, life: 7, size: 0.16, gravity: 0.15, tint: false });
+      else if (b.id === 'volcano') Particles.emit(x, 0.3, z, 1, '#ff7a1a', { speed: 0.2, up: 1.2, life: 3, size: 0.14, gravity: -0.15, tint: false });
+      else if (b.id === 'darkforest' || b.id === 'magic') Particles.emit(x, 0.6 + Math.random(), z, 1, b.id === 'magic' ? '#ff9af0' : '#d8ff6a', { speed: 0.4, up: 0.15, life: 3, size: 0.16, gravity: 0, tint: false });
+      else if (Math.random() < 0.4) Particles.emit(x, 0.8 + Math.random() * 2, z, 1, '#fff6c8', { speed: 0.3, up: 0.1, life: 4, size: 0.08, gravity: 0, tint: false });
+    }
     if (arrowMat) arrowMat.opacity = 0.35 + 0.3 * Math.sin(t * 3);
     if (World.portal) { World.portal.userData.disc.rotation.z = t; World.portal.userData.swirl.rotation.z = -t * 2; }
     if (World.clouds) for (const c of World.clouds) { c.position.x += dt * 0.6; if (c.position.x > 70) c.position.x = -70; }
@@ -2100,6 +2292,7 @@ const World = (() => {
   }
 
   return {
+    showTiles, setGridPref, get envObstacles() { return envObstacles; }, get pbr() { return pbr; }, mat,
     init, resize, setQuality, buildEnvironment, rebuildRoads, addRoadMesh, findPath, buildRoute, routePos, showArrows, setBuildOverlay, update, textSprite,
     get scene() { return scene; }, get camera() { return camera; }, get renderer() { return renderer; }, get biome() { return biome; },
     roadMeshes, portal: null, castlePos: null, portalPos: null, clouds: null,
@@ -2189,7 +2382,7 @@ const CamCtl = (() => {
   let follow = null;                 // () => Vector3
   const pointers = new Map();
   let dragMode = null, last = null, pinch = null, moved = 0, downPos = null;
-  const handlers = { tap: null, hover: null, paint: null, paintEnd: null, toolActive: () => false };
+  const handlers = { tap: null, hover: null, paint: null, paintEnd: null, toolActive: () => false, anyTool: () => false };
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
   const keys = new Set();
 
@@ -2201,7 +2394,7 @@ const CamCtl = (() => {
     window.addEventListener('pointercancel', onUp);
     el.addEventListener('wheel', e => { e.preventDefault(); zoom(e.deltaY > 0 ? 1.12 : 0.89); }, { passive: false });
     el.addEventListener('contextmenu', e => e.preventDefault());
-    window.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; keys.add(e.key.toLowerCase()); });
+    window.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; keys.add(e.key.toLowerCase()); });
     window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
     window.addEventListener('blur', () => keys.clear());
   }
@@ -2245,6 +2438,7 @@ const CamCtl = (() => {
       else dragMode = tool ? 'paint' : freeDrag;
       last = { x: e.clientX, y: e.clientY };
       if (dragMode === 'paint') { const p = groundAt(e.clientX, e.clientY); handlers.hover && handlers.hover(p); handlers.paintStart && handlers.paintStart(p, e.pointerType); }
+      else if (handlers.anyTool && handlers.anyTool() && handlers.hover) handlers.hover(groundAt(e.clientX, e.clientY));   // Vorschau beim Antippen
     } else if (pointers.size === 2) {
       if (dragMode === 'paint') handlers.paintCancel && handlers.paintCancel();
       dragMode = 'pinch';
@@ -2372,12 +2566,12 @@ const Player = (() => {
     pos.addScaledVector(vel, dt);
     if (pos.y <= 0) { pos.y = 0; vel.y = 0; onGround = true; }
     // Kollision mit Türmen, Deko, Burg (Kreise)
-    for (const o of obstacles()) {
+    for (const o of obstacles().concat(World.envObstacles)) {
       if (pos.y > (o.h || 1.2)) continue;
       const dx = pos.x - o.x, dz = pos.z - o.z, d = Math.hypot(dx, dz), r = o.r + 0.25;
       if (d < r && d > 0.0001) { pos.x = o.x + dx / d * r; pos.z = o.z + dz / d * r; }
     }
-    pos.x = THREE.MathUtils.clamp(pos.x, -42, 42); pos.z = THREE.MathUtils.clamp(pos.z, -42, 42);
+    pos.x = THREE.MathUtils.clamp(pos.x, -30, 30); pos.z = THREE.MathUtils.clamp(pos.z, -30, 30);
     // Drehen in Laufrichtung
     if (moving) {
       const target = Math.atan2(mx, mz);
@@ -2414,7 +2608,7 @@ const Save = (() => {
 
   function defaults() {
     return {
-      v: 3,
+      v: 4,
       tutorialDone: false,
       towerInv: { crossbow: [1] },             // Türme im Besitz: id -> Anzahl je Fusionsstufe [+0, +1, … +9]
       trapInv: {},                             // Fallen im Besitz (Anzahl)
@@ -2436,7 +2630,7 @@ const Save = (() => {
       pendingPicks: null,                     // Turm-Belohnung nach der letzten Runde
       layout: null,                           // {roads:[[x,z,id]], decos:[[x,z,id,rot]]}
       run: null,                              // laufende Runde (Snapshot nach jeder Welle)
-      settings: { music: 0.45, sfx: 0.7, quality: (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'medium' : 'high'), particles: true, autoStart: true, showGrid: true, damageNumbers: true, shirt: '#e03a3a', pants: '#2f5bd0' },
+      settings: { music: 0.45, sfx: 0.7, quality: (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'medium' : 'high'), particles: true, autoStart: false, showGrid: true, damageNumbers: true, shirt: '#e03a3a', pants: '#2f5bd0' },
     };
   }
   function merge(base, src) {
@@ -2461,6 +2655,8 @@ const Save = (() => {
       for (const k in P.towerInv) if (typeof P.towerInv[k] === 'number') P.towerInv[k] = [P.towerInv[k]];
       P.run = null; P.v = 3;
     }
+    // v4: Wellen starten standardmäßig nicht mehr von allein
+    if (P.v < 4) { P.settings.autoStart = false; P.v = 4; }
     if (!P.layout) P.layout = { roads: DEFAULT_ROADS.map(([x, z]) => [x, z, 'road_stone']), decos: [[2, 7, 'tree', 0], [3, 12, 'flowers', 0], [10, 1, 'lantern', 0], [16, 12, 'bush', 0], [20, 1, 'house', 1]] };
     refreshDaily();
     return P;
@@ -2759,7 +2955,7 @@ const Game = (() => {
     if (snapshot) for (const t of snapshot.towers) { const pl = t.plus || 0; if (!TOWER_BY_ID[t.id] || available('tower', t.id, pl) <= 0 || grid[t.x][t.z]) continue; const tw = spawnTower(TOWER_BY_ID[t.id], t.x, t.z, t.rot, false, pl); tw.targeting = t.targeting || 'first'; tw.kills = t.kills || 0; }
     if (snapshot && snapshot.traps) for (const [id, x, z] of snapshot.traps) if (TRAP_BY_ID[id] && available('trap', id) > 0 && grid[x][z] && grid[x][z].type === 'road') spawnTrap(TRAP_BY_ID[id], x, z, false);
     if (!snapshot) { Save.addStat('gamesPlayed'); }
-    R.pauseTimer = R.tutorial ? 0 : (Save.P.settings.autoStart ? 20 : 0); // erste Welle startet automatisch (im Tutorial erst nach dem Platzieren)
+    R.pauseTimer = 0; // Wellen starten nur, wenn der Spieler auf den Knopf drückt
     World.setBuildOverlay(true);
     Audio2.setMood('build');
     snapshotRun();
@@ -2776,6 +2972,7 @@ const Game = (() => {
     Save.saveSoon();
   }
   function clearEntities() {
+    for (const f of floats) f.el.remove(); floats.length = 0;
     for (const t of towers) removeTowerMesh(t);
     towers.length = 0;
     for (const e of enemies) scene.remove(e.mesh);
@@ -2829,7 +3026,20 @@ const Game = (() => {
     rangeRing.visible = false;
     if (sel) select(null);
     World.setBuildOverlay(!!sel || (R && R.phase === 'build'));
+    updateTileOverlay();
     ui.buildChanged && ui.buildChanged(sel);
+  }
+  // Freie Felder für die aktuelle Bauauswahl hervorheben
+  function updateTileOverlay() {
+    const sel = buildSel;
+    if (!sel || demo || !grid.length) { World.showTiles(null); return; }
+    const list = [];
+    for (let x = 0; x < GW; x++) for (let z = 0; z < GH; z++) {
+      const c = grid[x][z];
+      if (sel.kind === 'tower' || sel.kind === 'deco' || sel.kind === 'move') { if (!c) list.push([x, z]); }
+      else if (sel.kind === 'trap') { if (c && c.type === 'road' && !traps.has(x + ',' + z) && !((x === SPAWN.x && z === SPAWN.z) || (x === GOAL.x && z === GOAL.z))) list.push([x, z]); }
+    }
+    World.showTiles(list, sel.kind === 'trap' ? 0xffb347 : 0xffffff);
   }
   function rotateBuild() { buildRot = (buildRot + 1) % 4; if (ghost) ghost.rotation.y = buildRot * Math.PI / 2; Audio2.play('click'); }
 
@@ -2986,6 +3196,7 @@ const Game = (() => {
       Particles.emit(pos.x, 0.2, pos.z, 16, '#ffe14d', { speed: 1.6, life: 0.5 });
       Audio2.play('place'); setBuild(null); select(t); snapshotRun();
     }
+    updateTileOverlay();
     ui.hud && ui.hud();
     return true;
   }
@@ -3036,7 +3247,7 @@ const Game = (() => {
   function removeTrap(x, z) { const t = traps.get(x + ',' + z); if (!t) return; scene.remove(t.mesh); traps.delete(x + ',' + z); snapshotRun(); }
   function updateTraps(dt, time) {
     if (!traps.size) return;
-    const scale = Math.max(1, hpScale(Math.max(1, R.wave)) * 0.8);
+    const scale = Math.max(0.5, hpScale(Math.max(1, R.wave)) * R.mode.hp * 0.9);
     for (const tr of traps.values()) {
       const d = tr.def;
       tr.cd = Math.max(0, tr.cd - dt); tr.tick -= dt;
@@ -3256,7 +3467,7 @@ const Game = (() => {
       const child = ENEMY_BY_ID[e.def.splitInto];
       for (let i = 0; i < e.def.split; i++) {
         const c = spawnEnemy(child, R.wave, 1, Math.max(0, e.d - 0.15 * i), e.wave);
-        if (c && e.wave && R.waves.get(e.wave)) R.waves.get(e.wave).alive++;
+        if (c && e.wave && R.waves.get(e.wave)) { R.waves.get(e.wave).alive++; R.waves.get(e.wave).total++; }
       }
     }
     removeEnemy(e);
@@ -3277,6 +3488,7 @@ const Game = (() => {
   }
   function removeEnemy(e) {
     scene.remove(e.mesh);
+    e.mesh.traverse(o => { if (o.isMesh && (o.userData.ownMat || o.material.isMeshBasicMaterial) && o.material.dispose) o.material.dispose(); });
     const i = enemies.indexOf(e); if (i >= 0) enemies.splice(i, 1);
     if (!demo && e.wave && R.waves.has(e.wave)) {
       const w = R.waves.get(e.wave); w.alive--;
@@ -3330,8 +3542,10 @@ const Game = (() => {
     if (!R || R.over || demo) return;
     if (!route) { ui.toast && ui.toast('Kein gültiger Weg vom Spawn zum Ziel!', 'bad'); Audio2.play('error'); return; }
     if (R.hold) { ui.toast && ui.toast('Folge zuerst dem Tutorial 🙂', 'bad'); return; }
+    if (R.tutorial && R.phase === 'wave') { ui.toast && ui.toast('Im Tutorial erst die aktuelle Welle schaffen 🙂', 'bad'); return; }
     R.skipCd = Math.max(0, ((R.skipUntil || 0) - performance.now()) / 1000);
-    if (early !== 'auto' && R.skipCd > 0) { ui.toast && ui.toast(`⏳ Noch ${Math.ceil(R.skipCd)} Sekunden warten`, 'bad'); Audio2.play('error'); return; }
+    // Sperre gilt nur fürs Überspringen (Welle läuft noch)
+    if (early !== 'auto' && R.phase === 'wave' && R.skipCd > 0) { ui.toast && ui.toast(`⏳ Noch ${Math.ceil(R.skipCd)} Sekunden warten`, 'bad'); Audio2.play('error'); return; }
     if (R.phase === 'wave' && R.spawnQueue.length > 20) { ui.toast && ui.toast('Warte, bis mehr Gegner der aktuellen Welle erschienen sind', 'bad'); return; }
     const w = ++R.wave;
     const list = makeWave(w);
@@ -3377,7 +3591,7 @@ const Game = (() => {
     Audio2.play('waveClear');
     ui.waveCleared && ui.waveCleared(w, bonus, income);
     if (R.waves.size === 0 && R.spawnQueue.length === 0) {
-      R.phase = 'build'; R.pauseTimer = Save.P.settings.autoStart ? (R.tutorial ? 12 : 25) : 0;
+      R.phase = 'build'; R.pauseTimer = Save.P.settings.autoStart && !R.tutorial ? 25 : 0;
       Audio2.setMood('build'); setBuildOverlayForPhase();
     }
     snapshotRun();
@@ -3800,9 +4014,8 @@ const Game = (() => {
       e.revealed = false;
       if (e.def.flicker && Math.sin(time * 2 + e.anim) > 0.3) { e.revealed = true; continue; }
       for (const t of towers) {
-        const det = t.def.detect || t.level >= 4;
-        if (!det && !t.def.reveal) continue;
-        const r = towerStats(t).range || 2;
+        const det = t.def.detect || t.def.reveal || t.level >= 4;
+        const r = (towerStats(t).range || 2) * (det ? 1 : 0.4);
         if (dist2(t.mesh.position, e.pos) <= r * r) { e.revealed = true; break; }
       }
     }
@@ -3904,7 +4117,7 @@ const Game = (() => {
         case 'summon': {
           e.abilT[i] = 9;
           const sd = ENEMY_BY_ID[e.def.summon];
-          for (let k = 0; k < 2; k++) { const c = spawnEnemy(sd, R.wave, 0.5, Math.max(0, e.d - 0.3 - k * 0.25), e.wave); if (c && e.wave && R.waves.get(e.wave)) R.waves.get(e.wave).alive++; }
+          for (let k = 0; k < 2; k++) { const c = spawnEnemy(sd, R.wave, 0.5, Math.max(0, e.d - 0.3 - k * 0.25), e.wave); if (c && e.wave && R.waves.get(e.wave)) { R.waves.get(e.wave).alive++; R.waves.get(e.wave).total++; } }
           Particles.emit(e.pos.x, 0.6, e.pos.z, 30, e.def.glow || '#ff4040', { speed: 2, up: 2, life: 0.6 });
           break;
         }
@@ -4080,7 +4293,7 @@ const Game = (() => {
 
   // ---------------- Teilen / Import ----------------
   function exportLayout() {
-    const data = { v: 1, n: Save.P.name, r: Save.P.layout.roads, d: Save.P.layout.decos, t: towers.map(t => [t.def.id, t.x, t.z, t.plus]) };
+    const data = { v: 1, n: Save.P.name, r: Save.P.layout.roads, d: Save.P.layout.decos, t: demo ? [] : towers.map(t => [t.def.id, t.x, t.z, t.plus]) };
     return 'BYOTD:' + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   }
   function parseLayout(code) {
@@ -4097,7 +4310,7 @@ const Game = (() => {
   return {
     fuse, bestSpot, obstacles, available, buyRoadPieces, isBossWave, removeTrap, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
     continueEndless, exportLayout, parseLayout, loadLayout, recalcRoute, placeCastle, snapshotRun, ui,
-    get R() { return R; }, get traps() { return traps; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
+    get R() { return R; }, get traps() { return traps; }, get _grid() { return grid; }, get _floats() { return floats.length; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
     get enemies() { return enemies; }, get towers() { return towers; },
     stopDemo() { if (demo) { clearEntities(); demo = false; R = null; } },
     quit() { if (R && !demo && !R.over) snapshotRun(); clearEntities(); R = null; },
@@ -4132,7 +4345,7 @@ const Thumbs = (() => {
     r = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true, preserveDrawingBuffer: true });
     r.setPixelRatio(1); r.setSize(160, 160, false); r.outputColorSpace = THREE.SRGBColorSpace;
     scene = new THREE.Scene();
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x556070, 1.6));
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x556070, 2.4));
     const d = new THREE.DirectionalLight(0xffffff, 1.8); d.position.set(2, 4, 3); scene.add(d);
     cam = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
   }
@@ -4218,14 +4431,14 @@ const UI = (() => {
     db.classList.toggle('done', !av); db.textContent = av ? '🎁 Tagesbelohnung abholen!' : '✅ Belohnung abgeholt';
   }
   function goMenu() {
-    closeModal(); Tut.stop(); Game.quit(); visiting = null; $('.visit-bar')?.remove();
+    closeModal(true); Tut.stop(); Game.quit(); visiting = null; $('.visit-bar')?.remove();
     Player.remove(); CamCtl.setMode('free');
     show('menu'); refreshMenu();
     Game.startDemo(); CamCtl.setAuto(true); Audio2.setMood('menu');
     if (Save.openPicks()) setTimeout(picksScreen, 400); else Save.tidyPicks();
   }
   function startGame(modeId, biomeId, snapshot) {
-    closeModal(); Save.tidyPicks();
+    closeModal(true); Save.tidyPicks();
     Game.stopDemo(); CamCtl.setAuto(false);
     const b = BIOME_BY_ID[biomeId] || BIOMES[0];
     Save.P.equipped.biome = b.id;
@@ -4294,14 +4507,15 @@ const UI = (() => {
     $('#wpFill').style.width = (R.phase === 'wave' && total ? (1 - alive / total) * 100 : R.phase === 'build' ? 100 : 0) + '%';
     const nxt = R.wave + 1;
     const nb = Game.isBossWave(nxt);
-    $('#wpNext').textContent = R.phase === 'build' && R.pauseTimer > 0 ? `Nächste: ${nxt}${nb ? ' 👑' : ''} in ${Math.ceil(R.pauseTimer)}s` : `Nächste: ${nxt}${nb ? ' 👑 BOSS' : ''}`;
+    $('#wpNext').textContent = R.phase === 'build' && R.pauseTimer > 0 ? `Nächste: ${nxt}${nb ? ' 👑' : ''} in ${Math.ceil(R.pauseTimer)}s` : R.phase === 'build' ? `Nächste: ${nxt}${nb ? ' 👑 BOSS' : ''} – drück Start` : `Nächste: ${nxt}${nb ? ' 👑 BOSS' : ''}`;
     const wb = $('#waveBtn');
     let label = R.phase === 'build' ? (R.wave === 0 ? '▶ WELLE STARTEN' : R.pauseTimer > 0 ? '⏩ WELLE ÜBERSPRINGEN' : '▶ NÄCHSTE WELLE') : '⏩ WELLE ÜBERSPRINGEN';
-    if (R.skipCd > 0) label = `⏳ Warten … ${Math.ceil(R.skipCd)}`;
+    if (R.skipCd > 0 && R.phase === 'wave') label = `⏳ Warten … ${Math.ceil(R.skipCd)}`;
     if (wb.textContent !== label) wb.textContent = label;
     wb.classList.toggle('skip', R.phase !== 'build' || R.pauseTimer > 0);
-    wb.disabled = R.over || R.hold || R.skipCd > 0;
-    wb.classList.toggle('hidden', !!R.tutorial && (R.hold || R.wave === 0));
+    wb.disabled = R.over || R.hold || (R.skipCd > 0 && R.phase === 'wave');
+    wb.classList.toggle('hidden', !!R.tutorial && (R.hold || R.phase === 'wave'));
+    wb.classList.toggle('ready', R.phase === 'build' && !R.hold && !wb.disabled);
     $('#speedBtn').textContent = R.speed + 'x';
     $('#pauseBtn').textContent = R.paused ? '▶' : '❚❚';
     // Boss
@@ -4318,79 +4532,112 @@ const UI = (() => {
     // Baumenü-Preise aktualisieren
     $$('#bbItems .item[data-cost]').forEach(el => { const c = +el.dataset.cost; const pr = el.querySelector('.pr'); if (pr) pr.classList.toggle('no', R.coins < c); });
     const rp = $('#roadCount'); if (rp && rp.textContent !== String(P.roadPieces)) rp.textContent = P.roadPieces;
+    $$('#bbHead .buy[data-cost]').forEach(b => b.classList.toggle('no', R.coins < +b.dataset.cost));
     if (Game.selected && !$('#towerPanel').classList.contains('hidden')) {
       const key = Game.selected.plus + ':' + Game.selected.kills;
       if (lastHud.tp !== key) { towerPanel(Game.selected); }
     }
   }
 
-  // ---------------- Baumenü ----------------
+  // ---------------- Baumenü (Hotbar) ----------------
+  const CAT_INFO = {
+    towers: '🏰 <b>Türme</b> – antippen, dann ein freies Feld neben dem Weg wählen',
+    traps: '🪤 <b>Fallen</b> – werden direkt auf den Weg gelegt',
+    roads: '🛣️ <b>Wege</b> – Weg der Gegner umbauen (nur in der Pause)',
+    decos: '🌳 <b>Deko</b> – verschönere dein Grundstück',
+    tools: '🧰 <b>Werkzeuge</b>',
+  };
+  function card({ kind, id, plus = 0, pic, name, rarity, foot, footCls = '', locked, sel, badge, extra = '', title = '' }) {
+    const rc = rarity ? RARITIES[rarity].color : '#5c6b8a';
+    return `<button class="item${locked ? ' locked' : ''}${sel ? ' sel' : ''}" ${kind ? `data-kind="${kind}" data-id="${id}" data-plus="${plus}"` : ''} ${extra} title="${esc(title || name)}" style="--rc:${rc}">
+      ${plus ? `<span class="pl" style="background:${PLUS_COLORS[plus]}">+${plus}</span>` : ''}${badge || ''}
+      <div class="pic">${pic}</div><div class="nm">${esc(name)}</div><div class="ft ${footCls}">${foot}</div></button>`;
+  }
   function renderBuildBar() {
     const P = Save.P, R = Game.R, sel = Game.buildSel;
     const tut = R && R.tutorial;
-    $$('#bbTabs button[data-tab]').forEach(b => { b.classList.toggle('on', b.dataset.tab === curTab); b.classList.toggle('hidden', tut && b.dataset.tab !== 'towers'); });
+    // Kategorien mit Zählern
+    const towerFree = TOWERS.reduce((a, t) => { for (let pl = 0; pl <= MAX_PLUS; pl++) a += Math.max(0, Game.available('tower', t.id, pl)); return a; }, 0);
+    const trapFree = TRAPS.reduce((a, t) => a + Math.max(0, Game.available('trap', t.id)), 0);
+    const cnt = { towers: towerFree, traps: trapFree, roads: P.roadPieces };
+    $$('#bbTabs button[data-tab]').forEach(b => {
+      b.classList.toggle('on', b.dataset.tab === curTab);
+      b.classList.toggle('hidden', !!tut && b.dataset.tab !== 'towers');
+      const c = b.querySelector('.cnt'); if (c) { const n = cnt[b.dataset.tab]; c.textContent = n ?? ''; c.classList.toggle('hidden', !n); }
+    });
     let h = '';
-    const isSel = (k, id) => sel && sel.kind === k && sel.id === id ? ' sel' : '';
+    const isSel = (k, id, pl = 0) => !!(sel && sel.kind === k && sel.id === id && (sel.plus || 0) === pl);
     if (curTab === 'towers') {
-      const list = TOWERS.filter(t => Save.invTotal(t.id) > 0).sort((a, b) => RARITIES[a.rarity].order - RARITIES[b.rarity].order || a.cost - b.cost);
-      list.forEach(t => {
-        for (let pl = MAX_PLUS; pl >= 0; pl--) {
-          const tot = Save.inv(t.id, pl); if (!tot) continue;
-          const av = Game.available('tower', t.id, pl);
-          const on = sel && sel.kind === 'tower' && sel.id === t.id && (sel.plus || 0) === pl ? ' sel' : '';
-          h += `<button class="item${av > 0 ? '' : ' locked'}${on}" data-kind="tower" data-id="${t.id}" data-plus="${pl}" title="${esc(t.name)}">
-            <i class="rar" style="background:${RARITIES[t.rarity].color}"></i>${pl ? `<span class="pl" style="color:${PLUS_COLORS[pl]}">+${pl}</span>` : ''}
-            ${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div><div class="pr">${av} / ${tot} frei</div></button>`;
-        }
-      });
-      if (!tut) h += `<div class="item info">🎁 Neue Türme gibt es von <b>Bossen</b>. ⚗️ 3 gleiche Türme kannst du im <b>Inventar</b> zu einem stärkeren +1 fusen!</div>`;
+      const list = TOWERS.filter(t => Save.invTotal(t.id) > 0).sort((a, b) => RARITIES[b.rarity].order - RARITIES[a.rarity].order || b.cost - a.cost);
+      const entries = [];
+      list.forEach(t => { for (let pl = MAX_PLUS; pl >= 0; pl--) if (Save.inv(t.id, pl)) entries.push([t, pl]); });
+      entries.sort((a, b) => b[1] - a[1]);   // höchste Fusionsstufe zuerst
+      for (const [t, pl] of entries) {
+        const tot = Save.inv(t.id, pl), av = Game.available('tower', t.id, pl);
+        const fuse = !tut && tot >= 3 && pl < MAX_PLUS ? `<span class="fz" title="Fuse möglich">⚗️</span>` : '';
+        h += card({ kind: 'tower', id: t.id, plus: pl, pic: Thumbs.img('tower', t.id), name: t.name, rarity: t.rarity, foot: av > 0 ? `${av} frei` : 'alle gesetzt', footCls: av > 0 ? 'ok' : 'no', locked: av <= 0, sel: isSel('tower', t.id, pl), badge: fuse });
+      }
+      if (!entries.length) h += `<div class="empty">Keine Türme – besiege Bosse!</div>`;
     } else if (curTab === 'traps') {
       const list = TRAPS.filter(t => (P.trapInv[t.id] || 0) > 0);
-      list.forEach(t => {
-        const av = Game.available('trap', t.id);
-        h += `<button class="item${av > 0 ? '' : ' locked'}${isSel('trap', t.id)}" data-kind="trap" data-id="${t.id}" title="${esc(t.desc)}"><i class="rar" style="background:${RARITIES[t.rarity].color}"></i><div class="ic">${t.icon}</div><div class="nm">${esc(t.name)}</div><div class="pr">${av} / ${P.trapInv[t.id]} frei</div></button>`;
-      });
-      h += `<div class="item info">${list.length ? '🪤 Fallen legst du auf den Weg. Mit 🧹 Abreißen nimmst du sie wieder auf.' : '🪤 Noch keine Fallen. Bosse lassen manchmal Fallen fallen!'}</div>`;
+      list.forEach(t => { const av = Game.available('trap', t.id); h += card({ kind: 'trap', id: t.id, pic: `<span class="emo">${t.icon}</span>`, name: t.name, rarity: t.rarity, foot: av > 0 ? `${av} frei` : 'alle gelegt', footCls: av > 0 ? 'ok' : 'no', locked: av <= 0, sel: isSel('trap', t.id), title: t.desc }); });
+      if (!list.length) h += `<div class="empty">🪤 Noch keine Fallen – Bosse lassen manchmal Fallen fallen!</div>`;
     } else if (curTab === 'roads') {
-      h += `<div class="item info big">🛣️ Wegstücke: <b id="roadCount">${P.roadPieces}</b><br><small>Jedes neue Wegfeld braucht 1 Stück. Abreißen gibt es zurück.</small></div>`;
-      h += `<button class="item" data-tool="buyroad1" data-cost="${ROAD_PIECE_PRICE}"><div class="ic">➕</div><div class="nm">1 Wegstück kaufen</div><div class="pr">🪙${ROAD_PIECE_PRICE}</div></button>`;
-      h += `<button class="item" data-tool="buyroad5" data-cost="${ROAD_PIECE_PRICE * 5}"><div class="ic">📦</div><div class="nm">5 Wegstücke kaufen</div><div class="pr">🪙${ROAD_PIECE_PRICE * 5}</div></button>`;
-      ROADS.forEach(r => {
-        h += `<button class="item${isSel('road', r.id)}" data-kind="road" data-id="${r.id}"><div class="ic"><span style="display:inline-block;width:1.4em;height:1.4em;border-radius:6px;background:${r.color};border:3px solid ${r.edge};${r.width < 0.8 ? 'transform:scaleX(.6)' : ''}"></span></div><div class="nm">${esc(r.name)}</div><div class="pr">1 Stück</div></button>`;
-      });
-      h += `<button class="item${isSel('erase', 'erase')}" data-kind="erase" data-id="erase"><div class="ic">🧹</div><div class="nm">Weg abreißen</div><div class="pr">+1 Stück</div></button>`;
-      h += `<div class="item info">ℹ️ Wege nur in der Pause zwischen den Wellen ändern. Kurven &amp; Kreuzungen entstehen automatisch. Es muss immer ein Weg zur Burg führen.</div>`;
+      ROADS.forEach(r => { h += card({ kind: 'road', id: r.id, pic: `<span class="sw" style="background:${r.color};border-color:${r.edge};${r.width < 0.8 ? 'width:.9em' : ''}"></span>`, name: r.name, foot: '1 Stück', sel: isSel('road', r.id) }); });
+      h += card({ kind: 'erase', id: 'erase', pic: '<span class="emo">🧹</span>', name: 'Abreißen', foot: '+1 Stück', sel: isSel('erase', 'erase') });
     } else if (curTab === 'decos') {
-      DECOS.forEach(d => {
-        if (d.shop && !P.owned.decos.includes(d.id)) return;
-        h += `<button class="item${isSel('deco', d.id)}" data-kind="deco" data-id="${d.id}" data-cost="${d.cost}">${Thumbs.img('deco', d.id)}<div class="nm">${esc(d.name)}</div><div class="pr">🪙${d.cost}</div></button>`;
-      });
-      h += `<button class="item" data-act="shop"><div class="ic">🛒</div><div class="nm">Mehr im Shop</div><div class="pr">💎</div></button>`;
+      DECOS.forEach(d => { if (d.shop && !P.owned.decos.includes(d.id)) return; h += card({ kind: 'deco', id: d.id, pic: Thumbs.img('deco', d.id), name: d.name, foot: '🪙' + d.cost, footCls: R && R.coins < d.cost ? 'no' : '', sel: isSel('deco', d.id), extra: `data-cost="${d.cost}"` }); });
+      h += card({ pic: '<span class="emo">🛒</span>', name: 'Mehr im Shop', foot: '💎', extra: 'data-act="shop"' });
     } else {
-      h += `<button class="item${isSel('erase', 'erase')}" data-kind="erase" data-id="erase"><div class="ic">🧹</div><div class="nm">Abreißen</div><div class="pr">Weg/Falle/Deko</div></button>`;
-      h += `<button class="item" data-tool="rotate"><div class="ic">🔄</div><div class="nm">Drehen (R)</div><div class="pr">${Game.buildSel ? 'aktiv' : '&nbsp;'}</div></button>`;
-      h += `<button class="item" data-tool="cancel"><div class="ic">✋</div><div class="nm">Auswahl aufheben</div><div class="pr">Esc</div></button>`;
-      h += `<button class="item" data-tool="grid"><div class="ic">#️⃣</div><div class="nm">Raster</div><div class="pr">${P.settings.showGrid ? 'an' : 'aus'}</div></button>`;
-      h += `<button class="item" data-tool="sellall"><div class="ic">↩️</div><div class="nm">Alle Türme aufheben</div><div class="pr">ins Inventar</div></button>`;
+      h += card({ kind: 'erase', id: 'erase', pic: '<span class="emo">🧹</span>', name: 'Abreißen', foot: 'Weg · Falle · Deko', sel: isSel('erase', 'erase') });
+      h += card({ pic: '<span class="emo">#️⃣</span>', name: 'Raster', foot: P.settings.showGrid ? 'an' : 'aus', extra: 'data-tool="grid"' });
+      h += card({ pic: '<span class="emo">↩️</span>', name: 'Alle Türme aufheben', foot: 'ins Inventar', extra: 'data-tool="sellall"' });
+      h += card({ pic: '<span class="emo">🎒</span>', name: 'Inventar & Fuse', foot: '⚗️', extra: 'data-act="inventory"' });
     }
     $('#bbItems').innerHTML = h;
+    renderBuildHead();
+  }
+  // Kopfzeile: zeigt die Auswahl mit Werten oder Infos zur Kategorie
+  function renderBuildHead() {
+    const el = $('#bbHead'); if (!el) return;
+    const sel = Game.buildSel, P = Save.P, R = Game.R;
+    if (sel && sel.kind) {
+      let pic = '', name = '', info = '';
+      if (sel.kind === 'tower') {
+        const t = TOWER_BY_ID[sel.id], s = Game.towerStats({ def: t, plus: sel.plus || 0, level: plusVisual(sel.plus || 0), buffDmg: 1, buffRate: 1, buffRange: 0 });
+        pic = Thumbs.img('tower', sel.id); name = t.name + (sel.plus ? ` <span class="plus" style="color:${PLUS_COLORS[sel.plus]}">+${sel.plus}</span>` : '');
+        info = [t.dmg ? `💥 ${fmt(s.dmg)}` : '', s.range ? `🎯 ${s.range.toFixed(1)}` : '', t.rate && t.type !== 'beam' ? `⚡ ${s.rate.toFixed(2)}/s` : '', t.air ? '✈️' : ''].filter(Boolean).join(' · ');
+      } else if (sel.kind === 'trap') { const t = TRAP_BY_ID[sel.id]; pic = `<span class="emo">${t.icon}</span>`; name = t.name; info = t.desc; }
+      else if (sel.kind === 'road') { const r = ROAD_BY_ID[sel.id]; pic = `<span class="sw" style="background:${r.color};border-color:${r.edge}"></span>`; name = r.name; info = `Wegstücke: <b id="roadCount">${P.roadPieces}</b> · Finger/Maus ziehen zum Malen`; }
+      else if (sel.kind === 'deco') { const d = DECO_BY_ID[sel.id]; pic = Thumbs.img('deco', sel.id); name = d.name; info = `🪙${d.cost}`; }
+      else if (sel.kind === 'erase') { pic = '<span class="emo">🧹</span>'; name = 'Abreißen'; info = 'Weg, Falle oder Deko antippen'; }
+      else if (sel.kind === 'move') { pic = Thumbs.img('tower', sel.tower.def.id); name = 'Verschieben: ' + sel.tower.def.name; info = 'Freies Feld antippen'; }
+      const rot = ['tower', 'deco', 'move'].includes(sel.kind) ? `<button class="hb" data-tool="rotate" title="Drehen (R)">🔄</button>` : '';
+      el.innerHTML = `<div class="hp">${pic}</div><div class="ht"><b>${name}</b><small>${info}</small></div>${rot}<button class="hb x" data-tool="cancel" title="Abbrechen (Esc)">✕</button>`;
+      el.classList.add('active');
+    } else {
+      let extra = '';
+      if (curTab === 'roads') extra = `<span class="rp">🛣️ <b id="roadCount">${P.roadPieces}</b></span><button class="hb buy" data-tool="buyroad1" data-cost="${ROAD_PIECE_PRICE}">+1 🪙${ROAD_PIECE_PRICE}</button><button class="hb buy" data-tool="buyroad5" data-cost="${ROAD_PIECE_PRICE * 5}">+5 🪙${ROAD_PIECE_PRICE * 5}</button>`;
+      el.innerHTML = `<div class="ht"><span>${CAT_INFO[curTab]}</span></div>${extra}`;
+      el.classList.remove('active');
+    }
   }
   function onBuildItem(el) {
     const R = Game.R; if (!R) return;
     if (el.dataset.act) return action(el.dataset.act);
     const tool = el.dataset.tool;
     if (tool === 'rotate') return Game.rotateBuild();
-    if (tool === 'cancel') return Game.setBuild(null);
+    if (tool === 'cancel') { Audio2.play('click'); return Game.setBuild(null); }
     if (tool === 'buyroad1' || tool === 'buyroad5') { if (Game.buyRoadPieces(tool === 'buyroad1' ? 1 : 5)) renderBuildBar(); return; }
-    if (tool === 'grid') { Save.P.settings.showGrid = !Save.P.settings.showGrid; Save.saveSoon(); renderBuildBar(); return; }
+    if (tool === 'grid') { Save.P.settings.showGrid = !Save.P.settings.showGrid; Save.saveSoon(); World.setGridPref(Save.P.settings.showGrid); renderBuildBar(); return; }
     if (tool === 'sellall') {
-      if (!Game.towers.length) return toast('Keine Türme vorhanden');
-      return confirmBox('Alle Türme aufheben? Sie kommen zurück ins Inventar (Upgrades gehen verloren, 70% der Upgrade-Münzen gibt es zurück).', () => { [...Game.towers].forEach(t => Game.sell(t)); });
+      if (!Game.towers.length) return toast('Keine Türme auf dem Feld');
+      return confirmBox('Alle Türme vom Feld aufheben? Sie kommen zurück ins Inventar.', () => { [...Game.towers].forEach(t => Game.sell(t, true)); toast('↩ Alle Türme sind wieder im Inventar', 'good'); });
     }
     const kind = el.dataset.kind, id = el.dataset.id;
     if (!kind) return;
     const plus = +(el.dataset.plus || 0);
-    if ((kind === 'tower' || kind === 'trap') && Game.available(kind, id, plus) <= 0) { toast('Schon alle platziert – tippe einen Turm an und hebe ihn auf, um ihn umzustellen', 'bad'); return; }
+    if ((kind === 'tower' || kind === 'trap') && Game.available(kind, id, plus) <= 0) { toast('Schon alle gesetzt – tippe einen Turm auf dem Feld an und hebe ihn auf, um ihn umzustellen', 'bad'); Audio2.play('error'); return; }
     Audio2.play('click');
     const s = Game.buildSel;
     if (s && s.kind === kind && s.id === id && (s.plus || 0) === plus) Game.setBuild(null);
@@ -4398,16 +4645,8 @@ const UI = (() => {
   }
   function buildChanged(sel) {
     renderBuildBar();
-    const h = $('#buildHint');
-    if (!sel) { h.classList.add('hidden'); return; }
-    let name = sel.kind === 'tower' ? TOWER_BY_ID[sel.id].name + (sel.plus ? ' +' + sel.plus : '') : sel.kind === 'trap' ? TRAP_BY_ID[sel.id].name : sel.kind === 'road' ? ROAD_BY_ID[sel.id].name : sel.kind === 'deco' ? DECO_BY_ID[sel.id].name : sel.kind === 'move' ? 'Turm verschieben' : 'Abreißen';
-    const touch = matchMedia('(pointer:coarse)').matches;
-    const how = sel.kind === 'road' || sel.kind === 'erase' || sel.kind === 'trap' ? (touch ? 'Tippen oder Finger ziehen' : 'Klicken oder ziehen') : (touch ? 'Aufs Feld tippen zum Platzieren' : 'Klicken zum Platzieren · R: drehen');
-    h.innerHTML = `<b>${esc(name)}</b><span>${how}</span>${sel.kind !== 'road' && sel.kind !== 'erase' ? '<button class="btn small" data-tool="rotate">🔄</button>' : ''}<button class="btn small red" data-tool="cancel">✕</button>`;
-    h.classList.remove('hidden');
   }
 
-  // ---------------- Turm-Panel ----------------
   // Werte eines Turms bei Fusionsstufe pl (für Panel & Inventar)
   function statRows(def, pl, cmp) {
     const fake = { def, plus: pl, level: plusVisual(pl), buffDmg: 1, buffRate: 1, buffRange: 0 };
@@ -4453,15 +4692,22 @@ const UI = (() => {
   }
 
   // ---------------- Modal-Helfer ----------------
-  function openModal(title, html, compact) {
+  let modalLock = false;   // gesperrte Fenster (Boss-Truhe, Ergebnis) lassen sich nicht wegklicken
+  function openModal(title, html, compact, lock) {
+    const wasHidden = $('#modal').classList.contains('hidden');
+    modalLock = !!lock;
+    $('#modalClose').classList.toggle('hidden', !!lock);
     $('#modalTitle').innerHTML = title; $('#modalBody').innerHTML = html;
     $('.modal-box').classList.toggle('compact', !!compact);
     $('#modal').classList.remove('hidden');
     $('#modalBody').scrollTop = 0;
-    if (Game.R && !Game.demo && screen === 'game') { Game.R._wasPaused = Game.R.paused; Game.R.paused = true; }
+    // Nur beim ersten Öffnen merken, ob das Spiel vorher lief (sonst bleibt es nach verschachtelten Fenstern pausiert)
+    if (Game.R && !Game.demo && screen === 'game') { if (wasHidden) Game.R._wasPaused = Game.R.paused; Game.R.paused = true; }
   }
-  function closeModal() {
+  function closeModal(force) {
     if ($('#modal').classList.contains('hidden')) return;
+    if (modalLock && !force) return;
+    modalLock = false; $('#modalClose').classList.remove('hidden');
     $('#modal').classList.add('hidden');
     if (Game.R && !Game.demo && screen === 'game' && !Game.R.over) Game.R.paused = !!Game.R._wasPaused;
     modalState = null;
@@ -4719,10 +4965,10 @@ const UI = (() => {
       let h = `<div class="set-row"><span>👤 Spielername</span><input type="text" id="setName" maxlength="16" value="${esc(P.name)}"></div>
         <div class="set-row"><span>🎵 Musik</span><input type="range" id="setMusic" min="0" max="1" step="0.05" value="${S.music}"></div>
         <div class="set-row"><span>🔊 Soundeffekte</span><input type="range" id="setSfx" min="0" max="1" step="0.05" value="${S.sfx}"></div>
-        <div class="set-row"><span>🖥️ Grafikqualität</span><select id="setQ"><option value="low" ${S.quality === 'low' ? 'selected' : ''}>Niedrig (schnell, ohne Schatten)</option><option value="medium" ${S.quality === 'medium' ? 'selected' : ''}>Mittel</option><option value="high" ${S.quality === 'high' ? 'selected' : ''}>Hoch</option></select></div>
+        <div class="set-row"><span>🖥️ Grafikqualität</span><select id="setQ"><option value="low" ${S.quality === 'low' ? 'selected' : ''}>Niedrig (schnell, ohne Schatten)</option><option value="medium" ${S.quality === 'medium' ? 'selected' : ''}>Mittel</option><option value="high" ${S.quality === 'high' ? 'selected' : ''}>Hoch</option></select></div><p class="note" style="margin:.2em 0">Tipp: Nach dem Ändern der Grafik das Spiel einmal neu laden, damit alles wirkt.</p>
         <div class="set-row"><span>👕 Shirt-Farbe</span><div class="swatches">${['#e03a3a', '#2f8fe0', '#2fae4a', '#9b4dff', '#ff8a1a', '#222222', '#ff5ab4'].map(c => `<button data-shirt="${c}" class="${S.shirt === c ? 'on' : ''}" style="background:${c}"></button>`).join('')}</div></div>
         <div class="set-row"><span>👖 Hosen- & Kappenfarbe</span><div class="swatches">${['#2f5bd0', '#3a3a3a', '#6b4423', '#2f8f4a', '#d4af37', '#c0392b', '#ffffff'].map(c => `<button data-pants="${c}" class="${S.pants === c ? 'on' : ''}" style="background:${c}"></button>`).join('')}</div></div>
-        ${tg('particles', '✨ Viele Partikeleffekte')}${tg('autoStart', '⏱️ Wellen kommen automatisch (30s vor Welle 1, danach 25s Pause)')}${tg('damageNumbers', '🔢 Münz-Anzeigen über Gegnern')}${tg('showGrid', '#️⃣ Raster beim Bauen')}
+        ${tg('particles', '✨ Viele Partikeleffekte')}${tg('autoStart', '⏱️ Nächste Welle automatisch starten (nach 25s Pause)')}${tg('damageNumbers', '🔢 Münz-Anzeigen über Gegnern')}${tg('showGrid', '#️⃣ Raster beim Bauen')}
         <h4 class="sec">🎮 Steuerung</h4>
         <p class="note">🖱️ <b>PC:</b> WASD/Pfeile: laufen · Shift: rennen · Leertaste: springen · Maus ziehen: Kamera drehen · Mausrad: Zoom · B: Baumenü · Linksklick: bauen/auswählen · R: Gebäude drehen · Enter: Welle starten · C: Übersicht/Figur · Esc: abbrechen · U: Upgrade · X: Verkaufen<br>
         📱 <b>Touch:</b> Joystick links: laufen · ⤒: springen · 1 Finger auf der Welt: Kamera drehen · 2 Finger: zoomen · 🔨 BAUEN: Baumenü öffnen, dann aufs Feld tippen</p>
@@ -4796,9 +5042,10 @@ const UI = (() => {
       const b = box();
       b.innerHTML = `<div class="tut-face">🧙</div><div class="tut-text">${html}</div>${btn ? `<button class="btn green" id="tutBtn">${btn}</button>` : ''}`;
       b.classList.remove('hidden'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+      document.body.classList.add('tut-on');
       if (btn) $('#tutBtn').onclick = () => { Audio2.play('click'); onBtn(); };
     }
-    function hide() { box().classList.add('hidden'); }
+    function hide() { box().classList.add('hidden'); document.body.classList.remove('tut-on'); }
     function hl(sel) { $$('.tut-hl').forEach(e => e.classList.remove('tut-hl')); if (sel) $$(sel).forEach(e => e.classList.add('tut-hl')); }
     function showMarker(on, at) {
       if (marker) { World.scene.remove(marker); marker = null; }
@@ -4825,28 +5072,33 @@ const UI = (() => {
         hl(touch ? '#joy' : null);
         pollT = setInterval(() => { if (Player.pos.distanceTo(moveStart) > 2.5) go('place'); }, 200);
       } else if (s === 'place') {
+        if (!touch) setBuildOpen(true);
         say(`Du hast genau <b>eine Armbrust</b>. ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle die Armbrust und tippe' : 'Wähle unten die Armbrust und klicke'} auf das <b>leuchtende Feld</b> neben dem Weg.`);
         hl(document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle');
         showMarker(true);
         pollT = setInterval(() => { if (step === 'place') hl(document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle'); }, 400);
       } else if (s === 'wave1') {
-        showMarker(false); hl(null); setBuildOpen(false);
-        say('Super! Deine Armbrust schießt <b>ganz von allein</b>. Gleich kommt Welle 1 …');
-        R.hold = false; setTimeout(() => { if (step === 'wave1' && Game.R && Game.R.phase === 'build') Game.startWave(false); }, 2500);
+        showMarker(false); if (touch) setBuildOpen(false);
+        say('Super! Deine Armbrust schießt <b>ganz von allein</b>. Drück jetzt unten rechts auf <b>▶ WELLE STARTEN</b>!');
+        R.hold = false; setTimeout(() => hl('#waveBtn'), 50);
+      } else if (s === 'next') {
+        say(`Welle geschafft! 🎉 Wenn du bereit bist, drück <b>▶ WELLE STARTEN</b> für Welle ${R.wave + 1}.`);
+        setTimeout(() => hl('#waveBtn'), 50);
       } else if (s === 'fighting') {
+        hl(null);
         say('Pass auf die Gegner auf! 💪 Wenn du 3 gleiche Türme hast, kannst du sie später <b>fusen</b> – dann werden sie viel stärker.');
         setTimeout(() => { if (step === 'fighting') hide(); }, 4500);
       } else if (s === 'bosswarn') {
         R.hold = true; R.pauseTimer = 0;
-        say('⚠️ <b>Achtung!</b> Jede <b>5. Welle</b> kommt ein <b>BOSS</b>. Besiege ihn – dann bekommst du eine <b>neue Waffe</b>!', 'Los geht\'s! ▶', () => { R.hold = false; hide(); step = 'boss'; Game.startWave(false); });
+        say('⚠️ <b>Achtung!</b> Jede <b>5. Welle</b> kommt ein <b>BOSS</b>. Besiege ihn – dann bekommst du eine <b>neue Waffe</b>!', 'Verstanden ▶', () => { R.hold = false; step = 'boss'; say('Drück <b>▶ WELLE STARTEN</b>, wenn du bereit für den Boss bist!'); setTimeout(() => hl('#waveBtn'), 50); });
       } else if (s === 'place2') {
         R.hold = true; R.pauseTimer = 0; showMarker(true);
         say(`Deine neue Waffe ist da! 🎁 ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle sie aus' : 'Wähle sie unten aus'} und stelle sie neben den Weg.`);
         pollT = setInterval(() => { hl(document.body.classList.contains('build-open') ? '#bbItems .item:not(.locked)' : '#buildToggle'); }, 400);
       } else if (s === 'done') {
         hl(null); showMarker(false); setBuildOpen(!touch);
-        say('<b>Perfekt – Tutorial geschafft!</b> 🎓<br>Ab jetzt kommen die Wellen <b>automatisch</b>. Jede 5. Welle kommt ein Boss. Bosse geben dir <b>Türme, Wege und Fallen</b>.<br>⚗️ Hast du <b>3 gleiche Türme</b>, kannst du sie im <b>Inventar</b> zu einem starken <b>+1</b> fusen!', 'Spielen! ▶', () => {
-          Save.P.tutorialDone = true; R.tutorial = false; R.hold = false; R.pauseTimer = 15;
+        say('<b>Perfekt – Tutorial geschafft!</b> 🎓<br>Du startest jede Welle selbst mit <b>▶ WELLE STARTEN</b>. Jede 5. Welle kommt ein Boss. Bosse geben dir <b>Türme, Wege und Fallen</b>.<br>⚗️ Hast du <b>3 gleiche Türme</b>, kannst du sie im <b>Inventar</b> zu einem starken <b>+1</b> fusen!', 'Spielen! ▶', () => {
+          Save.P.tutorialDone = true; R.tutorial = false; R.hold = false; R.pauseTimer = 0;
           Save.checkAchievements(); Save.save(); hide(); step = null;
           document.body.classList.remove('tutorial'); renderBuildBar(); Game.snapshotRun();
         });
@@ -4856,7 +5108,9 @@ const UI = (() => {
       const R = Game.R; if (!R || !R.tutorial) return;
       if (name === 'placed' && step === 'place') go('wave1');
       else if (name === 'placed' && step === 'place2') { clearInterval(pollT); go('done'); }
-      else if (name === 'waveStart' && step === 'wave1') go('fighting');
+      else if (name === 'waveStart' && (step === 'wave1' || step === 'next')) go('fighting');
+      else if (name === 'waveStart' && step === 'boss') { hl(null); hide(); }
+      else if (name === 'waveCleared' && data < 4) go('next');
       else if (name === 'waveCleared' && data === 4) go('bosswarn');
       else if (name === 'rewardClosed') go('place2');
     }
@@ -4872,15 +5126,16 @@ const UI = (() => {
     if (rw.kind === 'roads') return { html: '<div class="ic">🛣️</div>', name: `${rw.n} Wegstücke`, color: '#9b9a94', sub: 'Wege' };
     return { html: '<div class="ic">💰</div>', name: `${rw.n} Münzen`, color: '#ffd700', sub: 'Münzen' };
   }
+  const rewardQueue = [];
   function bossReward(rw, bossDef) {
+    if (!$('#modal').classList.contains('hidden') && $('.roulette')) { rewardQueue.push([rw, bossDef]); return; }
     const R = Game.R;
     const fake = () => Save.rollFake(R.wave + 10);
     const strip = []; for (let i = 0; i < 36; i++) strip.push(i === 30 ? rw : fake());
     const cards = strip.map(r => { const c = rewardCard(r); return `<div class="rl-card" style="border-color:${c.color}">${c.html}<div class="nm">${esc(c.name)}</div></div>`; }).join('');
     openModal('🎁 Boss-Truhe', `<div class="result"><div class="big">👑 ${esc(bossDef.name)} besiegt!</div><p>Mal sehen, was in der Truhe ist …</p>
       <div class="roulette"><div class="rl-line"></div><div class="rl-strip" id="rlStrip">${cards}</div></div>
-      <div id="rlWin" class="rl-win hidden"></div></div>`, true);
-    $('#modalClose').classList.add('hidden');
+      <div id="rlWin" class="rl-win hidden"></div></div>`, true, true);
     const stripEl = $('#rlStrip');
     requestAnimationFrame(() => {
       const card = stripEl.children[30]; const wrap = stripEl.parentElement;
@@ -4891,8 +5146,13 @@ const UI = (() => {
       const tickSnd = () => { const t = performance.now() - t0; if (t > 4200) return; const pos = -new DOMMatrix(getComputedStyle(stripEl).transform).m41; const idx = Math.floor(pos / card.offsetWidth); if (idx !== last) { last = idx; Audio2.play('click'); } requestAnimationFrame(tickSnd); };
       tickSnd();
     });
+    let finished = false;
     setTimeout(() => {
       const c = rewardCard(rw);
+      if (!document.body.contains(stripEl)) { // Fenster wurde inzwischen ersetzt – Belohnung trotzdem sauber abschließen
+        if (R.tutorial) Tut.event('rewardClosed');
+        renderBuildBar(); return;
+      }
       stripEl.children[30].classList.add('won');
       Audio2.play('achievement');
       const isPlaceable = rw.kind === 'tower' || rw.kind === 'trap';
@@ -4903,7 +5163,9 @@ const UI = (() => {
       w.classList.remove('hidden');
       for (let i = 0; i < 3; i++) setTimeout(() => Particles.emit(Player.pos.x, 2, Player.pos.z, 50, c.color, { speed: 4, up: 5, life: 1.2, size: 0.3, tint: false }), i * 200);
       const finish = place => {
-        $('#modalClose').classList.remove('hidden'); closeModal();
+        if (finished) return; finished = true;
+        closeModal(true);
+        if (rewardQueue.length) { const [a, b] = rewardQueue.shift(); setTimeout(() => bossReward(a, b), 300); }
         if (R.tutorial) { Tut.event('rewardClosed'); }
         if (place && isPlaceable) { curTab = rw.kind === 'tower' ? 'towers' : 'traps'; setBuildOpen(true); Game.setBuild({ kind: rw.kind, id: rw.id }); }
         renderBuildBar();
@@ -4968,11 +5230,10 @@ const UI = (() => {
       ${won ? '<p>Belohnung: 💎100 🔮10</p>' : '<p>Deine Burg ist gefallen – aber du bekommst neue Türme für die nächste Runde!</p>'}
       <div id="rsPicks"></div>
       <div class="row"><button class="btn ${won ? '' : 'green'}" id="rsRetry">🔁 Neue Runde (Welle 1)</button><button class="btn gray" id="rsMenu">🏠 Hauptmenü</button></div></div>`;
-    openModal(won ? 'Sieg' : 'Niederlage', h, true);
-    $('#modalClose').classList.add('hidden');
+    openModal(won ? 'Sieg' : 'Niederlage', h, true, true);
     const renderPicks = () => { $('#rsPicks').innerHTML = picksHtml(); bindPicks(renderPicks); };
     renderPicks();
-    const done = () => $('#modalClose').classList.remove('hidden');
+    const done = () => closeModal(true);
     $('#rsRetry').onclick = () => { done(); Save.P.run = null; startGame(s.mode.id, Game.R.biome); };
     $('#rsMenu').onclick = () => { done(); goMenu(); };
     if (won) for (let i = 0; i < 6; i++) setTimeout(() => Particles.emit((Math.random() - 0.5) * 16, 2, (Math.random() - 0.5) * 10, 60, '#ffffff', { speed: 5, up: 6, life: 1.6, size: 0.35, tint: false }), i * 250);
@@ -4999,7 +5260,7 @@ const UI = (() => {
   function bindEvents() {
     document.addEventListener('click', e => {
       const b = e.target.closest('[data-act]'); if (b) { action(b.dataset.act); return; }
-      const it = e.target.closest('#bbItems .item'); if (it) { onBuildItem(it); return; }
+      const it = e.target.closest('#bbItems .item, #bbHead .hb'); if (it) { onBuildItem(it); return; }
       const tool = e.target.closest('[data-tool]'); if (tool) { onBuildItem(tool); return; }
       if (e.target.closest('[data-bbclose]')) { Audio2.play('click'); setBuildOpen(false); return; }
       if (e.target.closest('#buildToggle')) { Audio2.init(); Audio2.play('click'); setBuildOpen(true); return; }
@@ -5093,6 +5354,7 @@ const UI = (() => {
   setLoad(30, 'Baue 3D-Welt …');
   requestAnimationFrame(() => {
     try {
+      Models.setPBR(P.settings.quality !== 'low');
       World.init(document.getElementById('c'), P.settings.quality);
       Particles.enabled = P.settings.particles;
       Particles.setTint(EFFECTS.find(e => e.id === P.equipped.effect));
@@ -5101,7 +5363,9 @@ const UI = (() => {
       CamCtl.init(document.getElementById('c'), World.camera);
       Game.init();
       UI.hookGame(); UI.bindEvents();
-      CamCtl.handlers.toolActive = () => !!Game.buildSel && UI.screen === 'game';
+      // Ziehen malt nur bei Wegen/Abreißen/Fallen – Türme & Deko werden per Antippen gesetzt, Ziehen dreht dann die Kamera
+      CamCtl.handlers.toolActive = () => UI.screen === 'game' && !!Game.buildSel && ['road', 'erase', 'trap'].includes(Game.buildSel.kind);
+      CamCtl.handlers.anyTool = () => UI.screen === 'game' && !!Game.buildSel;
       CamCtl.handlers.hover = p => Game.hover(p);
       CamCtl.handlers.paintStart = p => Game.paintStart(p);
       CamCtl.handlers.paint = p => Game.paint(p);

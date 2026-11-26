@@ -16,7 +16,7 @@ const Thumbs = (() => {
     r = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true, preserveDrawingBuffer: true });
     r.setPixelRatio(1); r.setSize(160, 160, false); r.outputColorSpace = THREE.SRGBColorSpace;
     scene = new THREE.Scene();
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x556070, 1.6));
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x556070, 2.4));
     const d = new THREE.DirectionalLight(0xffffff, 1.8); d.position.set(2, 4, 3); scene.add(d);
     cam = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
   }
@@ -102,14 +102,14 @@ const UI = (() => {
     db.classList.toggle('done', !av); db.textContent = av ? '🎁 Tagesbelohnung abholen!' : '✅ Belohnung abgeholt';
   }
   function goMenu() {
-    closeModal(); Tut.stop(); Game.quit(); visiting = null; $('.visit-bar')?.remove();
+    closeModal(true); Tut.stop(); Game.quit(); visiting = null; $('.visit-bar')?.remove();
     Player.remove(); CamCtl.setMode('free');
     show('menu'); refreshMenu();
     Game.startDemo(); CamCtl.setAuto(true); Audio2.setMood('menu');
     if (Save.openPicks()) setTimeout(picksScreen, 400); else Save.tidyPicks();
   }
   function startGame(modeId, biomeId, snapshot) {
-    closeModal(); Save.tidyPicks();
+    closeModal(true); Save.tidyPicks();
     Game.stopDemo(); CamCtl.setAuto(false);
     const b = BIOME_BY_ID[biomeId] || BIOMES[0];
     Save.P.equipped.biome = b.id;
@@ -178,14 +178,15 @@ const UI = (() => {
     $('#wpFill').style.width = (R.phase === 'wave' && total ? (1 - alive / total) * 100 : R.phase === 'build' ? 100 : 0) + '%';
     const nxt = R.wave + 1;
     const nb = Game.isBossWave(nxt);
-    $('#wpNext').textContent = R.phase === 'build' && R.pauseTimer > 0 ? `Nächste: ${nxt}${nb ? ' 👑' : ''} in ${Math.ceil(R.pauseTimer)}s` : `Nächste: ${nxt}${nb ? ' 👑 BOSS' : ''}`;
+    $('#wpNext').textContent = R.phase === 'build' && R.pauseTimer > 0 ? `Nächste: ${nxt}${nb ? ' 👑' : ''} in ${Math.ceil(R.pauseTimer)}s` : R.phase === 'build' ? `Nächste: ${nxt}${nb ? ' 👑 BOSS' : ''} – drück Start` : `Nächste: ${nxt}${nb ? ' 👑 BOSS' : ''}`;
     const wb = $('#waveBtn');
     let label = R.phase === 'build' ? (R.wave === 0 ? '▶ WELLE STARTEN' : R.pauseTimer > 0 ? '⏩ WELLE ÜBERSPRINGEN' : '▶ NÄCHSTE WELLE') : '⏩ WELLE ÜBERSPRINGEN';
-    if (R.skipCd > 0) label = `⏳ Warten … ${Math.ceil(R.skipCd)}`;
+    if (R.skipCd > 0 && R.phase === 'wave') label = `⏳ Warten … ${Math.ceil(R.skipCd)}`;
     if (wb.textContent !== label) wb.textContent = label;
     wb.classList.toggle('skip', R.phase !== 'build' || R.pauseTimer > 0);
-    wb.disabled = R.over || R.hold || R.skipCd > 0;
-    wb.classList.toggle('hidden', !!R.tutorial && (R.hold || R.wave === 0));
+    wb.disabled = R.over || R.hold || (R.skipCd > 0 && R.phase === 'wave');
+    wb.classList.toggle('hidden', !!R.tutorial && (R.hold || R.phase === 'wave'));
+    wb.classList.toggle('ready', R.phase === 'build' && !R.hold && !wb.disabled);
     $('#speedBtn').textContent = R.speed + 'x';
     $('#pauseBtn').textContent = R.paused ? '▶' : '❚❚';
     // Boss
@@ -202,79 +203,112 @@ const UI = (() => {
     // Baumenü-Preise aktualisieren
     $$('#bbItems .item[data-cost]').forEach(el => { const c = +el.dataset.cost; const pr = el.querySelector('.pr'); if (pr) pr.classList.toggle('no', R.coins < c); });
     const rp = $('#roadCount'); if (rp && rp.textContent !== String(P.roadPieces)) rp.textContent = P.roadPieces;
+    $$('#bbHead .buy[data-cost]').forEach(b => b.classList.toggle('no', R.coins < +b.dataset.cost));
     if (Game.selected && !$('#towerPanel').classList.contains('hidden')) {
       const key = Game.selected.plus + ':' + Game.selected.kills;
       if (lastHud.tp !== key) { towerPanel(Game.selected); }
     }
   }
 
-  // ---------------- Baumenü ----------------
+  // ---------------- Baumenü (Hotbar) ----------------
+  const CAT_INFO = {
+    towers: '🏰 <b>Türme</b> – antippen, dann ein freies Feld neben dem Weg wählen',
+    traps: '🪤 <b>Fallen</b> – werden direkt auf den Weg gelegt',
+    roads: '🛣️ <b>Wege</b> – Weg der Gegner umbauen (nur in der Pause)',
+    decos: '🌳 <b>Deko</b> – verschönere dein Grundstück',
+    tools: '🧰 <b>Werkzeuge</b>',
+  };
+  function card({ kind, id, plus = 0, pic, name, rarity, foot, footCls = '', locked, sel, badge, extra = '', title = '' }) {
+    const rc = rarity ? RARITIES[rarity].color : '#5c6b8a';
+    return `<button class="item${locked ? ' locked' : ''}${sel ? ' sel' : ''}" ${kind ? `data-kind="${kind}" data-id="${id}" data-plus="${plus}"` : ''} ${extra} title="${esc(title || name)}" style="--rc:${rc}">
+      ${plus ? `<span class="pl" style="background:${PLUS_COLORS[plus]}">+${plus}</span>` : ''}${badge || ''}
+      <div class="pic">${pic}</div><div class="nm">${esc(name)}</div><div class="ft ${footCls}">${foot}</div></button>`;
+  }
   function renderBuildBar() {
     const P = Save.P, R = Game.R, sel = Game.buildSel;
     const tut = R && R.tutorial;
-    $$('#bbTabs button[data-tab]').forEach(b => { b.classList.toggle('on', b.dataset.tab === curTab); b.classList.toggle('hidden', tut && b.dataset.tab !== 'towers'); });
+    // Kategorien mit Zählern
+    const towerFree = TOWERS.reduce((a, t) => { for (let pl = 0; pl <= MAX_PLUS; pl++) a += Math.max(0, Game.available('tower', t.id, pl)); return a; }, 0);
+    const trapFree = TRAPS.reduce((a, t) => a + Math.max(0, Game.available('trap', t.id)), 0);
+    const cnt = { towers: towerFree, traps: trapFree, roads: P.roadPieces };
+    $$('#bbTabs button[data-tab]').forEach(b => {
+      b.classList.toggle('on', b.dataset.tab === curTab);
+      b.classList.toggle('hidden', !!tut && b.dataset.tab !== 'towers');
+      const c = b.querySelector('.cnt'); if (c) { const n = cnt[b.dataset.tab]; c.textContent = n ?? ''; c.classList.toggle('hidden', !n); }
+    });
     let h = '';
-    const isSel = (k, id) => sel && sel.kind === k && sel.id === id ? ' sel' : '';
+    const isSel = (k, id, pl = 0) => !!(sel && sel.kind === k && sel.id === id && (sel.plus || 0) === pl);
     if (curTab === 'towers') {
-      const list = TOWERS.filter(t => Save.invTotal(t.id) > 0).sort((a, b) => RARITIES[a.rarity].order - RARITIES[b.rarity].order || a.cost - b.cost);
-      list.forEach(t => {
-        for (let pl = MAX_PLUS; pl >= 0; pl--) {
-          const tot = Save.inv(t.id, pl); if (!tot) continue;
-          const av = Game.available('tower', t.id, pl);
-          const on = sel && sel.kind === 'tower' && sel.id === t.id && (sel.plus || 0) === pl ? ' sel' : '';
-          h += `<button class="item${av > 0 ? '' : ' locked'}${on}" data-kind="tower" data-id="${t.id}" data-plus="${pl}" title="${esc(t.name)}">
-            <i class="rar" style="background:${RARITIES[t.rarity].color}"></i>${pl ? `<span class="pl" style="color:${PLUS_COLORS[pl]}">+${pl}</span>` : ''}
-            ${Thumbs.img('tower', t.id)}<div class="nm">${esc(t.name)}</div><div class="pr">${av} / ${tot} frei</div></button>`;
-        }
-      });
-      if (!tut) h += `<div class="item info">🎁 Neue Türme gibt es von <b>Bossen</b>. ⚗️ 3 gleiche Türme kannst du im <b>Inventar</b> zu einem stärkeren +1 fusen!</div>`;
+      const list = TOWERS.filter(t => Save.invTotal(t.id) > 0).sort((a, b) => RARITIES[b.rarity].order - RARITIES[a.rarity].order || b.cost - a.cost);
+      const entries = [];
+      list.forEach(t => { for (let pl = MAX_PLUS; pl >= 0; pl--) if (Save.inv(t.id, pl)) entries.push([t, pl]); });
+      entries.sort((a, b) => b[1] - a[1]);   // höchste Fusionsstufe zuerst
+      for (const [t, pl] of entries) {
+        const tot = Save.inv(t.id, pl), av = Game.available('tower', t.id, pl);
+        const fuse = !tut && tot >= 3 && pl < MAX_PLUS ? `<span class="fz" title="Fuse möglich">⚗️</span>` : '';
+        h += card({ kind: 'tower', id: t.id, plus: pl, pic: Thumbs.img('tower', t.id), name: t.name, rarity: t.rarity, foot: av > 0 ? `${av} frei` : 'alle gesetzt', footCls: av > 0 ? 'ok' : 'no', locked: av <= 0, sel: isSel('tower', t.id, pl), badge: fuse });
+      }
+      if (!entries.length) h += `<div class="empty">Keine Türme – besiege Bosse!</div>`;
     } else if (curTab === 'traps') {
       const list = TRAPS.filter(t => (P.trapInv[t.id] || 0) > 0);
-      list.forEach(t => {
-        const av = Game.available('trap', t.id);
-        h += `<button class="item${av > 0 ? '' : ' locked'}${isSel('trap', t.id)}" data-kind="trap" data-id="${t.id}" title="${esc(t.desc)}"><i class="rar" style="background:${RARITIES[t.rarity].color}"></i><div class="ic">${t.icon}</div><div class="nm">${esc(t.name)}</div><div class="pr">${av} / ${P.trapInv[t.id]} frei</div></button>`;
-      });
-      h += `<div class="item info">${list.length ? '🪤 Fallen legst du auf den Weg. Mit 🧹 Abreißen nimmst du sie wieder auf.' : '🪤 Noch keine Fallen. Bosse lassen manchmal Fallen fallen!'}</div>`;
+      list.forEach(t => { const av = Game.available('trap', t.id); h += card({ kind: 'trap', id: t.id, pic: `<span class="emo">${t.icon}</span>`, name: t.name, rarity: t.rarity, foot: av > 0 ? `${av} frei` : 'alle gelegt', footCls: av > 0 ? 'ok' : 'no', locked: av <= 0, sel: isSel('trap', t.id), title: t.desc }); });
+      if (!list.length) h += `<div class="empty">🪤 Noch keine Fallen – Bosse lassen manchmal Fallen fallen!</div>`;
     } else if (curTab === 'roads') {
-      h += `<div class="item info big">🛣️ Wegstücke: <b id="roadCount">${P.roadPieces}</b><br><small>Jedes neue Wegfeld braucht 1 Stück. Abreißen gibt es zurück.</small></div>`;
-      h += `<button class="item" data-tool="buyroad1" data-cost="${ROAD_PIECE_PRICE}"><div class="ic">➕</div><div class="nm">1 Wegstück kaufen</div><div class="pr">🪙${ROAD_PIECE_PRICE}</div></button>`;
-      h += `<button class="item" data-tool="buyroad5" data-cost="${ROAD_PIECE_PRICE * 5}"><div class="ic">📦</div><div class="nm">5 Wegstücke kaufen</div><div class="pr">🪙${ROAD_PIECE_PRICE * 5}</div></button>`;
-      ROADS.forEach(r => {
-        h += `<button class="item${isSel('road', r.id)}" data-kind="road" data-id="${r.id}"><div class="ic"><span style="display:inline-block;width:1.4em;height:1.4em;border-radius:6px;background:${r.color};border:3px solid ${r.edge};${r.width < 0.8 ? 'transform:scaleX(.6)' : ''}"></span></div><div class="nm">${esc(r.name)}</div><div class="pr">1 Stück</div></button>`;
-      });
-      h += `<button class="item${isSel('erase', 'erase')}" data-kind="erase" data-id="erase"><div class="ic">🧹</div><div class="nm">Weg abreißen</div><div class="pr">+1 Stück</div></button>`;
-      h += `<div class="item info">ℹ️ Wege nur in der Pause zwischen den Wellen ändern. Kurven &amp; Kreuzungen entstehen automatisch. Es muss immer ein Weg zur Burg führen.</div>`;
+      ROADS.forEach(r => { h += card({ kind: 'road', id: r.id, pic: `<span class="sw" style="background:${r.color};border-color:${r.edge};${r.width < 0.8 ? 'width:.9em' : ''}"></span>`, name: r.name, foot: '1 Stück', sel: isSel('road', r.id) }); });
+      h += card({ kind: 'erase', id: 'erase', pic: '<span class="emo">🧹</span>', name: 'Abreißen', foot: '+1 Stück', sel: isSel('erase', 'erase') });
     } else if (curTab === 'decos') {
-      DECOS.forEach(d => {
-        if (d.shop && !P.owned.decos.includes(d.id)) return;
-        h += `<button class="item${isSel('deco', d.id)}" data-kind="deco" data-id="${d.id}" data-cost="${d.cost}">${Thumbs.img('deco', d.id)}<div class="nm">${esc(d.name)}</div><div class="pr">🪙${d.cost}</div></button>`;
-      });
-      h += `<button class="item" data-act="shop"><div class="ic">🛒</div><div class="nm">Mehr im Shop</div><div class="pr">💎</div></button>`;
+      DECOS.forEach(d => { if (d.shop && !P.owned.decos.includes(d.id)) return; h += card({ kind: 'deco', id: d.id, pic: Thumbs.img('deco', d.id), name: d.name, foot: '🪙' + d.cost, footCls: R && R.coins < d.cost ? 'no' : '', sel: isSel('deco', d.id), extra: `data-cost="${d.cost}"` }); });
+      h += card({ pic: '<span class="emo">🛒</span>', name: 'Mehr im Shop', foot: '💎', extra: 'data-act="shop"' });
     } else {
-      h += `<button class="item${isSel('erase', 'erase')}" data-kind="erase" data-id="erase"><div class="ic">🧹</div><div class="nm">Abreißen</div><div class="pr">Weg/Falle/Deko</div></button>`;
-      h += `<button class="item" data-tool="rotate"><div class="ic">🔄</div><div class="nm">Drehen (R)</div><div class="pr">${Game.buildSel ? 'aktiv' : '&nbsp;'}</div></button>`;
-      h += `<button class="item" data-tool="cancel"><div class="ic">✋</div><div class="nm">Auswahl aufheben</div><div class="pr">Esc</div></button>`;
-      h += `<button class="item" data-tool="grid"><div class="ic">#️⃣</div><div class="nm">Raster</div><div class="pr">${P.settings.showGrid ? 'an' : 'aus'}</div></button>`;
-      h += `<button class="item" data-tool="sellall"><div class="ic">↩️</div><div class="nm">Alle Türme aufheben</div><div class="pr">ins Inventar</div></button>`;
+      h += card({ kind: 'erase', id: 'erase', pic: '<span class="emo">🧹</span>', name: 'Abreißen', foot: 'Weg · Falle · Deko', sel: isSel('erase', 'erase') });
+      h += card({ pic: '<span class="emo">#️⃣</span>', name: 'Raster', foot: P.settings.showGrid ? 'an' : 'aus', extra: 'data-tool="grid"' });
+      h += card({ pic: '<span class="emo">↩️</span>', name: 'Alle Türme aufheben', foot: 'ins Inventar', extra: 'data-tool="sellall"' });
+      h += card({ pic: '<span class="emo">🎒</span>', name: 'Inventar & Fuse', foot: '⚗️', extra: 'data-act="inventory"' });
     }
     $('#bbItems').innerHTML = h;
+    renderBuildHead();
+  }
+  // Kopfzeile: zeigt die Auswahl mit Werten oder Infos zur Kategorie
+  function renderBuildHead() {
+    const el = $('#bbHead'); if (!el) return;
+    const sel = Game.buildSel, P = Save.P, R = Game.R;
+    if (sel && sel.kind) {
+      let pic = '', name = '', info = '';
+      if (sel.kind === 'tower') {
+        const t = TOWER_BY_ID[sel.id], s = Game.towerStats({ def: t, plus: sel.plus || 0, level: plusVisual(sel.plus || 0), buffDmg: 1, buffRate: 1, buffRange: 0 });
+        pic = Thumbs.img('tower', sel.id); name = t.name + (sel.plus ? ` <span class="plus" style="color:${PLUS_COLORS[sel.plus]}">+${sel.plus}</span>` : '');
+        info = [t.dmg ? `💥 ${fmt(s.dmg)}` : '', s.range ? `🎯 ${s.range.toFixed(1)}` : '', t.rate && t.type !== 'beam' ? `⚡ ${s.rate.toFixed(2)}/s` : '', t.air ? '✈️' : ''].filter(Boolean).join(' · ');
+      } else if (sel.kind === 'trap') { const t = TRAP_BY_ID[sel.id]; pic = `<span class="emo">${t.icon}</span>`; name = t.name; info = t.desc; }
+      else if (sel.kind === 'road') { const r = ROAD_BY_ID[sel.id]; pic = `<span class="sw" style="background:${r.color};border-color:${r.edge}"></span>`; name = r.name; info = `Wegstücke: <b id="roadCount">${P.roadPieces}</b> · Finger/Maus ziehen zum Malen`; }
+      else if (sel.kind === 'deco') { const d = DECO_BY_ID[sel.id]; pic = Thumbs.img('deco', sel.id); name = d.name; info = `🪙${d.cost}`; }
+      else if (sel.kind === 'erase') { pic = '<span class="emo">🧹</span>'; name = 'Abreißen'; info = 'Weg, Falle oder Deko antippen'; }
+      else if (sel.kind === 'move') { pic = Thumbs.img('tower', sel.tower.def.id); name = 'Verschieben: ' + sel.tower.def.name; info = 'Freies Feld antippen'; }
+      const rot = ['tower', 'deco', 'move'].includes(sel.kind) ? `<button class="hb" data-tool="rotate" title="Drehen (R)">🔄</button>` : '';
+      el.innerHTML = `<div class="hp">${pic}</div><div class="ht"><b>${name}</b><small>${info}</small></div>${rot}<button class="hb x" data-tool="cancel" title="Abbrechen (Esc)">✕</button>`;
+      el.classList.add('active');
+    } else {
+      let extra = '';
+      if (curTab === 'roads') extra = `<span class="rp">🛣️ <b id="roadCount">${P.roadPieces}</b></span><button class="hb buy" data-tool="buyroad1" data-cost="${ROAD_PIECE_PRICE}">+1 🪙${ROAD_PIECE_PRICE}</button><button class="hb buy" data-tool="buyroad5" data-cost="${ROAD_PIECE_PRICE * 5}">+5 🪙${ROAD_PIECE_PRICE * 5}</button>`;
+      el.innerHTML = `<div class="ht"><span>${CAT_INFO[curTab]}</span></div>${extra}`;
+      el.classList.remove('active');
+    }
   }
   function onBuildItem(el) {
     const R = Game.R; if (!R) return;
     if (el.dataset.act) return action(el.dataset.act);
     const tool = el.dataset.tool;
     if (tool === 'rotate') return Game.rotateBuild();
-    if (tool === 'cancel') return Game.setBuild(null);
+    if (tool === 'cancel') { Audio2.play('click'); return Game.setBuild(null); }
     if (tool === 'buyroad1' || tool === 'buyroad5') { if (Game.buyRoadPieces(tool === 'buyroad1' ? 1 : 5)) renderBuildBar(); return; }
-    if (tool === 'grid') { Save.P.settings.showGrid = !Save.P.settings.showGrid; Save.saveSoon(); renderBuildBar(); return; }
+    if (tool === 'grid') { Save.P.settings.showGrid = !Save.P.settings.showGrid; Save.saveSoon(); World.setGridPref(Save.P.settings.showGrid); renderBuildBar(); return; }
     if (tool === 'sellall') {
-      if (!Game.towers.length) return toast('Keine Türme vorhanden');
-      return confirmBox('Alle Türme aufheben? Sie kommen zurück ins Inventar (Upgrades gehen verloren, 70% der Upgrade-Münzen gibt es zurück).', () => { [...Game.towers].forEach(t => Game.sell(t)); });
+      if (!Game.towers.length) return toast('Keine Türme auf dem Feld');
+      return confirmBox('Alle Türme vom Feld aufheben? Sie kommen zurück ins Inventar.', () => { [...Game.towers].forEach(t => Game.sell(t, true)); toast('↩ Alle Türme sind wieder im Inventar', 'good'); });
     }
     const kind = el.dataset.kind, id = el.dataset.id;
     if (!kind) return;
     const plus = +(el.dataset.plus || 0);
-    if ((kind === 'tower' || kind === 'trap') && Game.available(kind, id, plus) <= 0) { toast('Schon alle platziert – tippe einen Turm an und hebe ihn auf, um ihn umzustellen', 'bad'); return; }
+    if ((kind === 'tower' || kind === 'trap') && Game.available(kind, id, plus) <= 0) { toast('Schon alle gesetzt – tippe einen Turm auf dem Feld an und hebe ihn auf, um ihn umzustellen', 'bad'); Audio2.play('error'); return; }
     Audio2.play('click');
     const s = Game.buildSel;
     if (s && s.kind === kind && s.id === id && (s.plus || 0) === plus) Game.setBuild(null);
@@ -282,16 +316,8 @@ const UI = (() => {
   }
   function buildChanged(sel) {
     renderBuildBar();
-    const h = $('#buildHint');
-    if (!sel) { h.classList.add('hidden'); return; }
-    let name = sel.kind === 'tower' ? TOWER_BY_ID[sel.id].name + (sel.plus ? ' +' + sel.plus : '') : sel.kind === 'trap' ? TRAP_BY_ID[sel.id].name : sel.kind === 'road' ? ROAD_BY_ID[sel.id].name : sel.kind === 'deco' ? DECO_BY_ID[sel.id].name : sel.kind === 'move' ? 'Turm verschieben' : 'Abreißen';
-    const touch = matchMedia('(pointer:coarse)').matches;
-    const how = sel.kind === 'road' || sel.kind === 'erase' || sel.kind === 'trap' ? (touch ? 'Tippen oder Finger ziehen' : 'Klicken oder ziehen') : (touch ? 'Aufs Feld tippen zum Platzieren' : 'Klicken zum Platzieren · R: drehen');
-    h.innerHTML = `<b>${esc(name)}</b><span>${how}</span>${sel.kind !== 'road' && sel.kind !== 'erase' ? '<button class="btn small" data-tool="rotate">🔄</button>' : ''}<button class="btn small red" data-tool="cancel">✕</button>`;
-    h.classList.remove('hidden');
   }
 
-  // ---------------- Turm-Panel ----------------
   // Werte eines Turms bei Fusionsstufe pl (für Panel & Inventar)
   function statRows(def, pl, cmp) {
     const fake = { def, plus: pl, level: plusVisual(pl), buffDmg: 1, buffRate: 1, buffRange: 0 };
@@ -337,15 +363,22 @@ const UI = (() => {
   }
 
   // ---------------- Modal-Helfer ----------------
-  function openModal(title, html, compact) {
+  let modalLock = false;   // gesperrte Fenster (Boss-Truhe, Ergebnis) lassen sich nicht wegklicken
+  function openModal(title, html, compact, lock) {
+    const wasHidden = $('#modal').classList.contains('hidden');
+    modalLock = !!lock;
+    $('#modalClose').classList.toggle('hidden', !!lock);
     $('#modalTitle').innerHTML = title; $('#modalBody').innerHTML = html;
     $('.modal-box').classList.toggle('compact', !!compact);
     $('#modal').classList.remove('hidden');
     $('#modalBody').scrollTop = 0;
-    if (Game.R && !Game.demo && screen === 'game') { Game.R._wasPaused = Game.R.paused; Game.R.paused = true; }
+    // Nur beim ersten Öffnen merken, ob das Spiel vorher lief (sonst bleibt es nach verschachtelten Fenstern pausiert)
+    if (Game.R && !Game.demo && screen === 'game') { if (wasHidden) Game.R._wasPaused = Game.R.paused; Game.R.paused = true; }
   }
-  function closeModal() {
+  function closeModal(force) {
     if ($('#modal').classList.contains('hidden')) return;
+    if (modalLock && !force) return;
+    modalLock = false; $('#modalClose').classList.remove('hidden');
     $('#modal').classList.add('hidden');
     if (Game.R && !Game.demo && screen === 'game' && !Game.R.over) Game.R.paused = !!Game.R._wasPaused;
     modalState = null;
@@ -603,10 +636,10 @@ const UI = (() => {
       let h = `<div class="set-row"><span>👤 Spielername</span><input type="text" id="setName" maxlength="16" value="${esc(P.name)}"></div>
         <div class="set-row"><span>🎵 Musik</span><input type="range" id="setMusic" min="0" max="1" step="0.05" value="${S.music}"></div>
         <div class="set-row"><span>🔊 Soundeffekte</span><input type="range" id="setSfx" min="0" max="1" step="0.05" value="${S.sfx}"></div>
-        <div class="set-row"><span>🖥️ Grafikqualität</span><select id="setQ"><option value="low" ${S.quality === 'low' ? 'selected' : ''}>Niedrig (schnell, ohne Schatten)</option><option value="medium" ${S.quality === 'medium' ? 'selected' : ''}>Mittel</option><option value="high" ${S.quality === 'high' ? 'selected' : ''}>Hoch</option></select></div>
+        <div class="set-row"><span>🖥️ Grafikqualität</span><select id="setQ"><option value="low" ${S.quality === 'low' ? 'selected' : ''}>Niedrig (schnell, ohne Schatten)</option><option value="medium" ${S.quality === 'medium' ? 'selected' : ''}>Mittel</option><option value="high" ${S.quality === 'high' ? 'selected' : ''}>Hoch</option></select></div><p class="note" style="margin:.2em 0">Tipp: Nach dem Ändern der Grafik das Spiel einmal neu laden, damit alles wirkt.</p>
         <div class="set-row"><span>👕 Shirt-Farbe</span><div class="swatches">${['#e03a3a', '#2f8fe0', '#2fae4a', '#9b4dff', '#ff8a1a', '#222222', '#ff5ab4'].map(c => `<button data-shirt="${c}" class="${S.shirt === c ? 'on' : ''}" style="background:${c}"></button>`).join('')}</div></div>
         <div class="set-row"><span>👖 Hosen- & Kappenfarbe</span><div class="swatches">${['#2f5bd0', '#3a3a3a', '#6b4423', '#2f8f4a', '#d4af37', '#c0392b', '#ffffff'].map(c => `<button data-pants="${c}" class="${S.pants === c ? 'on' : ''}" style="background:${c}"></button>`).join('')}</div></div>
-        ${tg('particles', '✨ Viele Partikeleffekte')}${tg('autoStart', '⏱️ Wellen kommen automatisch (30s vor Welle 1, danach 25s Pause)')}${tg('damageNumbers', '🔢 Münz-Anzeigen über Gegnern')}${tg('showGrid', '#️⃣ Raster beim Bauen')}
+        ${tg('particles', '✨ Viele Partikeleffekte')}${tg('autoStart', '⏱️ Nächste Welle automatisch starten (nach 25s Pause)')}${tg('damageNumbers', '🔢 Münz-Anzeigen über Gegnern')}${tg('showGrid', '#️⃣ Raster beim Bauen')}
         <h4 class="sec">🎮 Steuerung</h4>
         <p class="note">🖱️ <b>PC:</b> WASD/Pfeile: laufen · Shift: rennen · Leertaste: springen · Maus ziehen: Kamera drehen · Mausrad: Zoom · B: Baumenü · Linksklick: bauen/auswählen · R: Gebäude drehen · Enter: Welle starten · C: Übersicht/Figur · Esc: abbrechen · U: Upgrade · X: Verkaufen<br>
         📱 <b>Touch:</b> Joystick links: laufen · ⤒: springen · 1 Finger auf der Welt: Kamera drehen · 2 Finger: zoomen · 🔨 BAUEN: Baumenü öffnen, dann aufs Feld tippen</p>
@@ -680,9 +713,10 @@ const UI = (() => {
       const b = box();
       b.innerHTML = `<div class="tut-face">🧙</div><div class="tut-text">${html}</div>${btn ? `<button class="btn green" id="tutBtn">${btn}</button>` : ''}`;
       b.classList.remove('hidden'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+      document.body.classList.add('tut-on');
       if (btn) $('#tutBtn').onclick = () => { Audio2.play('click'); onBtn(); };
     }
-    function hide() { box().classList.add('hidden'); }
+    function hide() { box().classList.add('hidden'); document.body.classList.remove('tut-on'); }
     function hl(sel) { $$('.tut-hl').forEach(e => e.classList.remove('tut-hl')); if (sel) $$(sel).forEach(e => e.classList.add('tut-hl')); }
     function showMarker(on, at) {
       if (marker) { World.scene.remove(marker); marker = null; }
@@ -709,28 +743,33 @@ const UI = (() => {
         hl(touch ? '#joy' : null);
         pollT = setInterval(() => { if (Player.pos.distanceTo(moveStart) > 2.5) go('place'); }, 200);
       } else if (s === 'place') {
+        if (!touch) setBuildOpen(true);
         say(`Du hast genau <b>eine Armbrust</b>. ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle die Armbrust und tippe' : 'Wähle unten die Armbrust und klicke'} auf das <b>leuchtende Feld</b> neben dem Weg.`);
         hl(document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle');
         showMarker(true);
         pollT = setInterval(() => { if (step === 'place') hl(document.body.classList.contains('build-open') ? '#bbItems .item[data-id=crossbow]' : '#buildToggle'); }, 400);
       } else if (s === 'wave1') {
-        showMarker(false); hl(null); setBuildOpen(false);
-        say('Super! Deine Armbrust schießt <b>ganz von allein</b>. Gleich kommt Welle 1 …');
-        R.hold = false; setTimeout(() => { if (step === 'wave1' && Game.R && Game.R.phase === 'build') Game.startWave(false); }, 2500);
+        showMarker(false); if (touch) setBuildOpen(false);
+        say('Super! Deine Armbrust schießt <b>ganz von allein</b>. Drück jetzt unten rechts auf <b>▶ WELLE STARTEN</b>!');
+        R.hold = false; setTimeout(() => hl('#waveBtn'), 50);
+      } else if (s === 'next') {
+        say(`Welle geschafft! 🎉 Wenn du bereit bist, drück <b>▶ WELLE STARTEN</b> für Welle ${R.wave + 1}.`);
+        setTimeout(() => hl('#waveBtn'), 50);
       } else if (s === 'fighting') {
+        hl(null);
         say('Pass auf die Gegner auf! 💪 Wenn du 3 gleiche Türme hast, kannst du sie später <b>fusen</b> – dann werden sie viel stärker.');
         setTimeout(() => { if (step === 'fighting') hide(); }, 4500);
       } else if (s === 'bosswarn') {
         R.hold = true; R.pauseTimer = 0;
-        say('⚠️ <b>Achtung!</b> Jede <b>5. Welle</b> kommt ein <b>BOSS</b>. Besiege ihn – dann bekommst du eine <b>neue Waffe</b>!', 'Los geht\'s! ▶', () => { R.hold = false; hide(); step = 'boss'; Game.startWave(false); });
+        say('⚠️ <b>Achtung!</b> Jede <b>5. Welle</b> kommt ein <b>BOSS</b>. Besiege ihn – dann bekommst du eine <b>neue Waffe</b>!', 'Verstanden ▶', () => { R.hold = false; step = 'boss'; say('Drück <b>▶ WELLE STARTEN</b>, wenn du bereit für den Boss bist!'); setTimeout(() => hl('#waveBtn'), 50); });
       } else if (s === 'place2') {
         R.hold = true; R.pauseTimer = 0; showMarker(true);
         say(`Deine neue Waffe ist da! 🎁 ${touch ? 'Tippe auf <b>🔨 BAUEN</b>, wähle sie aus' : 'Wähle sie unten aus'} und stelle sie neben den Weg.`);
         pollT = setInterval(() => { hl(document.body.classList.contains('build-open') ? '#bbItems .item:not(.locked)' : '#buildToggle'); }, 400);
       } else if (s === 'done') {
         hl(null); showMarker(false); setBuildOpen(!touch);
-        say('<b>Perfekt – Tutorial geschafft!</b> 🎓<br>Ab jetzt kommen die Wellen <b>automatisch</b>. Jede 5. Welle kommt ein Boss. Bosse geben dir <b>Türme, Wege und Fallen</b>.<br>⚗️ Hast du <b>3 gleiche Türme</b>, kannst du sie im <b>Inventar</b> zu einem starken <b>+1</b> fusen!', 'Spielen! ▶', () => {
-          Save.P.tutorialDone = true; R.tutorial = false; R.hold = false; R.pauseTimer = 15;
+        say('<b>Perfekt – Tutorial geschafft!</b> 🎓<br>Du startest jede Welle selbst mit <b>▶ WELLE STARTEN</b>. Jede 5. Welle kommt ein Boss. Bosse geben dir <b>Türme, Wege und Fallen</b>.<br>⚗️ Hast du <b>3 gleiche Türme</b>, kannst du sie im <b>Inventar</b> zu einem starken <b>+1</b> fusen!', 'Spielen! ▶', () => {
+          Save.P.tutorialDone = true; R.tutorial = false; R.hold = false; R.pauseTimer = 0;
           Save.checkAchievements(); Save.save(); hide(); step = null;
           document.body.classList.remove('tutorial'); renderBuildBar(); Game.snapshotRun();
         });
@@ -740,7 +779,9 @@ const UI = (() => {
       const R = Game.R; if (!R || !R.tutorial) return;
       if (name === 'placed' && step === 'place') go('wave1');
       else if (name === 'placed' && step === 'place2') { clearInterval(pollT); go('done'); }
-      else if (name === 'waveStart' && step === 'wave1') go('fighting');
+      else if (name === 'waveStart' && (step === 'wave1' || step === 'next')) go('fighting');
+      else if (name === 'waveStart' && step === 'boss') { hl(null); hide(); }
+      else if (name === 'waveCleared' && data < 4) go('next');
       else if (name === 'waveCleared' && data === 4) go('bosswarn');
       else if (name === 'rewardClosed') go('place2');
     }
@@ -756,15 +797,16 @@ const UI = (() => {
     if (rw.kind === 'roads') return { html: '<div class="ic">🛣️</div>', name: `${rw.n} Wegstücke`, color: '#9b9a94', sub: 'Wege' };
     return { html: '<div class="ic">💰</div>', name: `${rw.n} Münzen`, color: '#ffd700', sub: 'Münzen' };
   }
+  const rewardQueue = [];
   function bossReward(rw, bossDef) {
+    if (!$('#modal').classList.contains('hidden') && $('.roulette')) { rewardQueue.push([rw, bossDef]); return; }
     const R = Game.R;
     const fake = () => Save.rollFake(R.wave + 10);
     const strip = []; for (let i = 0; i < 36; i++) strip.push(i === 30 ? rw : fake());
     const cards = strip.map(r => { const c = rewardCard(r); return `<div class="rl-card" style="border-color:${c.color}">${c.html}<div class="nm">${esc(c.name)}</div></div>`; }).join('');
     openModal('🎁 Boss-Truhe', `<div class="result"><div class="big">👑 ${esc(bossDef.name)} besiegt!</div><p>Mal sehen, was in der Truhe ist …</p>
       <div class="roulette"><div class="rl-line"></div><div class="rl-strip" id="rlStrip">${cards}</div></div>
-      <div id="rlWin" class="rl-win hidden"></div></div>`, true);
-    $('#modalClose').classList.add('hidden');
+      <div id="rlWin" class="rl-win hidden"></div></div>`, true, true);
     const stripEl = $('#rlStrip');
     requestAnimationFrame(() => {
       const card = stripEl.children[30]; const wrap = stripEl.parentElement;
@@ -775,8 +817,13 @@ const UI = (() => {
       const tickSnd = () => { const t = performance.now() - t0; if (t > 4200) return; const pos = -new DOMMatrix(getComputedStyle(stripEl).transform).m41; const idx = Math.floor(pos / card.offsetWidth); if (idx !== last) { last = idx; Audio2.play('click'); } requestAnimationFrame(tickSnd); };
       tickSnd();
     });
+    let finished = false;
     setTimeout(() => {
       const c = rewardCard(rw);
+      if (!document.body.contains(stripEl)) { // Fenster wurde inzwischen ersetzt – Belohnung trotzdem sauber abschließen
+        if (R.tutorial) Tut.event('rewardClosed');
+        renderBuildBar(); return;
+      }
       stripEl.children[30].classList.add('won');
       Audio2.play('achievement');
       const isPlaceable = rw.kind === 'tower' || rw.kind === 'trap';
@@ -787,7 +834,9 @@ const UI = (() => {
       w.classList.remove('hidden');
       for (let i = 0; i < 3; i++) setTimeout(() => Particles.emit(Player.pos.x, 2, Player.pos.z, 50, c.color, { speed: 4, up: 5, life: 1.2, size: 0.3, tint: false }), i * 200);
       const finish = place => {
-        $('#modalClose').classList.remove('hidden'); closeModal();
+        if (finished) return; finished = true;
+        closeModal(true);
+        if (rewardQueue.length) { const [a, b] = rewardQueue.shift(); setTimeout(() => bossReward(a, b), 300); }
         if (R.tutorial) { Tut.event('rewardClosed'); }
         if (place && isPlaceable) { curTab = rw.kind === 'tower' ? 'towers' : 'traps'; setBuildOpen(true); Game.setBuild({ kind: rw.kind, id: rw.id }); }
         renderBuildBar();
@@ -852,11 +901,10 @@ const UI = (() => {
       ${won ? '<p>Belohnung: 💎100 🔮10</p>' : '<p>Deine Burg ist gefallen – aber du bekommst neue Türme für die nächste Runde!</p>'}
       <div id="rsPicks"></div>
       <div class="row"><button class="btn ${won ? '' : 'green'}" id="rsRetry">🔁 Neue Runde (Welle 1)</button><button class="btn gray" id="rsMenu">🏠 Hauptmenü</button></div></div>`;
-    openModal(won ? 'Sieg' : 'Niederlage', h, true);
-    $('#modalClose').classList.add('hidden');
+    openModal(won ? 'Sieg' : 'Niederlage', h, true, true);
     const renderPicks = () => { $('#rsPicks').innerHTML = picksHtml(); bindPicks(renderPicks); };
     renderPicks();
-    const done = () => $('#modalClose').classList.remove('hidden');
+    const done = () => closeModal(true);
     $('#rsRetry').onclick = () => { done(); Save.P.run = null; startGame(s.mode.id, Game.R.biome); };
     $('#rsMenu').onclick = () => { done(); goMenu(); };
     if (won) for (let i = 0; i < 6; i++) setTimeout(() => Particles.emit((Math.random() - 0.5) * 16, 2, (Math.random() - 0.5) * 10, 60, '#ffffff', { speed: 5, up: 6, life: 1.6, size: 0.35, tint: false }), i * 250);
@@ -883,7 +931,7 @@ const UI = (() => {
   function bindEvents() {
     document.addEventListener('click', e => {
       const b = e.target.closest('[data-act]'); if (b) { action(b.dataset.act); return; }
-      const it = e.target.closest('#bbItems .item'); if (it) { onBuildItem(it); return; }
+      const it = e.target.closest('#bbItems .item, #bbHead .hb'); if (it) { onBuildItem(it); return; }
       const tool = e.target.closest('[data-tool]'); if (tool) { onBuildItem(tool); return; }
       if (e.target.closest('[data-bbclose]')) { Audio2.play('click'); setBuildOpen(false); return; }
       if (e.target.closest('#buildToggle')) { Audio2.init(); Audio2.play('click'); setBuildOpen(true); return; }

@@ -11,6 +11,7 @@
   setLoad(30, 'Baue 3D-Welt …');
   requestAnimationFrame(() => {
     try {
+      Models.setPBR(P.settings.quality !== 'low');
       World.init(document.getElementById('c'), P.settings.quality);
       Particles.enabled = P.settings.particles;
       Particles.setTint(EFFECTS.find(e => e.id === P.equipped.effect));
@@ -19,7 +20,9 @@
       CamCtl.init(document.getElementById('c'), World.camera);
       Game.init();
       UI.hookGame(); UI.bindEvents();
-      CamCtl.handlers.toolActive = () => !!Game.buildSel && UI.screen === 'game';
+      // Ziehen malt nur bei Wegen/Abreißen/Fallen – Türme & Deko werden per Antippen gesetzt, Ziehen dreht dann die Kamera
+      CamCtl.handlers.toolActive = () => UI.screen === 'game' && !!Game.buildSel && ['road', 'erase', 'trap'].includes(Game.buildSel.kind);
+      CamCtl.handlers.anyTool = () => UI.screen === 'game' && !!Game.buildSel;
       CamCtl.handlers.hover = p => Game.hover(p);
       CamCtl.handlers.paintStart = p => Game.paintStart(p);
       CamCtl.handlers.paint = p => Game.paint(p);

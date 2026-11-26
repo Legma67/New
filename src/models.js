@@ -4,11 +4,18 @@
 // ============================================================
 const Models = (() => {
   const matCache = new Map();
+  let pbr = true;
+  function setPBR(v) { pbr = v; matCache.clear(); }
   function M(color, opt = {}) {
     const key = color + '|' + (opt.e || '') + '|' + (opt.o ?? 1) + '|' + (opt.ei ?? 1) + '|' + (opt.side || 0);
     let m = matCache.get(key);
     if (!m) {
-      m = new THREE.MeshLambertMaterial({ color });
+      if (pbr) {
+        // Metallisch wirkende Farben (Gold, Silber, Stahl) bekommen etwas Glanz
+        const c = new THREE.Color(color), hsl = {}; c.getHSL(hsl);
+        const gold = hsl.h > 0.1 && hsl.h < 0.17 && hsl.s > 0.7 && hsl.l > 0.4;
+        m = new THREE.MeshStandardMaterial({ color, roughness: gold ? 0.35 : 0.72, metalness: gold ? 0.6 : 0.05, envMapIntensity: gold ? 1 : 0.45 });
+      } else m = new THREE.MeshLambertMaterial({ color });
       if (opt.e) { m.emissive = new THREE.Color(opt.e); m.emissiveIntensity = opt.ei ?? 1; }
       if (opt.o !== undefined && opt.o < 1) { m.transparent = true; m.opacity = opt.o; m.depthWrite = false; }
       if (opt.side) m.side = THREE.DoubleSide;
@@ -762,7 +769,7 @@ const Models = (() => {
     }
     mesh(box(0.58, 0.82, 0.32), sh, 0, 1.41, 0, g);
     mesh(box(0.58, 0.08, 0.33), M('#222'), 0, 1.02, 0, g);
-    const faceMat = new THREE.MeshLambertMaterial({ map: faceTex });
+    const faceMat = pbr ? new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.7 }) : new THREE.MeshLambertMaterial({ map: faceTex });
     const head = new THREE.Mesh(box(0.52, 0.52, 0.52), [skin, skin, skin, skin, faceMat, skin]);
     head.position.y = 2.1; head.castShadow = true; g.add(head);
     // Kappe
@@ -773,5 +780,5 @@ const Models = (() => {
     return g;
   }
 
-  return { makeTrap, makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
+  return { setPBR, makeTrap, makeAvatar, M, mesh, geo, box, cyl, sph, cone, tor, oct, ico, dod, makeTower, applyTowerLevel, makeEnemy, makeTree, makeDeco, makeCastle, makePortal };
 })();

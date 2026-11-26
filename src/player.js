@@ -53,12 +53,12 @@ const Player = (() => {
     pos.addScaledVector(vel, dt);
     if (pos.y <= 0) { pos.y = 0; vel.y = 0; onGround = true; }
     // Kollision mit Türmen, Deko, Burg (Kreise)
-    for (const o of obstacles()) {
+    for (const o of obstacles().concat(World.envObstacles)) {
       if (pos.y > (o.h || 1.2)) continue;
       const dx = pos.x - o.x, dz = pos.z - o.z, d = Math.hypot(dx, dz), r = o.r + 0.25;
       if (d < r && d > 0.0001) { pos.x = o.x + dx / d * r; pos.z = o.z + dz / d * r; }
     }
-    pos.x = THREE.MathUtils.clamp(pos.x, -42, 42); pos.z = THREE.MathUtils.clamp(pos.z, -42, 42);
+    pos.x = THREE.MathUtils.clamp(pos.x, -30, 30); pos.z = THREE.MathUtils.clamp(pos.z, -30, 30);
     // Drehen in Laufrichtung
     if (moving) {
       const target = Math.atan2(mx, mz);

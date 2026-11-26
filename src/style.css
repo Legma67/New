@@ -208,8 +208,13 @@ textarea.code{width:100%;height:6em;border-radius:10px;border:2px solid rgba(255
 body:not(.build-open) .build-bar{display:none}
 body:not(.build-open) #hud .build-toggle{display:block}
 body.tp-open .build-bar{display:none}
-body.touch:not(.build-open):not(.tp-open) #hud .joy{display:block}
-body.touch:not(.build-open) #hud .jump-btn{display:flex}
+body.touch:not(.tp-open) #hud .joy{display:block}
+body.build-open .joy{left:calc(min(36cqw,330px) + 22px + var(--safe-l))}
+body.touch #hud .jump-btn{display:flex}
+#buildBar img{-webkit-user-drag:none;user-select:none}#buildBar{user-select:none;-webkit-user-select:none}
+#dragFloat{position:fixed;left:0;top:0;z-index:80;width:64px;height:64px;margin:-80px 0 0 -32px;pointer-events:none;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+#dragFloat img{width:100%;height:100%;object-fit:contain}#dragFloat .emo{font-size:44px}
+#dragFloat.hidden{display:none}
 #camMode{font-size:.8em}
 .picks{margin:.8em 0;background:rgba(255,225,77,.1);border:2px solid #ffe14d;border-radius:16px;padding:.6em}
 .picks h3{margin:.1em 0 .4em;color:#ffe14d}
@@ -298,7 +303,7 @@ body.tutorial .side-menu,body.tutorial .hud-tr .shopbtn,body.tutorial .wc-row,bo
   .item .pic{height:2.6em}.item .emo{font-size:1.6em}
   .bb-head{min-height:2em;font-size:.78em}
 }
-@container root (max-width:700px){.build-bar{width:40cqw}}
+@container root (max-width:700px){.build-bar{width:40cqw}body.build-open .joy{left:calc(40cqw + 22px)}}
 body.build-open #tut{left:auto;right:calc(12px + var(--safe-r));transform:none;width:calc(100cqw - min(36cqw,330px) - 40px);max-width:560px}
 body.tut-on #toasts{top:calc(190px + env(safe-area-inset-top,0px))}
 @container root (max-height:430px){body.tut-on #toasts{top:auto;bottom:calc(150px + var(--safe-b))}}

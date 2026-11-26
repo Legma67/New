@@ -157,6 +157,48 @@ const UI = (() => {
     jb.addEventListener('pointerdown', e => { e.preventDefault(); Player.jump(); });
   }
 
+  // Turm/Falle/Deko aus dem Baumenü direkt aufs Feld ziehen
+  function bindDragPlace() {
+    let d = null;
+    const float = document.createElement('div'); float.id = 'dragFloat'; float.className = 'hidden'; $('#root').appendChild(float);
+    const inBar = (x, y) => { const el = document.elementFromPoint(x, y); return !!(el && el.closest('#buildBar')); };
+    document.addEventListener('pointerdown', e => {
+      const it = e.target.closest('#bbItems .item[data-kind]');
+      if (!it || it.classList.contains('locked') || !['tower', 'trap', 'deco'].includes(it.dataset.kind)) return;
+      d = { id: e.pointerId, x0: e.clientX, y0: e.clientY, it, on: false };
+      if (e.pointerType === 'mouse') e.preventDefault();
+    }, true);
+    document.addEventListener('dragstart', e => { if (e.target.closest && e.target.closest('#buildBar')) e.preventDefault(); }, true);
+    document.addEventListener('pointermove', e => {
+      if (!d || e.pointerId !== d.id) return;
+      const a = View.toLocal(d.x0, d.y0), b = View.toLocal(e.clientX, e.clientY);
+      if (!d.on) {
+        if (Math.hypot(b.x - a.x, b.y - a.y) < 14 || inBar(e.clientX, e.clientY) && Math.abs(b.y - a.y) > Math.abs(b.x - a.x)) return;
+        d.on = true;
+        const k = d.it.dataset.kind, id = d.it.dataset.id, plus = +d.it.dataset.plus || 0;
+        const sel = Game.buildSel;
+        if (!sel || sel.kind !== k || sel.id !== id || (sel.plus || 0) !== plus) Game.setBuild(k === 'tower' ? { kind: k, id, plus } : { kind: k, id });
+        float.innerHTML = d.it.querySelector('.pic').innerHTML; float.classList.remove('hidden');
+        document.body.classList.add('dragging');
+      }
+      float.style.transform = `translate(${b.x}px,${b.y}px)`;
+      if (!inBar(e.clientX, e.clientY)) Game.hover(CamCtl.groundAt(b.x, b.y));
+    }, true);
+    const end = e => {
+      if (!d || e.pointerId !== d.id) return;
+      const was = d; d = null;
+      if (!was.on) return;
+      float.classList.add('hidden'); document.body.classList.remove('dragging');
+      const b = View.toLocal(e.clientX, e.clientY);
+      if (e.type === 'pointerup' && !inBar(e.clientX, e.clientY)) { const g = CamCtl.groundAt(b.x, b.y); if (g) Game.tap(g); }
+      renderBuildBar();
+      // der folgende Klick darf die Auswahl nicht wieder umschalten
+      const stop = ev => { ev.stopPropagation(); ev.preventDefault(); };
+      document.addEventListener('click', stop, { capture: true, once: true }); setTimeout(() => document.removeEventListener('click', stop, true), 60);
+    };
+    document.addEventListener('pointerup', end, true); document.addEventListener('pointercancel', end, true);
+  }
+
   // ---------------- HUD ----------------
   function bump(el, key, v) { if (lastHud[key] !== undefined && lastHud[key] !== v) { el.parentElement.classList.remove('bump'); void el.offsetWidth; el.parentElement.classList.add('bump'); } lastHud[key] = v; }
   function hud(force) {
@@ -212,8 +254,8 @@ const UI = (() => {
 
   // ---------------- Baumenü (Hotbar) ----------------
   const CAT_INFO = {
-    towers: '🏰 <b>Türme</b> – antippen, dann ein freies Feld neben dem Weg wählen',
-    traps: '🪤 <b>Fallen</b> – werden direkt auf den Weg gelegt',
+    towers: '🏰 <b>Türme</b> – aufs Feld <b>ziehen</b> oder antippen und dann ein Feld wählen',
+    traps: '🪤 <b>Fallen</b> – auf den Weg ziehen oder antippen',
     roads: '🛣️ <b>Wege</b> – Weg der Gegner umbauen (nur in der Pause)',
     decos: '🌳 <b>Deko</b> – verschönere dein Grundstück',
     tools: '🧰 <b>Werkzeuge</b>',
@@ -979,7 +1021,7 @@ const UI = (() => {
       if (k === 'f') $('#speedBtn').click();
       if (/^[1-9]$/.test(k)) { const un = TOWERS.filter(t => Save.P.unlocked.includes(t.id)).sort((a, b) => a.cost - b.cost); const t = un[+k - 1]; if (t) { curTab = 'towers'; setBuildOpen(true); Game.setBuild({ kind: 'tower', id: t.id }); } }
     });
-    bindJoystick();
+    bindJoystick(); bindDragPlace();
     document.body.classList.toggle('touch', isTouch());
     // Mausrad im Baumenü horizontal scrollen
     $('#bbItems').addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { $('#bbItems').scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });

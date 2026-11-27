@@ -205,7 +205,7 @@ const Game = (() => {
   // ---------------- Bauen ----------------
   function setBuild(sel) {
     buildSel = sel; pending = null; ui.pendingChanged && ui.pendingChanged(null);
-    if (ghost) { scene.remove(ghost); ghost = null; ghostKey = ''; }
+    if (ghost) { dropGhost(); ghostKey = ''; }
     rangeRing.visible = false;
     if (sel) select(null);
     World.setBuildOverlay(!!sel || (R && R.phase === 'build'));
@@ -272,6 +272,13 @@ const Game = (() => {
     return { ok: false };
   }
 
+  // Vorschau entfernen und ihre eigenen Materialien freigeben (Geometrien sind geteilt)
+  function dropGhost() {
+    if (!ghost) return;
+    scene.remove(ghost);
+    ghost.traverse(o => { if (o.isMesh && o.material && o.material.dispose) o.material.dispose(); });
+    ghost = null;
+  }
   function makeGhost(sel) {
     let g;
     if (sel.kind === 'tower' || sel.kind === 'move') {
@@ -297,7 +304,7 @@ const Game = (() => {
     if (!t || !inPlot(t.x, t.z)) { if (ghost) ghost.visible = false; rangeRing.visible = false; return; }
     lastHoverTile = t;
     const key = buildSel.kind + (buildSel.id || '');
-    if (!ghost || ghostKey !== key) { if (ghost) scene.remove(ghost); ghost = makeGhost(buildSel); ghostKey = key; scene.add(ghost); }
+    if (!ghost || ghostKey !== key) { if (ghost) dropGhost(); ghost = makeGhost(buildSel); ghostKey = key; scene.add(ghost); }
     ghost.visible = true;
     ghost.position.copy(tileToWorld(t.x, t.z));
     const ok = canPlace(buildSel, t.x, t.z).ok;
@@ -398,6 +405,8 @@ const Game = (() => {
       Particles.emit(pos.x, 0.2, pos.z, 16, '#ffe14d', { speed: 1.6, life: 0.5 });
       Audio2.play('place'); setBuild(null); select(t); snapshotRun();
     }
+    // Vorschau nicht über dem gerade gesetzten Objekt stehen lassen
+    if (ghost && buildSel && sel.kind !== 'road' && sel.kind !== 'erase') { ghost.visible = false; rangeRing.visible = false; }
     updateTileOverlay();
     ui.hud && ui.hud();
     return true;
@@ -1703,7 +1712,7 @@ const Game = (() => {
   return {
     fuse, bestSpot, choose, confirmPlace, cancelPending, get pending() { return pending; }, obstacles, available, buyRoadPieces, isBossWave, removeTrap, init, newRun, startDemo, update, setBuild, rotateBuild, hover, tap, paintStart, paint, paintEnd, upgrade, sell, select, startMove, startWave, towerStats, upgradeCost, sellValue,
     continueEndless, exportLayout, parseLayout, loadLayout, recalcRoute, placeCastle, snapshotRun, ui,
-    get R() { return R; }, get traps() { return traps; }, get _grid() { return grid; }, get _floats() { return floats.length; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
+    get R() { return R; }, get traps() { return traps; }, get _ghost() { return ghost; }, get _grid() { return grid; }, get _floats() { return floats.length; }, get demo() { return demo; }, get selected() { return selected; }, get buildSel() { return buildSel; }, get route() { return route; },
     get enemies() { return enemies; }, get towers() { return towers; },
     stopDemo() { if (demo) { clearEntities(); demo = false; R = null; } },
     quit() { if (R && !demo && !R.over) snapshotRun(); clearEntities(); R = null; },

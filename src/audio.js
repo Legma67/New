@@ -9,7 +9,7 @@ const Audio2 = (() => {
   const lastPlay = {};
 
   function init() {
-    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+    if (ctx) { if (ctx.state !== 'running' && ctx.resume) ctx.resume().catch(() => {}); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     ctx = new AC();

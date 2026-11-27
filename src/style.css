@@ -344,3 +344,10 @@ body.touch .cam-ctl #camMode{min-height:32px}
 body.build-open .joy{left:calc(var(--bw) + 22px + var(--safe-l))}
 body.build-open .jump-btn{right:auto;left:calc(var(--bw) + 36px + var(--joy) + var(--safe-l));width:58px;height:58px;font-size:1.4em}
 body.build-open .jump-btn small{display:none}
+
+/* Hochformat (gedreht): Browser-Gesten aus, wir scrollen selbst */
+body.portrait,body.portrait *{touch-action:none!important}
+/* Lücken zwischen HUD-Knöpfen lassen Tipps aufs Spielfeld durch */
+#hud>.cam-ctl,#hud>.side-menu,#hud>.hud-tr,#hud>.wave-ctl,#hud>.hud-tc{pointer-events:none}
+#hud>.cam-ctl>*,#hud>.side-menu>*,#hud>.hud-tr>*,#hud>.wave-ctl>*,#hud>.wave-ctl .wc-row>*,#hud>.hud-tc>*{pointer-events:auto}
+#hud>.wave-ctl .wc-row{pointer-events:none}

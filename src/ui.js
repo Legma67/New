@@ -157,6 +157,60 @@ const UI = (() => {
     jb.addEventListener('pointerdown', e => { e.preventDefault(); Player.jump(); });
   }
 
+  // Im Hochformat ist das ganze Spiel um 90° gedreht. Der Browser wertet Wischgesten aber in
+  // Bildschirmrichtung aus – natives Scrollen geht dort nicht. Darum scrollen wir selbst.
+  function bindPortraitScroll() {
+    let s = null, inert = null;
+    const scrollerOf = el => {
+      for (; el && el !== document.body; el = el.parentElement) {
+        const cs = getComputedStyle(el);
+        if ((/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1) || (/(auto|scroll)/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 1)) return el;
+      }
+      return null;
+    };
+    const stopInert = () => { if (inert) cancelAnimationFrame(inert); inert = null; };
+    document.addEventListener('pointerdown', e => {
+      if (!View.portrait || e.pointerType !== 'touch' || e.target.closest('input[type=range]')) return;
+      stopInert();
+      const sc = scrollerOf(e.target); if (!sc) { s = null; return; }
+      const p = View.toLocal(e.clientX, e.clientY);
+      s = { id: e.pointerId, sc, x0: p.x, y0: p.y, x: p.x, y: p.y, axis: null, vx: 0, vy: 0, t: performance.now() };
+    }, true);
+    document.addEventListener('pointermove', e => {
+      if (!s || e.pointerId !== s.id) return;
+      const p = View.toLocal(e.clientX, e.clientY);
+      if (!s.axis) {
+        const dx = p.x - s.x0, dy = p.y - s.y0;
+        if (Math.hypot(dx, dy) < 8) return;
+        s.axis = Math.abs(dy) >= Math.abs(dx) ? 'y' : 'x';
+        // waagerecht aus dem Baumenü heraus = Turm aufs Feld ziehen, nicht scrollen
+        if (s.axis === 'x' && s.sc.closest('#buildBar') && s.sc.scrollWidth <= s.sc.clientWidth + 1) { s = null; return; }
+      }
+      const now = performance.now(), dt = Math.max(1, now - s.t);
+      const dx = p.x - s.x, dy = p.y - s.y; s.x = p.x; s.y = p.y; s.t = now;
+      if (s.axis === 'y') { s.sc.scrollTop -= dy; s.vy = -dy / dt; } else { s.sc.scrollLeft -= dx; s.vx = -dx / dt; }
+      s.moved = true;
+    }, true);
+    const end = e => {
+      if (!s || e.pointerId !== s.id) return;
+      const was = s; s = null;
+      if (!was.moved) return;
+      // Antippen nach dem Wischen nicht als Klick werten
+      const stop = ev => { ev.stopPropagation(); ev.preventDefault(); };
+      document.addEventListener('click', stop, { capture: true, once: true }); setTimeout(() => document.removeEventListener('click', stop, true), 80);
+      // Schwung
+      let v = was.axis === 'y' ? was.vy : was.vx, last = performance.now();
+      const step = now => {
+        const dt = now - last; last = now; v *= Math.pow(0.94, dt / 16);
+        if (Math.abs(v) < 0.02) { inert = null; return; }
+        if (was.axis === 'y') was.sc.scrollTop += v * dt; else was.sc.scrollLeft += v * dt;
+        inert = requestAnimationFrame(step);
+      };
+      inert = requestAnimationFrame(step);
+    };
+    document.addEventListener('pointerup', end, true); document.addEventListener('pointercancel', end, true);
+  }
+
   // Turm/Falle/Deko aus dem Baumenü direkt aufs Feld ziehen
   function bindDragPlace() {
     let d = null;
@@ -373,9 +427,14 @@ const UI = (() => {
     const p = Game.pending, el = $('#placeConfirm');
     if (!p || !el || el.classList.contains('hidden')) return;
     _cv.copy(tileToWorld(p.x, p.z)); _cv.y += 1.9; _cv.project(World.camera);
-    const x = (_cv.x * 0.5 + 0.5) * View.w, y = (-_cv.y * 0.5 + 0.5) * View.h;
+    let x = (_cv.x * 0.5 + 0.5) * View.w, y = (-_cv.y * 0.5 + 0.5) * View.h;
+    if (_cv.z > 1) { x = View.w / 2; y = View.h / 2; }   // hinter der Kamera: mittig anzeigen
+    // immer erreichbar bleiben: nie aus dem Bild und nie unter das Baumenü
+    const bar = $('#buildBar'), barR = document.body.classList.contains('build-open') && bar ? bar.offsetLeft + bar.offsetWidth : 0;
+    const half = el.offsetWidth / 2 || 60, hgt = el.offsetHeight || 50;
+    x = Math.min(Math.max(x, barR + half + 10, half + 10), View.w - half - 10);
+    y = Math.min(Math.max(y, hgt + 10), View.h - 10);
     el.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px) translate(-50%,-100%)`;
-    el.style.visibility = _cv.z > 1 ? 'hidden' : '';
   }
 
   // Werte eines Turms bei Fusionsstufe pl (für Panel & Inventar)
@@ -1041,7 +1100,7 @@ const UI = (() => {
       if (k === 'f') $('#speedBtn').click();
       if (/^[1-9]$/.test(k)) { const un = TOWERS.filter(t => Save.P.unlocked.includes(t.id)).sort((a, b) => a.cost - b.cost); const t = un[+k - 1]; if (t) { curTab = 'towers'; setBuildOpen(true); Game.setBuild({ kind: 'tower', id: t.id }); } }
     });
-    bindJoystick(); bindDragPlace();
+    bindJoystick(); bindDragPlace(); bindPortraitScroll();
     document.body.classList.toggle('touch', isTouch());
     // Mausrad im Baumenü horizontal scrollen
     $('#bbItems').addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { $('#bbItems').scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
